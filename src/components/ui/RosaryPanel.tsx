@@ -8,7 +8,6 @@ import { DEFAULT_ROSARY_OPTIONS } from "@/lib/rosary/types";
 import {
   beadKey,
   buildRosarySequence,
-  changeOptions,
   completedBeads,
   nextStep,
   prevStep,
@@ -21,7 +20,10 @@ import { RosaryBeadsSvg } from "./RosaryBeadsSvg";
 import { beadClick } from "./sfx";
 
 // 3D 묵주(WebGL)는 브라우저에서만 불러오고, 불러오는 동안은 2D 묵주를 보여 줌
-const RosaryViewer = dynamic(() => import("../rosary/RosaryViewer"), { ssr: false });
+const RosaryViewer = dynamic(() => import("../rosary/RosaryViewer"), {
+  ssr: false,
+  loading: () => <div className="rosary-3d" aria-hidden="true" />,
+});
 
 const MYSTERY_ORDER: MysteryId[] = ["joyful", "luminous", "sorrowful", "glorious"];
 
@@ -186,9 +188,14 @@ export function RosaryPanel() {
           {mystery.name}
           {!complete && <span className="sub"> · {section}</span>}
         </h2>
-        <button className="icon-btn" onClick={close} aria-label={ui.close}>
-          ✕
-        </button>
+        <div className="row">
+          <button className="icon-btn" onClick={() => setChoosing(true)} aria-label={ui.restart} title={ui.restart}>
+            ↺
+          </button>
+          <button className="icon-btn" onClick={close} aria-label={ui.close}>
+            ✕
+          </button>
+        </div>
       </header>
       <div className="panel-body rosary-body">
         <div className="beads-wrap">
@@ -207,7 +214,6 @@ export function RosaryPanel() {
           {complete ? (
             <div className="complete-card">
               <h3>{ui.complete}</h3>
-              <p>{ui.completeBody}</p>
               <div className="row">
                 <button className="btn" onClick={() => setChoosing(true)}>
                   {ui.again}
@@ -218,49 +224,14 @@ export function RosaryPanel() {
               </div>
             </div>
           ) : (
-            <div className={`step-card ${paused ? "is-paused" : ""}`}>
-              {decadeInfo && (
-                <p className="mystery-line">
-                  <strong>{ui.decadeN(step.decade)}</strong> {decadeInfo.title}
-                  <span className="scripture">
-                    {ui.scripture}: {decadeInfo.scripture}
-                  </span>
-                </p>
-              )}
-              <h3 className="prayer-name">
-                {prayer.name}
-                {step.optional && <em className="badge">{ui.optional}</em>}
-              </h3>
-              {step.hailMary && (
-                <div className="hm-count" aria-hidden="true">
-                  <span>{ui.hailMaryCount(step.hailMary.n, step.hailMary.of)}</span>
-                  <span className="dots">
-                    {Array.from({ length: step.hailMary.of }, (_, i) => (
-                      <i key={i} className={i < step.hailMary!.n - 1 ? "on" : i === step.hailMary!.n - 1 ? "cur" : ""} />
-                    ))}
-                  </span>
-                </div>
-              )}
-              <p className="guide">{prayer.guide}</p>
-              {prayer.text ? (
-                <p className="prayer-text">{prayer.text}</p>
-              ) : (
-                <p className="prayer-link">
-                  <a href={prayer.sourceUrl} target="_blank" rel="noopener noreferrer">
-                    {ui.officialText} ↗
-                  </a>
-                </p>
-              )}
-              {paused && <p className="paused-msg">{ui.paused}</p>}
-            </div>
-          )}
-
-          {!complete && (
             <>
-              <div className="progress" aria-hidden="true">
-                <div className="bar" style={{ width: `${((progress.stepIndex + 1) / steps.length) * 100}%` }} />
-              </div>
-              <p className="step-count">{ui.stepCount(progress.stepIndex + 1, steps.length)}</p>
+              {/* 묵주 아래에는 지금 기도 한 줄만 표시 */}
+              <p className={`step-line ${paused ? "is-paused" : ""}`} aria-hidden="true">
+                {step.kind === "mystery" && decadeInfo
+                  ? `${ui.decadeN(step.decade)} · ${decadeInfo.title}`
+                  : `${section} · ${prayer.name}${step.hailMary ? ` ${step.hailMary.n}/${step.hailMary.of}` : ""}`}
+                {paused && <span className="paused-tag"> · {ui.pause}</span>}
+              </p>
               <div className="controls">
                 <button className="btn" onClick={goBack} disabled={progress.stepIndex === 0}>
                   ← {ui.prev}
@@ -272,44 +243,8 @@ export function RosaryPanel() {
                   {ui.next} →
                 </button>
               </div>
-              <details className="more">
-                <summary>{ui.options} · {ui.sources}</summary>
-                <label>
-                  <input
-                    type="checkbox"
-                    checked={progress.options.includeFatima}
-                    onChange={(e) => setRosary(changeOptions(progress, { ...progress.options, includeFatima: e.target.checked }))}
-                  />
-                  {ui.includeFatima}
-                </label>
-                <label>
-                  <input
-                    type="checkbox"
-                    checked={progress.options.includeClosingPrayer}
-                    onChange={(e) =>
-                      setRosary(changeOptions(progress, { ...progress.options, includeClosingPrayer: e.target.checked }))
-                    }
-                  />
-                  {ui.includeClosing}
-                </label>
-                <p className="muted">{ui.textNotIncluded}</p>
-                <ul className="sources">
-                  {data.sources.map((s) => (
-                    <li key={s.url}>
-                      <a href={s.url} target="_blank" rel="noopener noreferrer">
-                        {s.label} ↗
-                      </a>
-                    </li>
-                  ))}
-                </ul>
-                <button className="btn small" onClick={() => setChoosing(true)}>
-                  {ui.restart}
-                </button>
-              </details>
             </>
           )}
-          <p className="muted small">{ui.savedLocally}</p>
-          <p className="muted small kbd-hint">{ui.keyboardHint}</p>
         </div>
       </div>
     </section>

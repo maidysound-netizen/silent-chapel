@@ -1,14 +1,14 @@
 "use client";
 import { useState } from "react";
 import { useApp } from "@/store/useAppStore";
-import { getUi, LOCALES, type Locale } from "@/lib/i18n";
+import { getUi } from "@/lib/i18n";
+import { LanguageTabs } from "./LanguageTabs";
 import { NICK_MAX, sanitizeNickname } from "@/lib/net/protocol";
 import { getNetworkManager } from "@/lib/net/NetworkManager";
 
 export function EntryScreen() {
   const savedNick = useApp((s) => s.nickname);
   const locale = useApp((s) => s.settings.locale);
-  const setSettings = useApp((s) => s.setSettings);
   const enter = useApp((s) => s.enter);
   const ui = getUi(locale);
   const [nick, setNick] = useState(savedNick);
@@ -23,6 +23,7 @@ export function EntryScreen() {
   return (
     <main className="entry">
       <div className="entry-card">
+        <LanguageTabs />
         <div className="entry-arch" aria-hidden="true" />
         <h1>{ui.appName}</h1>
         <p className="tagline">{ui.tagline}</p>
@@ -61,13 +62,6 @@ export function EntryScreen() {
           <p>{ui.controlsMobile}</p>
         </details>
         <div className="entry-footer">
-          <select aria-label={ui.language} value={locale} onChange={(e) => setSettings({ locale: e.target.value as Locale })}>
-            {LOCALES.map((l) => (
-              <option key={l.id} value={l.id}>
-                {l.label}
-              </option>
-            ))}
-          </select>
           <p className="muted small">{ui.disclaimer}</p>
         </div>
       </div>

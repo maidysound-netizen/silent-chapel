@@ -6,12 +6,13 @@ import { useApp, loadNickname, loadSettings } from "@/store/useAppStore";
 import { loadProgress } from "@/lib/rosary/storage";
 import { getNetworkManager } from "@/lib/net/NetworkManager";
 import { roomFromLocation } from "@/lib/net/RoomManager";
-import { localPlayer, interact, resetLocalPlayer, toggleSit } from "@/store/localPlayer";
+import { bow, localPlayer, interact, resetLocalPlayer, toggleSit } from "@/store/localPlayer";
 import { EntryScreen } from "./ui/EntryScreen";
 import { Hud } from "./ui/Hud";
 import { RosaryPanel } from "./ui/RosaryPanel";
 import { BiblePanel } from "./ui/BiblePanel";
 import { SettingsPanel } from "./ui/SettingsPanel";
+import { LanguageTabs } from "./ui/LanguageTabs";
 import { useSacredMusic } from "./ui/useSacredMusic";
 import { getUi } from "@/lib/i18n";
 import { FEATURES } from "@/lib/features";
@@ -61,6 +62,7 @@ function useKeyboard(active: boolean) {
         recompute();
       } else if (e.code === "KeyE") interact();
       else if (e.code === "KeyF") toggleSit();
+      else if (e.code === "KeyB") bow();
       else if (e.code === "KeyM" && app.pose === "sit") app.setMeditation(!app.meditation);
     };
     const up = (e: KeyboardEvent) => {
@@ -171,6 +173,7 @@ export default function ChapelApp() {
           <div className="hud-top solo">
             <span className="brand">{ui.appName}</span>
             <div className="hud-right">
+              <LanguageTabs compact />
               <button className="btn small" onClick={() => openPanel(panel === "settings" ? null : "settings")}>
                 {ui.settings}
               </button>

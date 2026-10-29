@@ -1,7 +1,8 @@
 "use client";
 import { useEffect } from "react";
 import { useApp, type Quality } from "@/store/useAppStore";
-import { getUi, LOCALES, type Locale } from "@/lib/i18n";
+import { getUi } from "@/lib/i18n";
+import { LanguageTabs } from "./LanguageTabs";
 import { MUSIC_TRACKS } from "@/lib/music";
 
 export function SettingsPanel() {
@@ -56,16 +57,10 @@ export function SettingsPanel() {
           <input type="checkbox" checked={settings.showNetStats} onChange={(e) => setSettings({ showNetStats: e.target.checked })} />
           {ui.netStats}
         </label>
-        <label className="select">
-          {ui.language}
-          <select value={settings.locale} onChange={(e) => setSettings({ locale: e.target.value as Locale })}>
-            {LOCALES.map((l) => (
-              <option key={l.id} value={l.id}>
-                {l.label}
-              </option>
-            ))}
-          </select>
-        </label>
+        <div className="setting-row">
+          <span>{ui.language}</span>
+          <LanguageTabs />
+        </div>
         <details className="credits">
           <summary>{ui.musicCredits}</summary>
           {MUSIC_TRACKS.map((t) => (
@@ -79,7 +74,7 @@ export function SettingsPanel() {
               <a href={t.sourceUrl} target="_blank" rel="noopener noreferrer">
                 Wikimedia Commons ↗
               </a>{" "}
-              · 원본 그대로 사용(편집 없음)
+              · {ui.musicUnchanged}
             </p>
           ))}
         </details>

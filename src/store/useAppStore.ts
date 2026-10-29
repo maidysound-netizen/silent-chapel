@@ -68,6 +68,8 @@ interface AppState {
   panel: Panel;
   meditation: boolean;
   prompt: InteractionTarget | null;
+  /** 성모상 가까이 있음 (절하기 버튼 문구용) */
+  nearMary: boolean;
   pose: Pose;
   rosary: RosaryProgress | null;
   hydrated: boolean;
@@ -79,6 +81,7 @@ interface AppState {
   openPanel(p: Panel): void;
   setMeditation(on: boolean): void;
   setPrompt(t: InteractionTarget | null): void;
+  setNearMary(v: boolean): void;
   setPose(p: Pose): void;
   setRosary(p: RosaryProgress | null): void;
 }
@@ -98,6 +101,7 @@ export const useApp = create<AppState>((set, get) => ({
   panel: null,
   meditation: false,
   prompt: null,
+  nearMary: false,
   pose: "stand",
   rosary: null,
   hydrated: false,
@@ -130,6 +134,9 @@ export const useApp = create<AppState>((set, get) => ({
     const same =
       cur?.kind === prompt?.kind && (cur?.kind !== "seat" || (prompt?.kind === "seat" && cur.seat.id === prompt.seat.id));
     if (!same) set({ prompt });
+  },
+  setNearMary: (nearMary) => {
+    if (get().nearMary !== nearMary) set({ nearMary });
   },
   setPose: (pose) => set(pose === "stand" ? { pose, meditation: false } : { pose }),
   setRosary: (rosary) => {

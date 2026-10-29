@@ -1,11 +1,11 @@
 "use client";
 // 묵주기도 패널의 3D 묵주. 손가락으로 알을 굴리듯 조작합니다.
 //   아래로 끌기(또는 휠) → 다음 알,  위로 끌기 → 이전 알,  가볍게 탭/클릭 → 다음 알
-import { useEffect, useMemo, useRef } from "react";
+import { useEffect, useRef } from "react";
 import { Canvas, useFrame, useThree } from "@react-three/fiber";
 import * as THREE from "three";
 import { RoomEnvironment } from "three/examples/jsm/environments/RoomEnvironment.js";
-import { RosaryModel, SHAPE_BY_KEY } from "./RosaryModel";
+import { RosaryModel } from "./RosaryModel";
 
 const ROLL_PX = 34; // 이만큼 끌면 알 하나
 const TAP_PX = 6;
@@ -26,21 +26,20 @@ function RoomLighting() {
   return null;
 }
 
-/** 카메라가 지금 기도하는 알을 부드럽게 따라감 */
-function FollowCamera({ currentKey }: { currentKey: string | null }) {
-  const focus = useRef(new THREE.Vector3(0, 0.4, 0));
-  const tmp = useMemo(() => new THREE.Vector3(), []);
-  useFrame(({ camera, clock }, delta) => {
-    const b = currentKey ? SHAPE_BY_KEY.get(currentKey) : undefined;
-    // 묵주 중심(0, 0.4, 0)과 지금 알 사이, 알 쪽으로 60%
-    if (b) tmp.set(b.position[0] * 0.6, b.position[1] * 0.6 + 0.16, b.position[2] * 0.6);
-    else tmp.set(0, 0.35, 0); // 완료: 전체 보기
-    const k = 1 - Math.exp(-delta * 3);
-    focus.current.lerp(tmp, k);
-    const dist = b ? 3.0 : 4.6;
-    const sway = Math.sin(clock.elapsedTime * 0.35) * 0.18;
-    camera.position.lerp(tmp.set(focus.current.x + sway, focus.current.y + 0.15, focus.current.z + dist), k);
-    camera.lookAt(focus.current);
+/** 묵주 전체(고리 위 끝 ~ 십자가 아래 끝)가 세로로 길게 다 보이도록 카메라 거리를 맞춤 */
+const BOUNDS = { cy: 0.4, halfH: 2.3, halfW: 1.25 };
+function FullViewCamera() {
+  const { size } = useThree();
+  useFrame(({ camera }, delta) => {
+    const cam = camera as THREE.PerspectiveCamera;
+    const t = Math.tan(THREE.MathUtils.degToRad(cam.fov / 2));
+    const aspect = size.width / Math.max(1, size.height);
+    const dist = Math.max(BOUNDS.halfH / t, BOUNDS.halfW / (t * aspect));
+    const k = 1 - Math.exp(-delta * 4);
+    cam.position.x += (0 - cam.position.x) * k;
+    cam.position.y += (BOUNDS.cy - cam.position.y) * k;
+    cam.position.z += (dist - cam.position.z) * k;
+    cam.lookAt(0, BOUNDS.cy, 0);
   });
   return null;
 }
@@ -59,6 +58,7 @@ export interface RosaryViewerProps {
   currentKey: string | null;
   onNext: () => void;
   onPrev: () => void;
+  /** 화면 읽기 프로그램/툴팁용 조작 안내 (화면에는 묵주만 표시) */
   hint: string;
 }
 
@@ -72,6 +72,7 @@ export default function RosaryViewer({ done, currentKey, onNext, onPrev, hint }:
     <div
       className="rosary-3d"
       aria-hidden="true"
+      title={hint}
       onPointerDown={(e) => {
         drag.current = { id: e.pointerId, startY: e.clientY, lastY: e.clientY, acc: 0, moved: 0 };
         try {
@@ -111,17 +112,16 @@ export default function RosaryViewer({ done, currentKey, onNext, onPrev, hint }:
         else handlers.current.onPrev();
       }}
     >
-      <Canvas dpr={[1, 2]} camera={{ fov: 35, near: 0.05, far: 30, position: [0, 0.3, 3.4] }} gl={{ antialias: true, alpha: true }}>
+      <Canvas dpr={[1, 2]} camera={{ fov: 35, near: 0.05, far: 40, position: [0, 0.4, 8] }} gl={{ antialias: true, alpha: true }}>
         <RoomLighting />
         <ambientLight intensity={0.25} />
         <directionalLight position={[2, 3, 4]} intensity={1.1} color="#fff1dc" />
         <directionalLight position={[-3, -1, -2]} intensity={0.4} color="#9fb4ff" />
         <Sway>
-          <RosaryModel done={done} currentKey={currentKey} />
+          <RosaryModel done={done} currentKey={currentKey} showFinger={false} />
         </Sway>
-        <FollowCamera currentKey={currentKey} />
+        <FullViewCamera />
       </Canvas>
-      <p className="rosary-3d-hint">{hint}</p>
     </div>
   );
 }

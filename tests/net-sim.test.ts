@@ -274,3 +274,17 @@ test("[시뮬레이션] 늦게 들어온 사람은 Presence만으로 기존 방�
   await a.net.disconnect();
   await b.net.disconnect();
 });
+
+test("[시뮬레이션] 절하기: 상대에게 전달되고, 짧은 시간 안의 반복은 무시", async () => {
+  const { players } = await makePlayers(2);
+  const [a, b] = players;
+  a.net.sendGesture("bow");
+  await tick();
+  const first = b.net.remotes.get(a.uid)!.bow.at;
+  assert.ok(first > 0, "B가 A의 절을 받음");
+  a.net.sendGesture("bow"); // 2초 안의 반복
+  await tick();
+  assert.equal(b.net.remotes.get(a.uid)!.bow.at, first);
+  await a.net.disconnect();
+  await b.net.disconnect();
+});

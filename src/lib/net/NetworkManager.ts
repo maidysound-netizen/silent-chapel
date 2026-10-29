@@ -13,7 +13,11 @@ import {
   interpolationDelayMs,
   poseOf,
   sendRateHz,
+  validateGesture,
   validateState,
+  PROTOCOL_VERSION,
+  type Gesture,
+  type GestureMessage,
   type PresenceMeta,
 } from "./protocol.ts";
 import { SnapshotBuffer } from "./PositionInterpolation.ts";
@@ -36,6 +40,8 @@ export interface RemotePlayer {
   moving: boolean;
   /** Presence에 있는지 (없으면 곧 제거) */
   present: boolean;
+  /** 절 동작 시작 시각 (아바타가 매 프레임 읽음) */
+  bow: { at: number };
 }
 
 export interface NetMetrics {
@@ -66,6 +72,9 @@ export interface NetSnapshot {
 const IDLE_RESEND_MS = 20_000;
 const STALE_REMOVE_MS = 12_000;
 const EVENT_STATE = "st";
+const EVENT_GESTURE = "gs";
+/** 같은 사람의 제스처는 이 간격보다 자주 받지 않음 (도배 방지) */
+const GESTURE_MIN_MS = 2000;
 
 export class NetworkManager {
   private sb: SupabaseClient | null;
@@ -197,6 +206,7 @@ export class NetworkManager {
 
     channel
       .on("broadcast", { event: EVENT_STATE }, ({ payload }) => this.onState(payload))
+      .on("broadcast", { event: EVENT_GESTURE }, ({ payload }) => this.onGesture(payload))
       .on("presence", { event: "sync" }, () => this.syncPresence())
       .on("presence", { event: "leave" }, ({ key }) => {
         if (key && key !== uid) {
@@ -374,6 +384,7 @@ export class NetworkManager {
       seatId: null,
       moving: false,
       present: true,
+      bow: { at: 0 },
     };
     this.remotes.set(uid, r);
     return r;
@@ -438,6 +449,30 @@ export class NetworkManager {
   /** 렌더링 시 사용할 보간 지연 */
   get interpolationDelay(): number {
     return interpolationDelayMs(this.metrics.sendHz);
+  }
+
+  /** 절 같은 짧은 동작을 같은 방 사람들에게 알림 */
+  sendGesture(g: Gesture): void {
+    const ch = this.channel;
+    const uid = this.snapshot.uid;
+    if (!ch || !uid || this.snapshot.status !== "connected") return;
+    const payload: GestureMessage = { v: PROTOCOL_VERSION, u: uid, t: Date.now(), g };
+    void ch.send({ type: "broadcast", event: EVENT_GESTURE, payload });
+    this.countSent(JSON.stringify(payload).length);
+  }
+
+  private onGesture(raw: unknown) {
+    const now = Date.now();
+    this.metrics.recvTotal++;
+    this.rateWindow.recv++;
+    const msg = validateGesture(raw, now);
+    const r = msg ? this.remotes.get(msg.u) : undefined;
+    if (!msg || !r || !r.present) {
+      this.metrics.droppedInvalid++;
+      return;
+    }
+    if (now - r.bow.at < GESTURE_MIN_MS) return;
+    r.bow.at = now;
   }
 
   occupiedSeats(): Set<string> {

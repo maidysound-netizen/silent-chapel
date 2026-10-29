@@ -57,6 +57,20 @@ kbd { font-size: 0.72em; border: 1px solid currentColor; border-radius: 4px; pad
 .icon-btn:hover { background: rgba(255, 245, 225, 0.15); }
 .badge { font-style: normal; font-size: 0.7rem; padding: 2px 8px; border-radius: 999px; background: var(--gold-soft); color: var(--gold); margin-left: 8px; vertical-align: middle; }
 
+/* ---------- 언어 탭 ---------- */
+.lang-tabs {
+  display: inline-flex; padding: 3px; gap: 2px; border-radius: 999px; background: rgba(0, 0, 0, 0.35); border: 1px solid var(--line);
+}
+.lang-tabs button {
+  border: 0; background: transparent; color: var(--muted); border-radius: 999px; padding: 5px 12px; font-size: 0.82rem; cursor: pointer;
+  min-height: 30px; white-space: nowrap; transition: background 0.2s, color 0.2s;
+}
+.lang-tabs button:hover { color: var(--text); }
+.lang-tabs button.active { background: var(--gold-soft); color: var(--gold); font-weight: 600; }
+.lang-tabs.compact button { padding: 4px 9px; font-size: 0.78rem; min-height: 28px; }
+.entry-card > .lang-tabs { margin: 0 auto 18px; }
+.setting-row { display: flex; align-items: center; justify-content: space-between; gap: 10px; font-size: 0.92rem; }
+
 /* ---------- 입장 화면 ---------- */
 /* 입장 화면: 뒤에서 움직이는 3D 성당이 비쳐 보이도록 반투명 */
 .entry {
@@ -176,16 +190,11 @@ kbd { font-size: 0.72em; border: 1px solid currentColor; border-radius: 4px; pad
 .rosary-body { grid-template-columns: 1fr; }
 .beads-wrap { display: grid; place-items: center; }
 .rosary-3d {
-  position: relative; width: 100%; height: 300px; border-radius: 12px; overflow: hidden; cursor: grab; touch-action: none;
+  position: relative; width: 100%; height: clamp(220px, calc(100dvh - 380px), 560px); border-radius: 12px; overflow: hidden; cursor: grab; touch-action: none;
   background: radial-gradient(ellipse at 50% 40%, rgba(216, 180, 105, 0.14), rgba(0, 0, 0, 0.25) 70%);
   border: 1px solid var(--line); user-select: none; -webkit-user-select: none;
 }
 .rosary-3d:active { cursor: grabbing; }
-.rosary-3d-hint {
-  position: absolute; left: 0; right: 0; bottom: 8px; margin: 0; text-align: center; font-size: 0.75rem; color: var(--muted);
-  pointer-events: none;
-}
-@media (max-height: 860px) { .rosary-3d { height: 230px; } }
 .rosary-svg { width: min(220px, 60%); height: auto; }
 .bead { fill: var(--bead-todo); stroke: rgba(0, 0, 0, 0.35); stroke-width: 0.6; transition: fill 0.8s ease, filter 0.8s ease; }
 .bead-done { fill: var(--bead-done); }
@@ -194,6 +203,9 @@ g.bead rect, g.bead ellipse { fill: inherit; }
 @keyframes bead-glow { 50% { filter: drop-shadow(0 0 2px #ffd27a); } }
 
 .step-area { display: grid; gap: 10px; }
+.step-line { margin: 0; text-align: center; font-family: var(--serif); font-size: 1.05rem; color: var(--text); }
+.step-line.is-paused { opacity: 0.6; }
+.paused-tag { color: var(--gold); font-family: var(--sans); font-size: 0.85rem; }
 .step-card { border: 1px solid var(--line); border-radius: 12px; padding: 14px; background: rgba(0, 0, 0, 0.25); display: grid; gap: 8px; transition: opacity 0.3s; }
 .step-card.is-paused > :not(.paused-msg) { opacity: 0.45; }
 .mystery-line { margin: 0; font-family: var(--serif); line-height: 1.5; }
@@ -267,7 +279,7 @@ g.bead rect, g.bead ellipse { fill: inherit; }
   .panel { left: 8px; right: 8px; width: auto; top: auto; bottom: 8px; max-height: 72dvh; }
   .bible-panel, .settings-panel { max-height: 72dvh; }
   .rosary-svg { width: 130px; }
-  .rosary-3d { height: 190px; }
+  .rosary-3d { height: clamp(200px, calc(72dvh - 210px), 480px); }
   .prayer-name { font-size: 1.25rem; }
   .brand { display: none; }
   .hud-actions .btn { min-height: 42px; padding: 0 12px; font-size: 0.9rem; }

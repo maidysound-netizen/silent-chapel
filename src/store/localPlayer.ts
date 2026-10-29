@@ -1,7 +1,7 @@
 "use client";
 // 로컬 플레이어의 가변 상태. 매 프레임 바뀌므로 React 상태 대신 일반 객체로 둡니다.
-import { createPlayerState, type PlayerState } from "@/lib/game/PlayerState";
-import { SPAWN, type Seat, SEAT_BY_ID, floorHeight } from "@/lib/game/chapelLayout";
+import { BOW_MS, createPlayerState, type PlayerState } from "@/lib/game/PlayerState";
+import { MARY, SPAWN, type Seat, SEAT_BY_ID, floorHeight } from "@/lib/game/chapelLayout";
 import { collide } from "@/lib/game/PlayerController";
 import { findInteraction, findSeat } from "@/lib/game/InteractionSystem";
 import { getNetworkManager } from "@/lib/net/NetworkManager";
@@ -12,6 +12,7 @@ export const localPlayer = {
   keys: { forward: 0, right: 0 },
   touch: { forward: 0, right: 0 },
   camera: { yaw: 0, pitch: 0.28, distance: 4.2 },
+  bow: { at: 0 },
 };
 
 export function resetLocalPlayer() {
@@ -51,6 +52,29 @@ export function interact() {
   if (t.kind === "rosary") app.openPanel("rosary");
   else if (t.kind === "bible") app.openPanel("bible");
   else sitAt(t.seat);
+}
+
+export const MARY_BOW_RADIUS = 3.5;
+
+export function isNearMary(x: number, z: number): boolean {
+  return Math.hypot(MARY.x - x, MARY.z - z) < MARY_BOW_RADIUS;
+}
+
+export function isBowing(now = Date.now()): boolean {
+  return now - localPlayer.bow.at < BOW_MS;
+}
+
+/** B 키 / 절하기 버튼. 성모상 가까이 서 있으면 성모님을 향해 돌아선 뒤 절합니다 */
+export function bow() {
+  const now = Date.now();
+  if (isBowing(now)) return;
+  const s = localPlayer.state;
+  if (s.pose === "stand" && isNearMary(s.x, s.z)) {
+    const yaw = Math.atan2(-(MARY.x - s.x), -(MARY.z - s.z));
+    localPlayer.state = { ...s, yaw };
+  }
+  localPlayer.bow.at = now;
+  getNetworkManager().sendGesture("bow");
 }
 
 /** F 키 / 앉기·일어나기 버튼 */

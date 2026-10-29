@@ -2,21 +2,22 @@
 // specific approved translation are confirmed; the UI links to official sources instead.
 import type { RosaryLocale } from "./types.ts";
 
-const USCCB = "https://www.usccb.org/how-we-teach/prayers";
+// Compendium of the Catechism — the appendix lists the common prayers
+const PRAYERS = "https://www.vatican.va/archive/compendium_ccc/documents/archive_2005_compendium-ccc_en.html";
 const RVM =
   "https://www.vatican.va/content/john-paul-ii/en/apost_letters/2002/documents/hf_jp-ii_apl_20021016_rosarium-virginis-mariae.html";
 
 export const rosaryEn: RosaryLocale = {
   prayers: {
-    signOfCross: { name: "Sign of the Cross", guide: "Make the Sign of the Cross.", text: null, sourceUrl: USCCB },
-    creed: { name: "Apostles' Creed", guide: "Holding the crucifix, pray the Apostles' Creed.", text: null, sourceUrl: USCCB },
-    ourFather: { name: "Our Father", guide: "On the large bead, pray the Our Father.", text: null, sourceUrl: USCCB },
-    hailMary: { name: "Hail Mary", guide: "On the small bead, pray the Hail Mary.", text: null, sourceUrl: USCCB },
-    gloryBe: { name: "Glory Be", guide: "Pray the Glory Be.", text: null, sourceUrl: USCCB },
-    fatima: { name: "Fatima Prayer", guide: "Optionally pray the Fatima Prayer.", text: null, sourceUrl: USCCB },
+    signOfCross: { name: "Sign of the Cross", guide: "Make the Sign of the Cross.", text: null, sourceUrl: PRAYERS },
+    creed: { name: "Apostles' Creed", guide: "Holding the crucifix, pray the Apostles' Creed.", text: null, sourceUrl: PRAYERS },
+    ourFather: { name: "Our Father", guide: "On the large bead, pray the Our Father.", text: null, sourceUrl: PRAYERS },
+    hailMary: { name: "Hail Mary", guide: "On the small bead, pray the Hail Mary.", text: null, sourceUrl: PRAYERS },
+    gloryBe: { name: "Glory Be", guide: "Pray the Glory Be.", text: null, sourceUrl: PRAYERS },
+    fatima: { name: "Fatima Prayer", guide: "Optionally pray the Fatima Prayer.", text: null, sourceUrl: PRAYERS },
     mystery: { name: "Announce the Mystery", guide: "Announce the mystery and reflect for a moment.", text: null, sourceUrl: RVM },
-    hailHolyQueen: { name: "Hail, Holy Queen", guide: "After five decades, pray the Hail, Holy Queen.", text: null, sourceUrl: USCCB },
-    closingPrayer: { name: "Closing Prayer", guide: "Optionally pray the concluding prayer.", text: null, sourceUrl: USCCB },
+    hailHolyQueen: { name: "Hail, Holy Queen", guide: "After five decades, pray the Hail, Holy Queen.", text: null, sourceUrl: PRAYERS },
+    closingPrayer: { name: "Closing Prayer", guide: "Optionally pray the concluding prayer.", text: null, sourceUrl: PRAYERS },
   },
   mysteries: {
     joyful: {
@@ -65,7 +66,7 @@ export const rosaryEn: RosaryLocale = {
     },
   },
   sources: [
-    { label: "USCCB · Prayers", url: USCCB },
+    { label: "Compendium of the Catechism (appendix: common prayers)", url: PRAYERS },
     { label: "St John Paul II, Rosarium Virginis Mariae (2002)", url: RVM },
   ],
   notes: [

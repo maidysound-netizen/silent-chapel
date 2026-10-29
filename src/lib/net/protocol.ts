@@ -149,3 +149,22 @@ export function sendRateHz(players: number, budgetPerSec = 80, maxHz = 10, minHz
 export function interpolationDelayMs(hz: number): number {
   return Math.max(120, Math.min(1500, (1000 / hz) * 1.6));
 }
+
+// ---- 제스처 (절) ----
+
+export type Gesture = "bow";
+/** Broadcast 'gs' 이벤트: 짧은 동작 신호. 위치와 달리 한 번만 보냅니다 */
+export interface GestureMessage {
+  v: number;
+  u: string;
+  t: number;
+  g: Gesture;
+}
+
+export function validateGesture(raw: unknown, now = Date.now()): GestureMessage | null {
+  if (!raw || typeof raw !== "object") return null;
+  const m = raw as Record<string, unknown>;
+  if (m.v !== PROTOCOL_VERSION || !isUserId(m.u) || m.g !== "bow") return null;
+  if (!finite(m.t) || m.t > now + MAX_FUTURE_MS || m.t < now - MAX_AGE_MS) return null;
+  return { v: PROTOCOL_VERSION, u: m.u, t: m.t, g: "bow" };
+}

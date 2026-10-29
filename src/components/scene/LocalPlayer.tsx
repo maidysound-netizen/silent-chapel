@@ -6,7 +6,7 @@ import * as THREE from "three";
 import { stepPlayer } from "@/lib/game/PlayerController";
 import { findInteraction } from "@/lib/game/InteractionSystem";
 import { getNetworkManager } from "@/lib/net/NetworkManager";
-import { localPlayer, occupiedSeats } from "@/store/localPlayer";
+import { isBowing, isNearMary, localPlayer, occupiedSeats } from "@/store/localPlayer";
 import { useApp } from "@/store/useAppStore";
 import { Avatar } from "./Avatar";
 
@@ -24,7 +24,8 @@ export function LocalPlayer() {
       if (ref.current) ref.current.visible = false;
       return;
     }
-    const blocked = app.panel !== null; // 기도/성경 패널이 열려 있으면 이동하지 않음
+    // 기도 패널이 열려 있거나 절하는 동안에는 이동하지 않음
+    const blocked = app.panel !== null || isBowing();
     const input = blocked
       ? { forward: 0, right: 0 }
       : {
@@ -46,10 +47,11 @@ export function LocalPlayer() {
     if (now - lastPromptCheck.current > 0.1) {
       lastPromptCheck.current = now;
       app.setPrompt(s.pose === "sit" ? null : findInteraction(s.x, s.z, occupiedSeats()));
+      app.setNearMary(s.pose === "stand" && isNearMary(s.x, s.z));
     }
 
     getNetworkManager().updateLocal(s);
   });
 
-  return <Avatar ref={ref} color="#8b7d6b" pose={pose} label={nickname} showLabel={false} />;
+  return <Avatar ref={ref} color="#8b7d6b" pose={pose} bow={localPlayer.bow} label={nickname} showLabel={false} />;
 }

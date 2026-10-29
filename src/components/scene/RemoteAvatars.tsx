@@ -29,7 +29,8 @@ function RemoteAvatar({ uid, label, pose }: { uid: string; label: string; pose: 
     ref.current.position.set(sample.x, sample.y + bob, sample.z);
     ref.current.rotation.y = sample.yaw;
   });
-  return <Avatar ref={ref} color={colorFor(uid)} pose={pose} label={label} showLabel={showNames} />;
+  const bow = getNetworkManager().remotes.get(uid)?.bow;
+  return <Avatar ref={ref} color={colorFor(uid)} pose={pose} bow={bow} label={label} showLabel={showNames} />;
 }
 
 export function RemoteAvatars() {

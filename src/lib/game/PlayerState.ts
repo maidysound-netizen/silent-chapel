@@ -3,6 +3,9 @@
 
 export type Pose = "stand" | "sit";
 
+/** 절(인사) 동작 길이: 숙이기 0.7초 → 머무름 1.3초 → 일어서기 0.8초 */
+export const BOW_MS = 2800;
+
 export interface PlayerState {
   x: number;
   y: number;

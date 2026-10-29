@@ -9,6 +9,7 @@ import {
   sanitizeNickname,
   sendRateHz,
   validatePresenceMeta,
+  validateGesture,
   validateState,
 } from "../src/lib/net/protocol.ts";
 import { SnapshotBuffer } from "../src/lib/net/PositionInterpolation.ts";
@@ -147,4 +148,12 @@ test("좌석 찾기: 가까운 빈 좌석, 점유 좌석 제외", () => {
   assert.equal(findSeat(seat.standX, seat.standZ, new Set())?.id, seat.id);
   assert.notEqual(findSeat(seat.standX, seat.standZ, new Set([seat.id]))?.id, seat.id);
   assert.equal(findSeat(0, 14, new Set()), null);
+});
+
+test("절(bow) 제스처 메시지 검증", () => {
+  const ok = { v: 1, u: UID, t: NOW, g: "bow" };
+  assert.deepEqual(validateGesture(ok, NOW), ok);
+  assert.equal(validateGesture({ ...ok, g: "dance" }, NOW), null);
+  assert.equal(validateGesture({ ...ok, u: "x" }, NOW), null);
+  assert.equal(validateGesture({ ...ok, t: NOW - 120_000 }, NOW), null);
 });

@@ -3,6 +3,7 @@
 import { Canvas } from "@react-three/fiber";
 import { AdaptiveDpr } from "@react-three/drei";
 import { useApp } from "@/store/useAppStore";
+import { getUi } from "@/lib/i18n";
 import { Architecture } from "./Architecture";
 import { Furnishings } from "./Furnishings";
 import { BibleObject, RosaryObject } from "./Interactables";
@@ -15,6 +16,7 @@ const DPR: Record<string, [number, number]> = { low: [0.75, 1], medium: [1, 1.5]
 
 export default function ChapelCanvas() {
   const quality = useApp((s) => s.settings.quality);
+  const locale = useApp((s) => s.settings.locale);
   return (
     <Canvas
       key={quality /* 안티앨리어싱/그림자 변경은 캔버스 재생성이 필요 */}
@@ -23,7 +25,7 @@ export default function ChapelCanvas() {
       dpr={DPR[quality]}
       gl={{ antialias: quality !== "low", powerPreference: quality === "low" ? "low-power" : "high-performance" }}
       camera={{ fov: 60, near: 0.1, far: 120, position: [0, 3, 18] }}
-      aria-label="3D 성당 내부"
+      aria-label={getUi(locale).canvasLabel}
     >
       <Lighting quality={quality} />
       <Architecture quality={quality} />

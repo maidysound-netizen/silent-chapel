@@ -4,10 +4,11 @@ import { useSyncExternalStore } from "react";
 import { useApp } from "@/store/useAppStore";
 import { getUi } from "@/lib/i18n";
 import { getNetworkManager } from "@/lib/net/NetworkManager";
-import { interact, standUp, toggleSit } from "@/store/localPlayer";
+import { bow, interact, standUp, toggleSit } from "@/store/localPlayer";
 import { TouchJoystick } from "./TouchJoystick";
 import { NetStats } from "./NetStats";
 import { FEATURES } from "@/lib/features";
+import { LanguageTabs } from "./LanguageTabs";
 
 export function PresenceChip() {
   const locale = useApp((s) => s.settings.locale);
@@ -54,6 +55,7 @@ export function Hud({ onExit }: { onExit: () => void }) {
   const prompt = useApp((s) => s.prompt);
   const pose = useApp((s) => s.pose);
   const meditation = useApp((s) => s.meditation);
+  const nearMary = useApp((s) => s.nearMary);
   const setMeditation = useApp((s) => s.setMeditation);
   const ui = getUi(settings.locale);
   const hideForMeditation = meditation && panel === null;
@@ -73,6 +75,7 @@ export function Hud({ onExit }: { onExit: () => void }) {
           <PresenceChip />
         </div>
         <div className="hud-right">
+          <LanguageTabs compact />
           <button
             className="icon-btn"
             onClick={() => setSettings({ sound: !settings.sound })}
@@ -110,6 +113,9 @@ export function Hud({ onExit }: { onExit: () => void }) {
               </button>
             </>
           )}
+          <button className="btn" onClick={bow}>
+            🙏 {nearMary ? ui.bowToMary : ui.bow} <kbd>B</kbd>
+          </button>
           <button className="btn rosary-btn" onClick={() => openPanel(panel === "rosary" ? null : "rosary")}>
             📿 {ui.rosary}
           </button>

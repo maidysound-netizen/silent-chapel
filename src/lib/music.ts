@@ -15,8 +15,8 @@ export const MUSIC_TRACKS: MusicTrack[] = [
   {
     src: "/audio/ave-maria-schola-gregoriana.ogg",
     mime: 'audio/ogg; codecs="vorbis"',
-    title: "Ave Maria (그레고리오 성가)",
-    performer: "Schola Gregoriana (폴란드 오우타제프 팔로티회 신학교), 지휘 Dariusz Smolarek 신부 · 2007",
+    title: "Ave Maria (Gregorian chant)",
+    performer: "Schola Gregoriana (Pallottine Seminary, Ołtarzew, Poland), cond. Fr. Dariusz Smolarek · 2007",
     license: "CC BY-SA 3.0",
     licenseUrl: "https://creativecommons.org/licenses/by-sa/3.0/",
     sourceUrl: "https://commons.wikimedia.org/wiki/File:Schola_Gregoriana-Ave_Maria.ogg",
