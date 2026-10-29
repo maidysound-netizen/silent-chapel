@@ -7,6 +7,7 @@ import { getNetworkManager } from "@/lib/net/NetworkManager";
 import { TouchJoystick } from "./TouchJoystick";
 import { NetStats } from "./NetStats";
 import { FEATURES } from "@/lib/features";
+import { standUp } from "@/store/localPlayer";
 import { LanguageTabs } from "./LanguageTabs";
 
 export function PresenceChip() {
@@ -87,7 +88,24 @@ export function Hud({ onExit }: { onExit: () => void }) {
       {settings.showNetStats && <NetStats />}
 
       <div className="hud-bottom">
-        {/* 행동 안내는 3D 물체 위에 필요할 때만 뜹니다(ContextPrompts). 묵상 중에는 빠져나갈 길만 남김 */}
+        {/* 서 있을 때의 행동 안내는 물체 위에 필요할 때만 뜹니다(PromptOverlay).
+            앉아 있을 때만 아래 가운데에 묵주기도 · 묵상 시점 · 일어나기를 보여 줌 */}
+        {pose === "sit" && !meditation && panel === null && (
+          <div className="hud-actions seated-bar">
+            <button className="btn" onClick={() => openPanel("rosary")}>
+              📿 {ui.rosary}
+              <kbd>R</kbd>
+            </button>
+            <button className="btn" onClick={() => setMeditation(true)}>
+              {ui.meditate}
+              <kbd>M</kbd>
+            </button>
+            <button className="btn" onClick={standUp}>
+              {ui.stand}
+              <kbd>F</kbd>
+            </button>
+          </div>
+        )}
         {meditation && (
           <div className="hud-actions">
             <button className="btn quiet" onClick={() => setMeditation(false)}>

@@ -65,6 +65,7 @@ function useKeyboard(active: boolean) {
       else if (e.code === "KeyF") toggleSit();
       else if (e.code === "KeyB") bow();
       else if (e.code === "KeyM" && app.pose === "sit") app.setMeditation(!app.meditation);
+      else if (e.code === "KeyR" && app.pose === "sit") app.openPanel("rosary");
     };
     const up = (e: KeyboardEvent) => {
       if (pressed.delete(e.code)) recompute();

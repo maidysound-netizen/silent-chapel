@@ -141,6 +141,9 @@ kbd { font-size: 0.72em; border: 1px solid currentColor; border-radius: 4px; pad
 .hud-actions .btn { backdrop-filter: blur(6px); background-color: rgba(30, 24, 18, 0.7); }
 .hud-actions .btn.primary { background: var(--primary); }
 .hud-actions .btn.quiet { opacity: 0.55; font-size: 0.85rem; }
+.seated-bar { animation: prompt-in 0.35s ease-out; }
+.seated-bar .btn { min-height: 38px; font-size: 0.9rem; }
+@media (pointer: coarse) { .hud-actions kbd { display: none; } }
 .hud-actions .btn.quiet:hover { opacity: 1; }
 .controls-hint { margin: 0; font-size: 0.75rem; color: var(--muted); }
 
