@@ -119,10 +119,6 @@ kbd { font-size: 0.72em; border: 1px solid currentColor; border-radius: 4px; pad
 .hud-actions .btn { backdrop-filter: blur(6px); background-color: rgba(30, 24, 18, 0.7); }
 .hud-actions .btn.primary { background: var(--primary); }
 .controls-hint { margin: 0; font-size: 0.75rem; color: var(--muted); }
-.avatar-label {
-  white-space: nowrap; font-size: 12px; padding: 2px 8px; border-radius: 999px; background: rgba(15, 10, 6, 0.65);
-  color: var(--text); border: 1px solid var(--line); user-select: none;
-}
 
 .joystick {
   position: absolute; left: 22px; bottom: calc(96px + env(safe-area-inset-bottom)); width: 120px; height: 120px; border-radius: 50%;

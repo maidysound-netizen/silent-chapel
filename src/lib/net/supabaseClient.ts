@@ -25,12 +25,23 @@ export function readSupabaseEnv(): SupabaseEnv | null {
   };
 }
 
+/**
+ * 같은 브라우저의 탭 두 개는 로그인 세션을 공유해 '같은 사람'이 됩니다.
+ * 멀티플레이 테스트용으로 ?profile=a / ?profile=b 를 붙이면 탭마다 다른 익명 방문자가 됩니다.
+ * (실제 서비스에서도 무해: 단지 다른 익명 계정을 하나 더 쓰는 것)
+ */
+function authStorageKey(): string {
+  if (typeof window === "undefined") return "silent-chapel-auth";
+  const profile = new URLSearchParams(window.location.search).get("profile");
+  return profile && /^[a-z0-9]{1,16}$/.test(profile) ? `silent-chapel-auth-${profile}` : "silent-chapel-auth";
+}
+
 export function getSupabase(): SupabaseClient | null {
   if (client !== undefined) return client;
   const env = readSupabaseEnv();
   client = env
     ? createClient(env.url, env.key, {
-        auth: { persistSession: true, autoRefreshToken: true, storageKey: "silent-chapel-auth" },
+        auth: { persistSession: true, autoRefreshToken: true, storageKey: authStorageKey() },
         realtime: { params: { eventsPerSecond: 20 } },
       })
     : null;

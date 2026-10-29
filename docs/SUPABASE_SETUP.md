@@ -73,6 +73,10 @@ NEXT_PUBLIC_REALTIME_MSG_BUDGET=80
 | 채널 `CHANNEL_ERROR` / unauthorized | 4단계 정책 누락 또는 `join_room` 실패 |
 | `room is full` | 최근 2분 안에 활동한 방문자가 `max_players` 이상 |
 
+### 같은 컴퓨터에서 2명 테스트하기
+같은 브라우저의 탭들은 로그인 정보를 공유해 한 사람으로 취급됩니다. 주소 뒤에 `?profile=a`, `?profile=b` 를 붙이면
+탭마다 다른 익명 방문자가 됩니다. (예: `http://localhost:3100/?profile=a`)
+
 ## 7. 보안 설계 요약
 
 | 위협 | 대응 |

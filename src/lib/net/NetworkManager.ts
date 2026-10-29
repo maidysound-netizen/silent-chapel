@@ -82,6 +82,8 @@ export class NetworkManager {
   private local: PlayerState | null = null;
   private joinedAt = 0;
   private wantConnected = false;
+  /** 연결 시도 번호. 더 새로운 시도나 disconnect가 생기면 이전 시도는 중간에 멈춥니다 */
+  private generation = 0;
   private janitor: ReturnType<typeof setInterval> | null = null;
   private latencySamples: number[] = [];
   private rateWindow = { sent: 0, recv: 0, at: 0 };
@@ -162,19 +164,24 @@ export class NetworkManager {
 
   private async openChannel(): Promise<void> {
     if (!this.wantConnected || !this.sb || !this.env) return;
+    const gen = ++this.generation;
+    const stale = () => gen !== this.generation || !this.wantConnected;
     const roomId = this.snapshot.roomId!;
     this.teardownChannel();
     this.emit({ status: this.metrics.reconnects > 0 || this.snapshot.uid ? "reconnecting" : "connecting" });
 
     const uid = await this.ensureAuth();
+    if (stale()) return;
     this.emit({ uid });
 
     if (this.env.privateChannels) {
       // DB 함수가 방 존재 여부와 닉네임을 검증하고 visitor_sessions 행을 만듭니다.
       // Realtime 권한 정책(RLS)은 이 행이 있는 사용자만 채널에 들어오게 합니다.
       const { error } = await this.sb.rpc("join_room", { p_room_id: roomId, p_nickname: this.nickname });
+      if (stale()) return;
       if (error) throw new Error(`방 입장 실패(join_room): ${error.message}`);
       await this.sb.realtime.setAuth();
+      if (stale()) return;
     }
 
     const channel = this.sb.channel(roomTopic(roomId), {
@@ -242,6 +249,7 @@ export class NetworkManager {
 
   async disconnect(): Promise<void> {
     this.wantConnected = false;
+    this.generation++; // 진행 중인 연결 시도 무효화
     if (typeof window !== "undefined") window.removeEventListener("offline", this.onOffline);
     this.reconnector?.dispose();
     this.reconnector = null;
