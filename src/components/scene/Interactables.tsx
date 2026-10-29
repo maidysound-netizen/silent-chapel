@@ -1,11 +1,14 @@
 "use client";
 // 클릭할 수 있는 묵주와 성경. 가까이 가면 은은하게 빛나 상호작용할 수 있음을 알려 줍니다.
 import { useMemo, useRef, useState } from "react";
+import { RosaryModel } from "../rosary/RosaryModel";
+import { beadKey, buildRosarySequence, completedBeads } from "@/lib/rosary/sequence";
 import { useFrame, type ThreeEvent } from "@react-three/fiber";
 import * as THREE from "three";
 import { AMBO, ROSARY_STAND } from "@/lib/game/chapelLayout";
 import { useApp } from "@/store/useAppStore";
 import { pointerDrag } from "./pointerDrag";
+import { FEATURES } from "@/lib/features";
 
 function useClickable(onActivate: () => void) {
   const [hover, setHover] = useState(false);
@@ -47,53 +50,19 @@ function Beacon({ position, active }: { position: [number, number, number]; acti
   );
 }
 
-function RosaryBeads({ glow }: { glow: number }) {
-  const ref = useRef<THREE.InstancedMesh>(null);
-  const count = 59;
-  const matrices = useMemo(() => {
-    const out: THREE.Matrix4[] = [];
-    const m = new THREE.Matrix4();
-    // 고리 (54알) — 타원 모양으로 쿠션 위에 놓임
-    for (let i = 0; i < 54; i++) {
-      const a = (i / 54) * Math.PI * 2;
-      const big = i % 11 === 0;
-      const s = big ? 1.5 : 1;
-      m.compose(new THREE.Vector3(Math.cos(a) * 0.16, 0, Math.sin(a) * 0.11 - 0.02), new THREE.Quaternion(), new THREE.Vector3(s, s, s));
-      out.push(m.clone());
-    }
-    // 펜던트 (큰 알 1 + 작은 알 3 + 큰 알 1)
-    for (let i = 0; i < 5; i++) {
-      const s = i === 0 || i === 4 ? 1.5 : 1;
-      m.compose(new THREE.Vector3(0, 0, 0.1 + i * 0.026), new THREE.Quaternion(), new THREE.Vector3(s, s, s));
-      out.push(m.clone());
-    }
-    return out;
-  }, []);
-  useFrame(() => {
-    if (!ref.current) return;
-    if (!ref.current.userData.init) {
-      matrices.forEach((m, i) => ref.current!.setMatrixAt(i, m));
-      ref.current.instanceMatrix.needsUpdate = true;
-      ref.current.computeBoundingSphere();
-      ref.current.userData.init = true;
-    }
-    (ref.current.material as THREE.MeshStandardMaterial).emissiveIntensity = glow;
-  });
+/** 받침대 위 묵주: 패널의 3D 묵주와 같은 모델 (내 기도 진행이 금빛으로 표시됨 — 이 기기에서만) */
+function StandRosary({ glow }: { glow: boolean }) {
+  const progress = useApp((st) => st.rosary);
+  const { done, currentKey } = useMemo(() => {
+    if (!progress) return { done: new Set<string>(), currentKey: null };
+    const steps = buildRosarySequence(progress.options);
+    const complete = progress.status === "complete";
+    const bead = complete ? null : steps[progress.stepIndex]?.bead;
+    return { done: completedBeads(steps, progress.stepIndex, complete), currentKey: bead ? beadKey(bead) : null };
+  }, [progress]);
   return (
-    <group>
-      <instancedMesh ref={ref} args={[undefined, undefined, count]}>
-        <sphereGeometry args={[0.009, 8, 6]} />
-        <meshStandardMaterial color="#8a5a3a" roughness={0.35} emissive="#ffcf80" emissiveIntensity={0} />
-      </instancedMesh>
-      {/* 작은 십자가 */}
-      <mesh position={[0, 0, 0.26]}>
-        <boxGeometry args={[0.008, 0.004, 0.06]} />
-        <meshStandardMaterial color="#c9a44a" metalness={0.8} roughness={0.3} />
-      </mesh>
-      <mesh position={[0, 0, 0.245]}>
-        <boxGeometry args={[0.035, 0.004, 0.008]} />
-        <meshStandardMaterial color="#c9a44a" metalness={0.8} roughness={0.3} />
-      </mesh>
+    <group scale={0.11} rotation={[-Math.PI / 2, 0, 0]} position={[0, 0, 0.04]}>
+      <RosaryModel done={done} currentKey={glow ? currentKey : null} showFinger={false} />
     </group>
   );
 }
@@ -116,7 +85,7 @@ export function RosaryObject() {
         <meshStandardMaterial color={active ? "#8a2f36" : "#6b2228"} roughness={0.95} />
       </mesh>
       <group position={[0, ROSARY_STAND.y + 0.07, 0]} rotation={[0, Math.PI / 2, 0]}>
-        <RosaryBeads glow={active ? 0.6 : 0.08} />
+        <StandRosary glow={active} />
       </group>
       <Beacon position={[0, ROSARY_STAND.y + 0.45, 0]} active={active} />
       <pointLight position={[0, ROSARY_STAND.y + 0.5, 0]} intensity={active ? 0.6 : 0} distance={2} color="#ffd9a0" />
@@ -127,8 +96,10 @@ export function RosaryObject() {
 export function BibleObject() {
   const openPanel = useApp((s) => s.openPanel);
   const near = useApp((s) => s.prompt?.kind === "bible");
-  const { hover, handlers } = useClickable(() => openPanel("bible"));
-  const active = hover || near;
+  const { hover, handlers: clickHandlers } = useClickable(() => openPanel("bible"));
+  // 성경 기능이 꺼져 있으면 독서대는 장식으로만 둡니다
+  const handlers = FEATURES.bible ? clickHandlers : {};
+  const active = FEATURES.bible && (hover || near);
   return (
     <group position={[AMBO.x, 0, AMBO.z]}>
       {/* 독서대 */}
@@ -158,7 +129,7 @@ export function BibleObject() {
           <meshStandardMaterial color="#b0262c" />
         </mesh>
       </group>
-      <Beacon position={[0, AMBO.y + 0.45, 0]} active={active} />
+      {FEATURES.bible && <Beacon position={[0, AMBO.y + 0.45, 0]} active={active} />}
       <pointLight position={[0, AMBO.y + 0.5, 0.2]} intensity={active ? 0.6 : 0} distance={2} color="#ffd9a0" />
     </group>
   );

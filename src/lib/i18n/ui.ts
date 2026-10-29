@@ -72,6 +72,7 @@ const ko = {
   again: "다시 바치기",
   savedLocally: "진행 상태는 이 기기에만 저장되며 다른 방문자에게 보이지 않습니다.",
   keyboardHint: "키보드: → 또는 Space 다음 · ← 이전 · P 멈춤 · Esc 닫기",
+  rollHint: "묵주알을 아래로 굴리거나 눌러서 다음 기도로",
   sources: "출처",
   // bible
   bibleTitle: "성경",
@@ -80,7 +81,8 @@ const ko = {
   openMissa: "매일미사 열기",
   openBible: "성경 읽기 (주교회의 성경)",
   bibleNote: "성경 본문은 저작권과 API 이용 조건을 확인한 뒤 연동할 예정입니다.",
-  soundOnHint: "소리를 켜면 직접 만든 잔잔한 배경음이 재생됩니다.",
+  soundOnHint: "소리를 켜면 그레고리오 성가 「Ave Maria」가 잔잔히 흐르고, 묵주알을 굴릴 때 작은 소리가 납니다.",
+  musicCredits: "음악 정보",
 };
 
 export type UiDict = typeof ko;
@@ -156,6 +158,7 @@ const en: UiDict = {
   again: "Pray again",
   savedLocally: "Progress is saved only on this device and is never shown to others.",
   keyboardHint: "Keys: → or Space next · ← back · P pause · Esc close",
+  rollHint: "Roll the bead down or tap it to move on",
   sources: "Sources",
   bibleTitle: "Bible",
   todaysWord: "Today's readings",
@@ -163,7 +166,8 @@ const en: UiDict = {
   openMissa: "Daily readings (USCCB)",
   openBible: "Read the Bible (USCCB)",
   bibleNote: "Bible text will be integrated after checking copyright and API terms.",
-  soundOnHint: "Turning sound on plays a soft, self-made ambient tone.",
+  soundOnHint: "Sound plays the Gregorian chant Ave Maria softly, with a gentle click as you roll each bead.",
+  musicCredits: "Music credits",
 };
 
 // 일본어는 구조만 준비해 두었습니다. 번역 전까지는 한국어를 사용합니다.

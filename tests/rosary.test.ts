@@ -131,3 +131,21 @@ test("묵주알 완료 표시: 한 알의 마지막 기도까지 끝나야 완�
   // 전체 묵주알 수: 십자가1 + 펜던트 큰알1 + 작은알3 + 메달1 + 큰알5 + 작은알50
   assert.equal(completedBeads(s, 0, true).size, 61);
 });
+
+test("3D 묵주 모양: 모든 기도 단계의 묵주알이 3D 묵주에 존재", async () => {
+  const { buildRosaryShape } = await import("../src/lib/rosary/rosaryShape.ts");
+  const { beadKey } = await import("../src/lib/rosary/sequence.ts");
+  const shape = buildRosaryShape();
+  const keys = new Set(shape.map((b) => b.key));
+  assert.equal(shape.length, 61, "십자가1 + 메달1 + 큰 알6 + 작은 알53");
+  assert.equal(keys.size, 61, "중복 없음");
+  for (const s of buildRosarySequence(ALL)) if (s.bead) assert.ok(keys.has(beadKey(s.bead)), beadKey(s.bead));
+  // 알끼리 겹치지 않음
+  const pts = shape.filter((b) => b.kind === "small" || b.kind === "large");
+  for (let i = 0; i < pts.length; i++)
+    for (let j = i + 1; j < pts.length; j++) {
+      const [a, b] = [pts[i], pts[j]];
+      const d = Math.hypot(a.position[0] - b.position[0], a.position[1] - b.position[1], a.position[2] - b.position[2]);
+      assert.ok(d > a.radius + b.radius, `${a.key}–${b.key} 겹침 (${d.toFixed(3)})`);
+    }
+});

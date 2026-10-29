@@ -7,6 +7,7 @@ import { getNetworkManager } from "@/lib/net/NetworkManager";
 import { interact, standUp, toggleSit } from "@/store/localPlayer";
 import { TouchJoystick } from "./TouchJoystick";
 import { NetStats } from "./NetStats";
+import { FEATURES } from "@/lib/features";
 
 export function PresenceChip() {
   const locale = useApp((s) => s.settings.locale);
@@ -112,9 +113,11 @@ export function Hud({ onExit }: { onExit: () => void }) {
           <button className="btn rosary-btn" onClick={() => openPanel(panel === "rosary" ? null : "rosary")}>
             📿 {ui.rosary}
           </button>
-          <button className="btn" onClick={() => openPanel(panel === "bible" ? null : "bible")}>
-            {ui.bible}
-          </button>
+          {FEATURES.bible && (
+            <button className="btn" onClick={() => openPanel(panel === "bible" ? null : "bible")}>
+              {ui.bible}
+            </button>
+          )}
         </div>
         <p className="controls-hint desktop-only">{ui.controlsPc}</p>
       </div>

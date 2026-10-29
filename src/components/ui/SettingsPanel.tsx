@@ -2,6 +2,7 @@
 import { useEffect } from "react";
 import { useApp, type Quality } from "@/store/useAppStore";
 import { getUi, LOCALES, type Locale } from "@/lib/i18n";
+import { MUSIC_TRACKS } from "@/lib/music";
 
 export function SettingsPanel() {
   const settings = useApp((s) => s.settings);
@@ -65,6 +66,23 @@ export function SettingsPanel() {
             ))}
           </select>
         </label>
+        <details className="credits">
+          <summary>{ui.musicCredits}</summary>
+          {MUSIC_TRACKS.map((t) => (
+            <p key={t.src} className="small">
+              「{t.title}」 — {t.performer}
+              <br />
+              <a href={t.licenseUrl} target="_blank" rel="noopener noreferrer">
+                {t.license}
+              </a>{" "}
+              ·{" "}
+              <a href={t.sourceUrl} target="_blank" rel="noopener noreferrer">
+                Wikimedia Commons ↗
+              </a>{" "}
+              · 원본 그대로 사용(편집 없음)
+            </p>
+          ))}
+        </details>
         <p className="muted small">{ui.disclaimer}</p>
       </div>
     </section>

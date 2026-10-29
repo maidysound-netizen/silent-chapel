@@ -12,8 +12,9 @@ import { Hud } from "./ui/Hud";
 import { RosaryPanel } from "./ui/RosaryPanel";
 import { BiblePanel } from "./ui/BiblePanel";
 import { SettingsPanel } from "./ui/SettingsPanel";
-import { useAmbientSound } from "./ui/useAmbientSound";
+import { useSacredMusic } from "./ui/useSacredMusic";
 import { getUi } from "@/lib/i18n";
+import { FEATURES } from "@/lib/features";
 
 // Three.js는 브라우저에서만 실행 (서버 렌더링 제외)
 const ChapelCanvas = dynamic(() => import("./scene/ChapelCanvas"), {
@@ -128,7 +129,7 @@ export default function ChapelApp() {
   }, []);
 
   useKeyboard(inChapel && !mode2D);
-  useAmbientSound(inChapel && settings.sound);
+  useSacredMusic(inChapel && settings.sound);
 
   // 3D 성당에 있는 동안만 실시간 방에 연결 (2D 기도 모드는 개인 기도)
   useEffect(() => {
@@ -145,54 +146,61 @@ export default function ChapelApp() {
   }, [inChapel, mode2D, roomId, nickname]);
 
   if (!hydrated) return <div className="loading">Silent Chapel…</div>;
-  if (!inChapel) return <EntryScreen />;
 
   const ui = getUi(settings.locale);
-
-  if (mode2D) {
-    return (
-      <div className="chapel mode-2d">
-        <Backdrop2D />
-        <div className="hud-top solo">
-          <span className="brand">{ui.appName}</span>
-          <div className="hud-right">
-            <button className="btn small" onClick={() => openPanel(panel === "settings" ? null : "settings")}>
-              {ui.settings}
-            </button>
-            <button className="btn small" onClick={exit}>
-              {ui.exit}
-            </button>
-          </div>
-        </div>
-        <div className="center-2d">
-          {panel === "settings" ? (
-            <SettingsPanel />
-          ) : panel === "bible" ? (
-            <BiblePanel />
-          ) : panel === "rosary" ? (
-            <RosaryPanel />
-          ) : (
-            <div className="panel launcher-2d">
-              <button className="btn primary wide" onClick={() => openPanel("rosary")}>
-                📿 {ui.rosary}
-              </button>
-              <button className="btn wide" onClick={() => openPanel("bible")}>
-                {ui.bible}
-              </button>
-            </div>
-          )}
-        </div>
-      </div>
-    );
-  }
+  const in2D = inChapel && mode2D;
 
   return (
-    <div className="chapel">
-      <ChapelCanvas />
-      <Hud onExit={exit} />
-      {panel === "rosary" && <RosaryPanel />}
-      {panel === "bible" && <BiblePanel />}
-      {panel === "settings" && <SettingsPanel />}
+    <div className={`chapel ${in2D ? "mode-2d" : ""}`}>
+      {/* 입장 화면 뒤에도 성당이 보이도록 3D는 입장 전부터 그립니다 (2D 기도 모드 제외) */}
+      {in2D ? <Backdrop2D /> : <ChapelCanvas />}
+
+      {!inChapel && <EntryScreen />}
+
+      {inChapel && !mode2D && (
+        <>
+          <Hud onExit={exit} />
+          {panel === "rosary" && <RosaryPanel />}
+          {FEATURES.bible && panel === "bible" && <BiblePanel />}
+          {panel === "settings" && <SettingsPanel />}
+        </>
+      )}
+
+      {in2D && (
+        <>
+          <div className="hud-top solo">
+            <span className="brand">{ui.appName}</span>
+            <div className="hud-right">
+              <button className="btn small" onClick={() => openPanel(panel === "settings" ? null : "settings")}>
+                {ui.settings}
+              </button>
+              <button className="btn small" onClick={exit}>
+                {ui.exit}
+              </button>
+            </div>
+          </div>
+          <div className="center-2d">
+            {panel === "settings" ? (
+              <SettingsPanel />
+            ) : FEATURES.bible && panel === "bible" ? (
+              <BiblePanel />
+            ) : panel === "rosary" ? (
+              <RosaryPanel />
+            ) : (
+              <div className="panel launcher-2d">
+                <button className="btn primary wide" onClick={() => openPanel("rosary")}>
+                  📿 {ui.rosary}
+                </button>
+                {FEATURES.bible && (
+                  <button className="btn wide" onClick={() => openPanel("bible")}>
+                    {ui.bible}
+                  </button>
+                )}
+              </div>
+            )}
+          </div>
+        </>
+      )}
     </div>
   );
 }

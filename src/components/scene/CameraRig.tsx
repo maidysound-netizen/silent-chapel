@@ -66,17 +66,29 @@ export function CameraRig() {
     };
   }, [gl]);
 
-  useFrame((_, delta) => {
+  useFrame((state, delta) => {
     const s = localPlayer.state;
-    const meditation = useApp.getState().meditation && s.pose === "sit";
-    const k = 1 - Math.exp(-delta * (meditation ? 1.6 : 6));
-    if (meditation) {
+    const app = useApp.getState();
+    const intro = app.phase !== "chapel";
+    const meditation = app.meditation && s.pose === "sit";
+    const k = 1 - Math.exp(-delta * (intro ? 0.8 : meditation ? 1.6 : 6));
+    if (intro) {
+      // 입장 화면: 신랑을 따라 천천히 제단 쪽으로 다가갔다 물러나는 카메라
+      const t = state.clock.elapsedTime;
+      const along = (1 - Math.cos(t * 0.045)) / 2; // 0 → 1 → 0 (약 140초 주기)
+      desired.current.set(Math.sin(t * 0.06) * 1.6, 2.6 + Math.sin(t * 0.08) * 0.25, 13 - along * 11);
+      target.current.set(0, 4.2, CRUCIFIX.z);
+    } else if (meditation) {
       // 앉은 자리 눈높이에서 십자가를 바라봄
-      desired.current.set(s.x, s.y + 1.12, s.z);
+      desired.current.set(s.x, s.y + 1.25, s.z - 0.05);
       target.current.set(CRUCIFIX.x, CRUCIFIX.y + 3.6, CRUCIFIX.z);
     } else {
-      const { yaw, pitch, distance } = localPlayer.camera;
-      const headY = s.y + (s.pose === "sit" ? 1.1 : 1.5);
+      const sitting = s.pose === "sit";
+      const { yaw } = localPlayer.camera;
+      // 앉아 있을 때는 장의자 등받이에 가리지 않도록 더 가깝고 높은 곳에서 내려다봄
+      const pitch = sitting ? Math.max(localPlayer.camera.pitch, 0.55) : localPlayer.camera.pitch;
+      const distance = sitting ? Math.min(localPlayer.camera.distance, 2.4) : localPlayer.camera.distance;
+      const headY = s.y + (sitting ? 1.2 : 1.5);
       target.current.set(s.x, headY, s.z);
       desired.current.set(
         s.x + Math.sin(yaw) * Math.cos(pitch) * distance,

@@ -6,15 +6,22 @@ import { getRosaryLocale, getUi } from "@/lib/i18n";
 import type { MysteryId, RosaryOptions } from "@/lib/rosary/types";
 import { DEFAULT_ROSARY_OPTIONS } from "@/lib/rosary/types";
 import {
+  beadKey,
   buildRosarySequence,
   changeOptions,
+  completedBeads,
   nextStep,
   prevStep,
   setPaused,
   startProgress,
   suggestedMysteryForDay,
 } from "@/lib/rosary/sequence";
+import dynamic from "next/dynamic";
 import { RosaryBeadsSvg } from "./RosaryBeadsSvg";
+import { beadClick } from "./sfx";
+
+// 3D 묵주(WebGL)는 브라우저에서만 불러오고, 불러오는 동안은 2D 묵주를 보여 줌
+const RosaryViewer = dynamic(() => import("../rosary/RosaryViewer"), { ssr: false });
 
 const MYSTERY_ORDER: MysteryId[] = ["joyful", "luminous", "sorrowful", "glorious"];
 
@@ -28,12 +35,33 @@ export function RosaryPanel() {
   const [choosing, setChoosing] = useState(progress === null);
   const [options, setOptions] = useState<RosaryOptions>(progress?.options ?? DEFAULT_ROSARY_OPTIONS);
   const headingRef = useRef<HTMLHeadingElement>(null);
+  const [use3D] = useState(() => {
+    try {
+      return !!document.createElement("canvas").getContext("webgl2");
+    } catch {
+      return false;
+    }
+  });
   const today = useMemo(() => suggestedMysteryForDay(new Date().getDay()), []);
   const [selected, setSelected] = useState<MysteryId>(progress?.mystery ?? today);
 
   const steps = useMemo(() => buildRosarySequence(progress?.options ?? options), [progress?.options, options]);
 
   const close = useCallback(() => openPanel(null), [openPanel]);
+
+  // 버튼·키보드·묵주 굴리기가 모두 같은 함수를 씀. 한 번에 여러 알을 굴려도 최신 상태를 쓰도록 store에서 직접 읽음
+  const advance = useCallback(() => {
+    const p = useApp.getState().rosary;
+    if (!p || p.status !== "praying") return;
+    setRosary(nextStep(p));
+    if (useApp.getState().settings.sound) beadClick();
+  }, [setRosary]);
+  const goBack = useCallback(() => {
+    const p = useApp.getState().rosary;
+    if (!p || p.stepIndex === 0) return;
+    setRosary(prevStep(p));
+    if (useApp.getState().settings.sound) beadClick(0.15);
+  }, [setRosary]);
 
   useEffect(() => {
     headingRef.current?.focus();
@@ -51,17 +79,17 @@ export function RosaryPanel() {
       const onButton = (e.target as HTMLElement | null)?.tagName === "BUTTON";
       if (e.key === "ArrowRight" || (e.key === " " && !onButton)) {
         e.preventDefault();
-        if (progress.status === "praying") setRosary(nextStep(progress));
+        advance();
       } else if (e.key === "ArrowLeft") {
         e.preventDefault();
-        setRosary(prevStep(progress));
+        goBack();
       } else if (e.key === "p" || e.key === "P") {
         setRosary(setPaused(progress, progress.status !== "paused"));
       }
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, [choosing, progress, setRosary, close]);
+  }, [choosing, progress, setRosary, close, advance, goBack]);
 
   const begin = () => {
     setRosary(startProgress(selected, options));
@@ -137,6 +165,9 @@ export function RosaryPanel() {
 
   // ---------- 진행 / 완료 ----------
   const complete = progress.status === "complete";
+  const done = completedBeads(steps, progress.stepIndex, complete);
+  const currentBead = complete ? null : steps[progress.stepIndex]?.bead ?? null;
+  const currentKey = currentBead ? beadKey(currentBead) : null;
   const paused = progress.status === "paused";
   const step = steps[progress.stepIndex];
   const prayer = data.prayers[step.kind];
@@ -161,7 +192,11 @@ export function RosaryPanel() {
       </header>
       <div className="panel-body rosary-body">
         <div className="beads-wrap">
-          <RosaryBeadsSvg steps={steps} stepIndex={progress.stepIndex} complete={complete} />
+          {use3D ? (
+            <RosaryViewer done={done} currentKey={currentKey} onNext={advance} onPrev={goBack} hint={ui.rollHint} />
+          ) : (
+            <RosaryBeadsSvg steps={steps} stepIndex={progress.stepIndex} complete={complete} />
+          )}
         </div>
 
         <div className="step-area">
@@ -227,13 +262,13 @@ export function RosaryPanel() {
               </div>
               <p className="step-count">{ui.stepCount(progress.stepIndex + 1, steps.length)}</p>
               <div className="controls">
-                <button className="btn" onClick={() => setRosary(prevStep(progress))} disabled={progress.stepIndex === 0}>
+                <button className="btn" onClick={goBack} disabled={progress.stepIndex === 0}>
                   ← {ui.prev}
                 </button>
                 <button className="btn" onClick={() => setRosary(setPaused(progress, !paused))} aria-pressed={paused}>
                   {paused ? ui.continue : ui.pause}
                 </button>
-                <button className="btn primary" onClick={() => setRosary(nextStep(progress))} disabled={paused}>
+                <button className="btn primary" onClick={advance} disabled={paused}>
                   {ui.next} →
                 </button>
               </div>

@@ -19,6 +19,11 @@ export function LocalPlayer() {
   useFrame((state, delta) => {
     const dt = Math.min(delta, 0.1);
     const app = useApp.getState();
+    // 입장 화면에서는 아바타 없이 성당만 보여 줌
+    if (app.phase !== "chapel") {
+      if (ref.current) ref.current.visible = false;
+      return;
+    }
     const blocked = app.panel !== null; // 기도/성경 패널이 열려 있으면 이동하지 않음
     const input = blocked
       ? { forward: 0, right: 0 }
