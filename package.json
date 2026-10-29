@@ -1,0 +1,31 @@
+{
+  "name": "silent-chapel",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Silent Chapel — 3D 가상 성당 묵상 공간 + 묵주기도 + 소규모 실시간 멀티플레이 MVP",
+  "scripts": {
+    "dev": "node node_modules/next/dist/bin/next dev -p 3100",
+    "prebuild": "node scripts/clean-appledouble.mjs",
+    "build": "node node_modules/next/dist/bin/next build",
+    "start": "node node_modules/next/dist/bin/next start -p 3100",
+    "typecheck": "node node_modules/typescript/bin/tsc --noEmit",
+    "test": "node --experimental-strip-types --test --test-force-exit tests/*.test.ts"
+  },
+  "dependencies": {
+    "@react-three/drei": "10.7.9",
+    "@react-three/fiber": "9.8.2",
+    "@supabase/supabase-js": "2.118.0",
+    "next": "16.4.3",
+    "react": "19.3.1",
+    "react-dom": "19.3.1",
+    "three": "0.186.1",
+    "zustand": "5.0.16"
+  },
+  "devDependencies": {
+    "@types/node": "22.20.5",
+    "@types/react": "19.3.0",
+    "@types/react-dom": "19.3.0",
+    "@types/three": "0.186.0",
+    "typescript": "5.9.3"
+  }
+}
