@@ -4,7 +4,6 @@ import { useSyncExternalStore } from "react";
 import { useApp } from "@/store/useAppStore";
 import { getUi } from "@/lib/i18n";
 import { getNetworkManager } from "@/lib/net/NetworkManager";
-import { bow, interact, standUp, toggleSit } from "@/store/localPlayer";
 import { TouchJoystick } from "./TouchJoystick";
 import { NetStats } from "./NetStats";
 import { FEATURES } from "@/lib/features";
@@ -52,20 +51,11 @@ export function Hud({ onExit }: { onExit: () => void }) {
   const setSettings = useApp((s) => s.setSettings);
   const panel = useApp((s) => s.panel);
   const openPanel = useApp((s) => s.openPanel);
-  const prompt = useApp((s) => s.prompt);
   const pose = useApp((s) => s.pose);
   const meditation = useApp((s) => s.meditation);
-  const nearMary = useApp((s) => s.nearMary);
   const setMeditation = useApp((s) => s.setMeditation);
   const ui = getUi(settings.locale);
   const hideForMeditation = meditation && panel === null;
-
-  let action: { label: string; key: string; run: () => void } | null = null;
-  if (pose !== "sit" && prompt) {
-    if (prompt.kind === "rosary") action = { label: ui.interactRosary, key: "E", run: interact };
-    else if (prompt.kind === "bible") action = { label: ui.interactBible, key: "E", run: interact };
-    else action = { label: ui.interactPew, key: "F", run: toggleSit };
-  }
 
   return (
     <div className={`hud ${hideForMeditation ? "hud-quiet" : ""}`}>
@@ -97,34 +87,22 @@ export function Hud({ onExit }: { onExit: () => void }) {
       {settings.showNetStats && <NetStats />}
 
       <div className="hud-bottom">
-        <div className="hud-actions" role="toolbar" aria-label="actions">
-          {action && (
-            <button className="btn primary action" onClick={action.run}>
-              {action.label} <kbd>{action.key}</kbd>
+        {/* 행동 안내는 3D 물체 위에 필요할 때만 뜹니다(ContextPrompts). 묵상 중에는 빠져나갈 길만 남김 */}
+        {meditation && (
+          <div className="hud-actions">
+            <button className="btn quiet" onClick={() => setMeditation(false)}>
+              {ui.leaveMeditation}
+              <kbd>M</kbd>
             </button>
-          )}
-          {pose === "sit" && (
-            <>
-              <button className="btn" onClick={standUp}>
-                {ui.stand} <kbd>F</kbd>
-              </button>
-              <button className="btn" onClick={() => setMeditation(!meditation)} aria-pressed={meditation}>
-                {meditation ? ui.leaveMeditation : ui.meditate} <kbd>M</kbd>
-              </button>
-            </>
-          )}
-          <button className="btn" onClick={bow}>
-            🙏 {nearMary ? ui.bowToMary : ui.bow} <kbd>B</kbd>
-          </button>
-          <button className="btn rosary-btn" onClick={() => openPanel(panel === "rosary" ? null : "rosary")}>
-            📿 {ui.rosary}
-          </button>
-          {FEATURES.bible && (
+          </div>
+        )}
+        {FEATURES.bible && (
+          <div className="hud-actions">
             <button className="btn" onClick={() => openPanel(panel === "bible" ? null : "bible")}>
               {ui.bible}
             </button>
-          )}
-        </div>
+          </div>
+        )}
         <p className="controls-hint desktop-only">{ui.controlsPc}</p>
       </div>
 

@@ -13,6 +13,7 @@ import { RosaryPanel } from "./ui/RosaryPanel";
 import { BiblePanel } from "./ui/BiblePanel";
 import { SettingsPanel } from "./ui/SettingsPanel";
 import { LanguageTabs } from "./ui/LanguageTabs";
+import { PromptOverlay } from "./ui/PromptOverlay";
 import { useSacredMusic } from "./ui/useSacredMusic";
 import { getUi } from "@/lib/i18n";
 import { FEATURES } from "@/lib/features";
@@ -162,6 +163,7 @@ export default function ChapelApp() {
       {inChapel && !mode2D && (
         <>
           <Hud onExit={exit} />
+          <PromptOverlay />
           {panel === "rosary" && <RosaryPanel />}
           {FEATURES.bible && panel === "bible" && <BiblePanel />}
           {panel === "settings" && <SettingsPanel />}

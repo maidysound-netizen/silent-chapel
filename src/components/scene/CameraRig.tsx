@@ -7,6 +7,7 @@ import { BOUNDS, CEILING_Y, CRUCIFIX } from "@/lib/game/chapelLayout";
 import { localPlayer } from "@/store/localPlayer";
 import { useApp } from "@/store/useAppStore";
 import { pointerDrag } from "./pointerDrag";
+import { sceneRefs } from "./sceneRefs";
 
 const DRAG_THRESHOLD = 6;
 
@@ -16,6 +17,15 @@ export function CameraRig() {
   const desired = useRef(new THREE.Vector3());
   const look = useRef(new THREE.Vector3(0, 1.5, 0));
   const init = useRef(false);
+
+  useEffect(() => {
+    sceneRefs.camera = camera;
+    sceneRefs.canvas = gl.domElement;
+    return () => {
+      if (sceneRefs.camera === camera) sceneRefs.camera = null;
+      if (sceneRefs.canvas === gl.domElement) sceneRefs.canvas = null;
+    };
+  }, [camera, gl]);
 
   useEffect(() => {
     const el = gl.domElement;

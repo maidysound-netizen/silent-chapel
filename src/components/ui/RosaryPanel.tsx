@@ -54,7 +54,8 @@ export function RosaryPanel() {
   // 버튼·키보드·묵주 굴리기가 모두 같은 함수를 씀. 한 번에 여러 알을 굴려도 최신 상태를 쓰도록 store에서 직접 읽음
   const advance = useCallback(() => {
     const p = useApp.getState().rosary;
-    if (!p || p.status !== "praying") return;
+    // 멈춤 상태였어도 묵주를 굴리면 다시 이어서 기도 (nextStep이 praying으로 바꿈)
+    if (!p || p.status === "complete") return;
     setRosary(nextStep(p));
     if (useApp.getState().settings.sound) beadClick();
   }, [setRosary]);
@@ -223,28 +224,7 @@ export function RosaryPanel() {
                 </button>
               </div>
             </div>
-          ) : (
-            <>
-              {/* 묵주 아래에는 지금 기도 한 줄만 표시 */}
-              <p className={`step-line ${paused ? "is-paused" : ""}`} aria-hidden="true">
-                {step.kind === "mystery" && decadeInfo
-                  ? `${ui.decadeN(step.decade)} · ${decadeInfo.title}`
-                  : `${section} · ${prayer.name}${step.hailMary ? ` ${step.hailMary.n}/${step.hailMary.of}` : ""}`}
-                {paused && <span className="paused-tag"> · {ui.pause}</span>}
-              </p>
-              <div className="controls">
-                <button className="btn" onClick={goBack} disabled={progress.stepIndex === 0}>
-                  ← {ui.prev}
-                </button>
-                <button className="btn" onClick={() => setRosary(setPaused(progress, !paused))} aria-pressed={paused}>
-                  {paused ? ui.continue : ui.pause}
-                </button>
-                <button className="btn primary" onClick={advance} disabled={paused}>
-                  {ui.next} →
-                </button>
-              </div>
-            </>
-          )}
+          ) : null}
         </div>
       </div>
     </section>

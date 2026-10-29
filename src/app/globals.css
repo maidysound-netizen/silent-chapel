@@ -140,6 +140,8 @@ kbd { font-size: 0.72em; border: 1px solid currentColor; border-radius: 4px; pad
 .hud-actions { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; pointer-events: auto; }
 .hud-actions .btn { backdrop-filter: blur(6px); background-color: rgba(30, 24, 18, 0.7); }
 .hud-actions .btn.primary { background: var(--primary); }
+.hud-actions .btn.quiet { opacity: 0.55; font-size: 0.85rem; }
+.hud-actions .btn.quiet:hover { opacity: 1; }
 .controls-hint { margin: 0; font-size: 0.75rem; color: var(--muted); }
 
 .joystick {
@@ -151,6 +153,19 @@ kbd { font-size: 0.72em; border: 1px solid currentColor; border-radius: 4px; pad
   .joystick { display: grid; }
   .desktop-only { display: none; }
 }
+
+/* 물체 위에 필요할 때만 뜨는 행동 안내 */
+.prompt-layer { position: absolute; inset: 0; pointer-events: none; overflow: hidden; z-index: 2; }
+.prompt-tag {
+  position: fixed; left: 0; top: 0; pointer-events: auto; white-space: nowrap;
+  display: inline-flex; align-items: center; gap: 4px; min-height: 36px; padding: 0 14px; border-radius: 999px;
+  background: rgba(28, 21, 13, 0.82); color: #f6e6c0; border: 1px solid rgba(216, 180, 105, 0.85);
+  font-size: 0.9rem; font-weight: 600; cursor: pointer; backdrop-filter: blur(4px);
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.35); animation: prompt-in 0.35s ease-out;
+  will-change: transform;
+}
+.prompt-tag:hover { background: rgba(70, 52, 22, 0.92); border-color: #ffe2a0; }
+@keyframes prompt-in { from { opacity: 0; } }
 
 .netstats {
   position: absolute; top: 64px; left: 16px; font: 11px/1.5 ui-monospace, Menlo, monospace; background: rgba(0, 0, 0, 0.55);
@@ -165,7 +180,7 @@ kbd { font-size: 0.72em; border: 1px solid currentColor; border-radius: 4px; pad
   animation: panel-in 0.35s ease-out;
 }
 @keyframes panel-in { from { opacity: 0; transform: translateY(8px); } }
-.bible-panel, .settings-panel { bottom: auto; max-height: calc(100% - 160px); }
+.bible-panel, .settings-panel, .rosary-panel { bottom: auto; max-height: calc(100% - 160px); }
 .panel-header { display: flex; align-items: center; justify-content: space-between; padding: 12px 12px 12px 18px; border-bottom: 1px solid var(--line); }
 .panel-header h2 { margin: 0; font-family: var(--serif); font-weight: 400; font-size: 1.15rem; outline: none; }
 .panel-header .sub { color: var(--muted); font-size: 0.95rem; }
@@ -190,7 +205,7 @@ kbd { font-size: 0.72em; border: 1px solid currentColor; border-radius: 4px; pad
 .rosary-body { grid-template-columns: 1fr; }
 .beads-wrap { display: grid; place-items: center; }
 .rosary-3d {
-  position: relative; width: 100%; height: clamp(220px, calc(100dvh - 380px), 560px); border-radius: 12px; overflow: hidden; cursor: grab; touch-action: none;
+  position: relative; width: 100%; height: clamp(260px, calc(100dvh - 270px), 820px); border-radius: 12px; overflow: hidden; cursor: grab; touch-action: none;
   background: radial-gradient(ellipse at 50% 40%, rgba(216, 180, 105, 0.14), rgba(0, 0, 0, 0.25) 70%);
   border: 1px solid var(--line); user-select: none; -webkit-user-select: none;
 }
@@ -279,7 +294,7 @@ g.bead rect, g.bead ellipse { fill: inherit; }
   .panel { left: 8px; right: 8px; width: auto; top: auto; bottom: 8px; max-height: 72dvh; }
   .bible-panel, .settings-panel { max-height: 72dvh; }
   .rosary-svg { width: 130px; }
-  .rosary-3d { height: clamp(200px, calc(72dvh - 210px), 480px); }
+  .rosary-3d { height: clamp(220px, calc(72dvh - 110px), 620px); }
   .prayer-name { font-size: 1.25rem; }
   .brand { display: none; }
   .hud-actions .btn { min-height: 42px; padding: 0 12px; font-size: 0.9rem; }

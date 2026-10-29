@@ -1,6 +1,7 @@
 "use client";
 // 단순하고 중립적인 방문자 아바타 (긴 옷을 입은 실루엣). 얼굴/성별/종교 복장을 표현하지 않습니다.
-import { forwardRef, useEffect, useMemo, useRef } from "react";
+import { forwardRef, useMemo, useRef } from "react";
+import { TextSprite } from "./TextSprite";
 import { useFrame } from "@react-three/fiber";
 import * as THREE from "three";
 import { BOW_MS, type Pose } from "@/lib/game/PlayerState";
@@ -38,41 +39,9 @@ function useBow(group: React.RefObject<THREE.Group | null>, bow: BowState | unde
   });
 }
 
-/**
- * 이름표: 캔버스에 글자를 그려 스프라이트(항상 카메라를 보는 판)로 표시합니다.
- * (DOM 오버레이보다 가볍고, 한글도 시스템 글꼴로 그려집니다)
- */
+/** 이름표 */
 function NameTag({ text, y }: { text: string; y: number }) {
-  const { texture, aspect } = useMemo(() => {
-    const scale = 2;
-    const font = `${14 * scale}px -apple-system, "Apple SD Gothic Neo", "Noto Sans KR", sans-serif`;
-    const c = document.createElement("canvas");
-    const g = c.getContext("2d")!;
-    g.font = font;
-    const w = Math.ceil(g.measureText(text).width) + 20 * scale;
-    const h = 24 * scale;
-    c.width = w;
-    c.height = h;
-    g.font = font;
-    g.fillStyle = "rgba(15,10,6,0.7)";
-    g.beginPath();
-    g.roundRect(0, 0, w, h, h / 2);
-    g.fill();
-    g.fillStyle = "#efe6d4";
-    g.textAlign = "center";
-    g.textBaseline = "middle";
-    g.fillText(text, w / 2, h / 2 + scale);
-    const t = new THREE.CanvasTexture(c);
-    t.colorSpace = THREE.SRGBColorSpace;
-    return { texture: t, aspect: w / h };
-  }, [text]);
-  useEffect(() => () => texture.dispose(), [texture]);
-  const height = 0.3;
-  return (
-    <sprite position={[0, y, 0]} scale={[height * aspect, height, 1]} renderOrder={10}>
-      <spriteMaterial map={texture} transparent depthTest={false} depthWrite={false} toneMapped={false} />
-    </sprite>
-  );
+  return <TextSprite text={text} position={[0, y, 0]} height={0.3} />;
 }
 
 export interface AvatarProps {

@@ -72,7 +72,7 @@ export default function RosaryViewer({ done, currentKey, onNext, onPrev, hint }:
     <div
       className="rosary-3d"
       aria-hidden="true"
-      title={hint}
+      data-hint={hint}
       onPointerDown={(e) => {
         drag.current = { id: e.pointerId, startY: e.clientY, lastY: e.clientY, acc: 0, moved: 0 };
         try {
