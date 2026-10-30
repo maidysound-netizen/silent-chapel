@@ -16,10 +16,12 @@ import {
   poseOf,
   sendRateHz,
   validateGesture,
+  validateModeration,
   validateState,
   PROTOCOL_VERSION,
   type Gesture,
   type GestureMessage,
+  type ModerationMessage,
   type PresenceMeta,
 } from "./protocol.ts";
 import { SnapshotBuffer } from "./PositionInterpolation.ts";
@@ -28,7 +30,7 @@ import { ReconnectionHandler } from "./ReconnectionHandler.ts";
 import { roomCandidates, roomTopic } from "./RoomManager.ts";
 import { getSupabase, readSupabaseEnv, type SupabaseEnv } from "./supabaseClient.ts";
 
-export type NetStatus = "disabled" | "idle" | "auth" | "connecting" | "connected" | "reconnecting" | "offline" | "error" | "full";
+export type NetStatus = "disabled" | "idle" | "auth" | "connecting" | "connected" | "reconnecting" | "offline" | "error" | "full" | "banned";
 
 export interface RemotePlayer {
   uid: string;
@@ -70,6 +72,8 @@ export interface NetSnapshot {
   roomId: string | null;
   /** 나를 포함한 접속자 수 */
   count: number;
+  /** 관리자(내보내기 가능) 여부 — 서버 is_admin() 결과 */
+  isAdmin: boolean;
   others: { uid: string; nick: string; tag: string; pose: Pose }[];
 }
 
@@ -77,6 +81,7 @@ const IDLE_RESEND_MS = 20_000;
 const STALE_REMOVE_MS = 12_000;
 const EVENT_STATE = "st";
 const EVENT_GESTURE = "gs";
+const EVENT_MODERATION = "md";
 /** 같은 사람의 제스처는 이 간격보다 자주 받지 않음 (도배 방지) */
 const GESTURE_MIN_MS = 2000;
 /** 방에 아직 있다고 DB에 알리는 주기. join_room 의 정원 계산이 이 기록을 봅니다 */
@@ -85,6 +90,7 @@ const HEARTBEAT_MS = 30_000;
 type RpcError = { code?: string; message?: string };
 const isRoomFull = (e: RpcError) => e.code === "P0001" || /room is full/i.test(e.message ?? "");
 const isRoomMissing = (e: RpcError) => e.code === "P0002" || /room not found/i.test(e.message ?? "");
+const isBannedError = (e: RpcError) => e.code === "P0003" || /^banned$/i.test(e.message ?? "");
 
 export class NetworkManager {
   private sb: SupabaseClient | null;
@@ -93,7 +99,7 @@ export class NetworkManager {
   private presence: PresenceManager | null = null;
   private reconnector: ReconnectionHandler | null = null;
   private listeners = new Set<() => void>();
-  private snapshot: NetSnapshot = { status: "disabled", error: null, uid: null, roomId: null, count: 1, others: [] };
+  private snapshot: NetSnapshot = { status: "disabled", error: null, uid: null, roomId: null, count: 1, isAdmin: false, others: [] };
   private nickname = "";
   private seq = 0;
   private lastSentAt = 0;
@@ -104,6 +110,8 @@ export class NetworkManager {
   /** 연결 시도 번호. 더 새로운 시도나 disconnect가 생기면 이전 시도는 중간에 멈춥니다 */
   private generation = 0;
   private lastHeartbeat = 0;
+  /** 서버에서 차단이 확인된 사람 (이 세션 동안 숨김) */
+  private readonly banned = new Set<string>();
   private janitor: ReturnType<typeof setInterval> | null = null;
   private latencySamples: number[] = [];
   private rateWindow = { sent: 0, recv: 0, at: 0 };
@@ -207,6 +215,10 @@ export class NetworkManager {
           joined = candidate;
           break;
         }
+        if (isBannedError(error)) {
+          this.onBannedSelf();
+          return;
+        }
         if (!isRoomFull(error) && !isRoomMissing(error)) throw new Error(`방 입장 실패(join_room): ${error.message}`);
       }
       if (!joined) {
@@ -218,6 +230,7 @@ export class NetworkManager {
         this.emit({ roomId });
       }
       this.lastHeartbeat = Date.now();
+      void this.refreshAdmin();
       await this.sb.realtime.setAuth();
       if (stale()) return;
     }
@@ -236,6 +249,7 @@ export class NetworkManager {
     channel
       .on("broadcast", { event: EVENT_STATE }, ({ payload }) => this.onState(payload))
       .on("broadcast", { event: EVENT_GESTURE }, ({ payload }) => this.onGesture(payload))
+      .on("broadcast", { event: EVENT_MODERATION }, ({ payload }) => void this.onModeration(payload))
       .on("presence", { event: "sync" }, () => this.syncPresence())
       .on("presence", { event: "leave" }, ({ key }) => {
         if (key && key !== uid) {
@@ -377,7 +391,7 @@ export class NetworkManager {
       /* ignore */
     }
     const msg = validateState(raw, now);
-    if (!msg || msg.u === this.snapshot.uid) {
+    if (!msg || msg.u === this.snapshot.uid || this.banned.has(msg.u)) {
       this.metrics.droppedInvalid++;
       return;
     }
@@ -433,7 +447,7 @@ export class NetworkManager {
     const members = this.presence.members();
     const me = this.snapshot.uid;
     for (const [uid, m] of members) {
-      if (uid === me) continue;
+      if (uid === me || this.banned.has(uid)) continue;
       let r = this.remotes.get(uid);
       if (!r) r = this.createRemote(uid, m.meta.n);
       r.nick = m.meta.n;
@@ -515,6 +529,73 @@ export class NetworkManager {
     }
     if (now - r.bow.at < GESTURE_MIN_MS) return;
     r.bow.at = now;
+  }
+
+  // ---------- 관리자 내보내기 ----------
+
+  private async refreshAdmin() {
+    if (!this.sb) return;
+    const { data, error } = await this.sb.rpc("is_admin");
+    this.emit({ isAdmin: !error && data === true });
+  }
+
+  /** 설정의 관리자 비밀번호. 맞으면 이 기기가 관리자가 됨 */
+  async claimAdmin(code: string): Promise<boolean> {
+    if (!this.sb || !this.env?.privateChannels) return false;
+    const { data, error } = await this.sb.rpc("claim_admin", { p_code: code });
+    const ok = !error && data === true;
+    if (ok) this.emit({ isAdmin: true });
+    return ok;
+  }
+
+  /** 관리자: 서버에 차단을 기록하고, 같은 방 사람들에게 알림 */
+  async banUser(target: string): Promise<boolean> {
+    const uid = this.snapshot.uid;
+    if (!this.sb || !uid || !this.snapshot.isAdmin || target === uid) return false;
+    const { error } = await this.sb.rpc("ban_user", { p_target: target });
+    if (error) return false;
+    this.hideBanned(target);
+    const ch = this.channel;
+    if (ch) {
+      const payload: ModerationMessage = { v: PROTOCOL_VERSION, u: uid, t: Date.now(), k: "ban", x: target };
+      void ch.send({ type: "broadcast", event: EVENT_MODERATION, payload });
+      this.countSent(JSON.stringify(payload).length);
+    }
+    return true;
+  }
+
+  /** 알림은 누구나 흉내 낼 수 있으므로 서버에 확인한 뒤에만 따름 */
+  private async onModeration(raw: unknown) {
+    const msg = validateModeration(raw);
+    if (!msg || !this.sb) {
+      this.metrics.droppedInvalid++;
+      return;
+    }
+    if (msg.x === this.snapshot.uid) {
+      const { data, error } = await this.sb.rpc("am_i_banned");
+      if (!error && data === true) this.onBannedSelf();
+      return;
+    }
+    if (this.banned.has(msg.x)) return;
+    const { data, error } = await this.sb.rpc("is_banned", { p_target: msg.x });
+    if (!error && data === true) this.hideBanned(msg.x);
+  }
+
+  private hideBanned(uid: string) {
+    this.banned.add(uid);
+    this.remotes.delete(uid);
+    this.publishPlayers();
+  }
+
+  /** 내가 차단됨: 연결을 끊고 다시 시도하지 않음 (혼자 머무는 상태로) */
+  private onBannedSelf() {
+    this.wantConnected = false;
+    this.generation++;
+    this.reconnector?.dispose();
+    this.reconnector = null;
+    this.teardownChannel();
+    this.remotes.clear();
+    this.emit({ status: "banned", error: "banned", count: 1, others: [] });
   }
 
   occupiedSeats(): Set<string> {

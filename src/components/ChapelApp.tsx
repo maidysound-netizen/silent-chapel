@@ -12,6 +12,7 @@ import { Hud } from "./ui/Hud";
 import { RosaryPanel } from "./ui/RosaryPanel";
 import { BiblePanel } from "./ui/BiblePanel";
 import { SettingsPanel } from "./ui/SettingsPanel";
+import { PeoplePanel } from "./ui/PeoplePanel";
 import { LanguageTabs } from "./ui/LanguageTabs";
 import { PromptOverlay } from "./ui/PromptOverlay";
 import { useSacredMusic } from "./ui/useSacredMusic";
@@ -171,6 +172,7 @@ export default function ChapelApp() {
           {panel === "rosary" && <RosaryPanel />}
           {FEATURES.bible && panel === "bible" && <BiblePanel />}
           {panel === "settings" && <SettingsPanel />}
+          {panel === "people" && <PeoplePanel />}
         </>
       )}
 

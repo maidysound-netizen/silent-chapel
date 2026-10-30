@@ -188,3 +188,25 @@ export function validateGesture(raw: unknown, now = Date.now()): GestureMessage 
   if (!finite(m.t) || m.t > now + MAX_FUTURE_MS || m.t < now - MAX_AGE_MS) return null;
   return { v: PROTOCOL_VERSION, u: m.u, t: m.t, g: "bow" };
 }
+
+// ---- 관리자 내보내기 알림 ----
+
+/**
+ * Broadcast 'md' 이벤트: 관리자가 x 를 내보냈다는 알림.
+ * 누구나 이 형식을 흉내 낼 수 있으므로, 받는 쪽은 반드시 서버(is_banned / am_i_banned)에 확인한 뒤에만 따릅니다.
+ */
+export interface ModerationMessage {
+  v: number;
+  u: string;
+  t: number;
+  k: "ban";
+  x: string;
+}
+
+export function validateModeration(raw: unknown, now = Date.now()): ModerationMessage | null {
+  if (!raw || typeof raw !== "object") return null;
+  const m = raw as Record<string, unknown>;
+  if (m.v !== PROTOCOL_VERSION || !isUserId(m.u) || !isUserId(m.x) || m.k !== "ban" || m.u === m.x) return null;
+  if (!finite(m.t) || m.t > now + MAX_FUTURE_MS || m.t < now - MAX_AGE_MS) return null;
+  return { v: PROTOCOL_VERSION, u: m.u, t: m.t, k: "ban", x: m.x };
+}

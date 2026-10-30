@@ -326,3 +326,13 @@ g.bead rect, g.bead ellipse { fill: inherit; }
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation: none !important; transition: none !important; }
 }
+
+/* 함께 있는 사람 · 관리자 */
+button.chip.presence { cursor: pointer; font: inherit; }
+button.chip.presence:disabled { cursor: default; }
+.people-panel { bottom: auto; max-height: calc(100% - 160px); }
+.people-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; }
+.people-list li { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.btn.danger { border-color: rgba(200, 90, 80, 0.6); color: #f0b7ae; }
+.admin-section form { display: grid; gap: 8px; margin-top: 8px; }
+.admin-section input { width: 100%; margin-top: 4px; }

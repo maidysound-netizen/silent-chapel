@@ -170,3 +170,15 @@ test("방 나누기 순서: 자동 배정 방은 한 바퀴, 별도 방은 그 �
   assert.equal(roomNumber("chapel-10"), 10);
   assert.equal(roomNumber("study-group"), null);
 });
+
+test("내보내기 알림 형식 검증: 잘못된 id·자기 자신·오래된 알림은 거부", async () => {
+  const { validateModeration } = await import("../src/lib/net/protocol.ts");
+  const a = "11111111-2222-3333-4444-555555555555";
+  const b = "66666666-7777-8888-9999-000000000000";
+  const now = Date.now();
+  assert.ok(validateModeration({ v: 1, u: a, t: now, k: "ban", x: b }, now));
+  assert.equal(validateModeration({ v: 1, u: a, t: now, k: "ban", x: a }, now), null);
+  assert.equal(validateModeration({ v: 1, u: a, t: now, k: "ban", x: "not-a-uuid" }, now), null);
+  assert.equal(validateModeration({ v: 1, u: a, t: now, k: "kick-all", x: b }, now), null);
+  assert.equal(validateModeration({ v: 1, u: a, t: now - 60_000, k: "ban", x: b }, now), null);
+});

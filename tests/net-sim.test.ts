@@ -19,7 +19,29 @@ class FakeServer {
   /** 가짜 DB 방 정원 (설정하지 않으면 join_room 은 항상 성공) */
   rooms: Map<string, { max: number; members: Set<string> }> | null = null;
 
-  rpc(uid: string, name: string, args: any): { error: { code: string; message: string } | null } {
+  /** 가짜 DB 관리자·차단 목록 */
+  admins = new Set<string>();
+  bannedUsers = new Set<string>();
+  adminCode = "correct-horse";
+
+  rpc(uid: string, name: string, args: any): { data?: unknown; error: { code: string; message: string } | null } {
+    switch (name) {
+      case "claim_admin":
+        if (args.p_code !== this.adminCode) return { data: false, error: null };
+        this.admins.add(uid);
+        return { data: true, error: null };
+      case "is_admin":
+        return { data: this.admins.has(uid), error: null };
+      case "ban_user":
+        if (!this.admins.has(uid)) return { error: { code: "42501", message: "not admin" } };
+        this.bannedUsers.add(args.p_target);
+        return { error: null };
+      case "is_banned":
+        return { data: this.bannedUsers.has(args.p_target), error: null };
+      case "am_i_banned":
+        return { data: this.bannedUsers.has(uid), error: null };
+    }
+    if (name === "join_room" && this.bannedUsers.has(uid)) return { error: { code: "P0003", message: "banned" } };
     if (!this.rooms) return { error: null };
     if (name === "leave_room") {
       for (const r of this.rooms.values()) r.members.delete(uid);
@@ -334,5 +356,46 @@ test("[시뮬레이션] 방이 가득 차면 다음 방으로 자동 입장, 모
   // 한 명이 나가면 자리가 비어 다음 사람이 들어올 수 있음
   await players[0].net.disconnect();
   assert.equal(server.rooms.get("main-chapel")!.members.size, 1);
+  for (const p of players) await p.net.disconnect();
+});
+
+test("[시뮬레이션] 관리자 내보내기: 비밀번호 확인 → 차단 → 상대는 연결 끊김, 다른 사람 화면에서도 사라짐, 재입장 거절", async () => {
+  const { server, players } = await makePlayers(3);
+  const [admin, troll, other] = players;
+  assert.equal(await admin.net.claimAdmin("wrong-password"), false);
+  assert.equal(admin.net.getSnapshot().isAdmin, false);
+  // 관리자가 아니면 내보낼 수 없음
+  assert.equal(await other.net.banUser(troll.uid), false);
+  assert.equal(await admin.net.claimAdmin("correct-horse"), true);
+  assert.equal(admin.net.getSnapshot().isAdmin, true);
+
+  assert.equal(await admin.net.banUser(troll.uid), true);
+  await tick();
+  await tick();
+  assert.equal(troll.net.getSnapshot().status, "banned", "내보내진 사람은 연결이 끊김");
+  assert.ok(!admin.net.getSnapshot().others.some((o) => o.uid === troll.uid), "관리자 화면에서 사라짐");
+  assert.ok(!other.net.getSnapshot().others.some((o) => o.uid === troll.uid), "다른 사람 화면에서도 사라짐");
+  assert.ok(other.net.getSnapshot().others.some((o) => o.uid === admin.uid), "관리자는 그대로 보임");
+
+  // 다시 들어오려 하면 거절
+  await troll.net.connect("main-chapel", "Visitor2");
+  await tick();
+  assert.equal(troll.net.getSnapshot().status, "banned");
+  assert.ok(server.bannedUsers.has(troll.uid));
+  for (const p of players) await p.net.disconnect();
+});
+
+test("[시뮬레이션] 가짜 내보내기 알림은 서버 확인에서 걸러져 무시됨", async () => {
+  const { players } = await makePlayers(3);
+  const [faker, victim, other] = players;
+  // 관리자가 아닌 사람이 '내보내기' 알림 형식을 흉내 내 직접 보냄
+  const ch = faker.channels.at(-1)!;
+  for (const target of [victim.uid, other.uid]) {
+    ch.send({ type: "broadcast", event: "md", payload: { v: 1, u: faker.uid, t: Date.now(), k: "ban", x: target } });
+  }
+  await tick();
+  await tick();
+  assert.equal(victim.net.getSnapshot().status, "connected", "서버가 차단을 확인해 주지 않으면 연결 유지");
+  assert.ok(other.net.getSnapshot().others.some((o) => o.uid === victim.uid), "다른 사람 화면에서도 그대로 보임");
   for (const p of players) await p.net.disconnect();
 });

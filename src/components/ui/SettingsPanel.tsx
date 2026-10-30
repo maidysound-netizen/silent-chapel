@@ -1,5 +1,6 @@
 "use client";
-import { useEffect } from "react";
+import { useEffect, useState, useSyncExternalStore } from "react";
+import { getNetworkManager } from "@/lib/net/NetworkManager";
 import { useApp, type Quality } from "@/store/useAppStore";
 import { getUi } from "@/lib/i18n";
 import { LanguageTabs } from "./LanguageTabs";
@@ -78,8 +79,51 @@ export function SettingsPanel() {
             </p>
           ))}
         </details>
+        <AdminSection />
         <p className="muted small">{ui.disclaimer}</p>
       </div>
     </section>
+  );
+}
+
+/** 관리자 비밀번호 입력 (Supabase 연결이 있을 때만). 비밀번호는 서버 claim_admin 이 해시와 비교하며 저장하지 않음 */
+function AdminSection() {
+  const locale = useApp((s) => s.settings.locale);
+  const ui = getUi(locale);
+  const net = getNetworkManager();
+  const snap = useSyncExternalStore(net.subscribe.bind(net), net.getSnapshot, net.getSnapshot);
+  const [code, setCode] = useState("");
+  const [result, setResult] = useState<"ok" | "fail" | null>(null);
+  const [busy, setBusy] = useState(false);
+  if (!net.enabled) return null;
+
+  const submit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setBusy(true);
+    const ok = await net.claimAdmin(code);
+    setBusy(false);
+    setCode("");
+    setResult(ok ? "ok" : "fail");
+  };
+
+  return (
+    <details className="admin-section">
+      <summary>{ui.admin}</summary>
+      {snap.isAdmin ? (
+        <p className="small">✓ {ui.adminOk}</p>
+      ) : (
+        <form onSubmit={(e) => void submit(e)}>
+          <p className="muted small">{ui.adminHint}</p>
+          <label className="small">
+            {ui.adminCode}
+            <input type="password" autoComplete="off" minLength={8} maxLength={128} value={code} onChange={(e) => setCode(e.target.value)} />
+          </label>
+          <button className="btn small" type="submit" disabled={busy || code.length < 8}>
+            {ui.adminClaim}
+          </button>
+          {result === "fail" && <p className="small">{ui.adminFail}</p>}
+        </form>
+      )}
+    </details>
   );
 }

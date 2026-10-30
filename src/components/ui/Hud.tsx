@@ -13,6 +13,8 @@ import { LanguageTabs } from "./LanguageTabs";
 
 export function PresenceChip() {
   const locale = useApp((s) => s.settings.locale);
+  const panel = useApp((s) => s.panel);
+  const openPanel = useApp((s) => s.openPanel);
   const ui = getUi(locale);
   const net = getNetworkManager();
   const snap = useSyncExternalStore(net.subscribe.bind(net), net.getSnapshot, net.getSnapshot);
@@ -25,6 +27,10 @@ export function PresenceChip() {
       text = n ? `${ui.roomName(n)} · ${ui.visitors(snap.count)}` : ui.visitors(snap.count);
       break;
     }
+    case "banned":
+      text = ui.banned;
+      tone = "off";
+      break;
     case "full":
       text = ui.allRoomsFull;
       tone = "wait";
@@ -47,11 +53,21 @@ export function PresenceChip() {
       text = ui.offlineMode;
       tone = "off";
   }
+  // 누르면 '함께 있는 사람' 목록 (관리자는 여기서 내보내기)
+  const canList = snap.status === "connected";
   return (
-    <div className={`chip presence ${tone}`} role="status" aria-live="polite" title={snap.error ?? undefined}>
+    <button
+      type="button"
+      className={`chip presence ${tone}`}
+      aria-live="polite"
+      title={snap.error ?? undefined}
+      disabled={!canList}
+      aria-expanded={panel === "people"}
+      onClick={() => openPanel(panel === "people" ? null : "people")}
+    >
       <span className="dot" aria-hidden="true" />
       {text}
-    </div>
+    </button>
   );
 }
 

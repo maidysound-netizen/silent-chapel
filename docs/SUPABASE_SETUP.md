@@ -49,6 +49,30 @@
 앱은 `main-chapel` 이 가득 차면 `chapel-2`, `chapel-3` … 순서로 자동 입장하고, 화면 위 표시에 "제2경당"처럼 방 번호를 보여 줍니다.
 이 마이그레이션을 실행하기 전에도 앱은 그대로 동작합니다(추가 방이 없으면 건너뜀). 다만 그때는 정원 계산이 예전 방식이라 사실상 한 방에 모두 들어갑니다.
 
+### 3-2. 관리자 내보내기(차단) — 세 번째 마이그레이션
+
+1. [`supabase/migrations/20261030010000_admin_ban.sql`](../supabase/migrations/20261030010000_admin_ban.sql) 을 실행합니다 (3-1 다음).
+2. **관리자 비밀번호 정하기** — SQL Editor 에서 따로 한 번 실행합니다. 8자 이상, 파일이나 Git 에 적지 마세요.
+   ```sql
+   insert into public.admin_secret (id, code_hash)
+   values (1, extensions.crypt('여기에-관리자-비밀번호', extensions.gen_salt('bf')))
+   on conflict (id) do update set code_hash = excluded.code_hash;
+   ```
+3. 앱에서 **설정 → 관리자** 에 비밀번호를 넣으면 그 기기가 관리자가 됩니다.
+4. 화면 위 **"제N경당 · 함께 머무는 사람 N명"** 을 누르면 목록이 열리고, 관리자에게만 **내보내기** 버튼이 보입니다.
+
+| 이름 | 용도 |
+| --- | --- |
+| `admins`, `banned_users`, `admin_secret` | 관리자·차단 목록·비밀번호 해시 (API 로 직접 읽기/쓰기 불가) |
+| `claim_admin`, `is_admin` | 비밀번호 확인 후 관리자 등록 / 확인 |
+| `ban_user`, `unban_user` | 내보내기 / 되돌리기 (관리자만, 관리자끼리는 못 내보냄) |
+| `is_banned`, `am_i_banned` | 앱이 '내보내기' 알림이 진짜인지 서버에 확인 |
+| `join_room` (교체) | 차단된 사람 입장 거절 |
+
+차단 풀기: `delete from public.banned_users where user_id = '<id>';` · 관리자 해제: `delete from public.admins where user_id = '<id>';`
+
+**한계:** 익명 로그인이라 상대가 브라우저 데이터를 지우면 새 id 로 다시 들어올 수 있습니다. 또 Realtime 권한은 채널에 들어올 때 검사되므로, 공식 앱이 아닌 조작된 클라이언트는 다시 연결하기 전까지 메시지를 보낼 수 있지만, 다른 사람들의 앱은 서버에서 차단을 확인한 순간부터 그 사람을 화면에서 숨깁니다.
+
 ## 4. Realtime 설정
 
 1. **Realtime → Settings** 에서 **Allow public access** 를 **끕니다** (Private 채널만 허용).
