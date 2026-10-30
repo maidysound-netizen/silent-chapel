@@ -49,3 +49,9 @@ test("서버 오류 코드 → 안내 종류", async () => {
   assert.equal(lightErrorReason({ code: "P0003" }), "banned");
   assert.equal(lightErrorReason({ code: "XX000" }), "error");
 });
+
+test("서버에 소원 초 SQL 이 없으면 '준비 안 됨' 안내", async () => {
+  const { lightErrorReason } = await import("../src/lib/wishes.ts");
+  assert.equal(lightErrorReason({ code: "PGRST202" }), "notReady");
+  assert.equal(lightErrorReason({ code: "PGRST205" }), "notReady");
+});

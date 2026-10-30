@@ -37,6 +37,7 @@ export function WishPanel() {
     notInRoom: ui.wishNotInRoom,
     banned: ui.wishBanned,
     invalid: ui.wishInvalid,
+    notReady: ui.wishNotReady,
     error: ui.wishError,
   };
 

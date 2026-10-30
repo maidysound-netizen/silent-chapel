@@ -108,7 +108,7 @@ export class WishStore {
   }
 }
 
-export type LightResult = { ok: true } | { ok: false; reason: "tooSoon" | "daily" | "notInRoom" | "banned" | "invalid" | "error" };
+export type LightResult = { ok: true } | { ok: false; reason: "tooSoon" | "daily" | "notInRoom" | "banned" | "invalid" | "notReady" | "error" };
 
 /** 서버 오류 코드 → 안내 종류 (supabase/migrations/20261030030000_wish_candles.sql) */
 export function lightErrorReason(e: { code?: string; message?: string }): Exclude<LightResult, { ok: true }>["reason"] {
@@ -123,6 +123,11 @@ export function lightErrorReason(e: { code?: string; message?: string }): Exclud
       return "banned";
     case "22023":
       return "invalid";
+    // 서버에 소원 초 함수·표가 아직 없음 (SQL 미실행)
+    case "PGRST202":
+    case "PGRST205":
+    case "42883":
+      return "notReady";
     default:
       return "error";
   }
