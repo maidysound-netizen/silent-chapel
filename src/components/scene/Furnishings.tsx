@@ -115,7 +115,8 @@ function Altar() {
         <boxGeometry args={[ALTAR.width + 0.3, 0.02, ALTAR.depth + 0.1]} />
         <meshStandardMaterial color="#fbf8f0" roughness={0.9} />
       </mesh>
-      <mesh position={[0, top - 0.25, ALTAR.depth / 2 + 0.06]}>
+      {/* 앞 드리운 천: 윗면이 덮개 밑면과 같은 높이면 겹쳐 깜빡이므로 살짝 아래로 */}
+      <mesh position={[0, top - 0.255, ALTAR.depth / 2 + 0.06]}>
         <boxGeometry args={[ALTAR.width + 0.3, 0.5, 0.02]} />
         <meshStandardMaterial color="#fbf8f0" roughness={0.9} />
       </mesh>

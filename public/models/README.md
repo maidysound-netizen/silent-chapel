@@ -39,4 +39,4 @@ npx @gltf-transform/cli@4 optimize object/Meshy_AI_virgin_mary_statue_….glb pu
 ```
 
 배치·크기는 `src/lib/game/chapelLayout.ts` 의 `CRUCIFIX`(받침이 제단 단 바닥에, 높이 6.4m)와
-`MARY_SHRINE`(받침대 0.7m + 성모상 1.7m)에서, 불러오기·재질 보정은 `src/components/scene/StatueModel.tsx` 에서 합니다.
+`MARY_SHRINE`(받침대 0.8m + 성모상 2.2m)에서, 불러오기·재질 보정은 `src/components/scene/StatueModel.tsx` 에서 합니다.

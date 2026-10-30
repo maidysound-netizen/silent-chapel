@@ -9,7 +9,7 @@ import { useEffect, useMemo, useRef } from "react";
 import * as THREE from "three";
 import { useApp } from "@/store/useAppStore";
 import { getUi } from "@/lib/i18n";
-import { ALTAR, MARY, ROSARY_STAND } from "@/lib/game/chapelLayout";
+import { ALTAR, MARY, MARY_SHRINE, ROSARY_STAND } from "@/lib/game/chapelLayout";
 import { bow, interact, sitAt } from "@/store/localPlayer";
 import { sceneRefs } from "../scene/sceneRefs";
 
@@ -40,7 +40,7 @@ export function PromptOverlay() {
     if (pose !== "sit") {
       if (prompt?.kind === "rosary")
         items.push({ id: "rosary", text: `📿 ${ui.interactRosary}`, keyHint: "E", at: [ROSARY_STAND.x, ROSARY_STAND.y + 0.35, ROSARY_STAND.z], run: interact });
-      if (nearMary) items.push({ id: "mary", text: `🙏 ${ui.bowToMary}`, keyHint: "B", at: [MARY.x + 0.2, 2.95, MARY.z], run: bow });
+      if (nearMary) items.push({ id: "mary", text: `🙏 ${ui.bowToMary}`, keyHint: "B", at: [MARY.x + 0.2, MARY_SHRINE.pedestalH + MARY_SHRINE.statueH + 0.25, MARY.z], run: bow });
       else if (nearJesus) items.push({ id: "jesus", text: `✝ ${ui.bowToJesus}`, keyHint: "B", at: [ALTAR.x, ALTAR.height + 1.1, ALTAR.z], run: bow });
       if (prompt?.kind === "seat") {
         const seat = prompt.seat;

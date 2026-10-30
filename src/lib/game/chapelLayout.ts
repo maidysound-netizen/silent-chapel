@@ -90,7 +90,7 @@ export const ALTAR = { x: 0, z: -16.5, width: 3.2, depth: 1.2, height: 1.05 };
 export const CRUCIFIX = { x: 0, z: -20.4, y: SANCTUARY_Y, height: 6.4, focusY: SANCTUARY_Y + 4.6 };
 export const MARY = { x: -8.7, z: -7.5, yaw: -Math.PI / 2 }; // 오른쪽(+X)을 바라봄
 /** 왼쪽 측랑의 성모 기도 공간: 받침대 위 성모상, 벽의 푸른 감실, 바닥 카펫 */
-export const MARY_SHRINE = { pedestalH: 0.7, statueH: 1.7, rug: { minX: -9.5, maxX: -6.7, minZ: -9.3, maxZ: -5.0 } };
+export const MARY_SHRINE = { pedestalH: 0.8, statueH: 2.2, rug: { minX: -9.5, maxX: -6.7, minZ: -9.3, maxZ: -5.0 } };
 export const ROSARY_STAND = { x: -7.6, z: -6.3, y: 0.95 };
 export const KNEELER = { x: -7.3, z: -7.5 };
 export const CANDLE_RACK = { x: -8.6, z: -5.6 };
