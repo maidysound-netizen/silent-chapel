@@ -20,10 +20,10 @@
 
 | 모델 | 출처 | 웹용 파일 |
 | --- | --- | --- |
-| 십자가상 | Meshy AI 로 생성 (원본 `object/Meshy_AI_crucifix_statue_…glb`, Git 제외) | `public/models/chapel/crucifix.glb` |
-| 성모상 | Meshy AI 로 생성 (원본 `object/Meshy_AI_virgin_mary_statue_…glb`, Git 제외) | `public/models/chapel/mary.glb` |
+| 십자가상 | 프로젝트 소유자가 Meshy AI 로 생성 (원본 `object/Meshy_AI_crucifix_statue_…glb`, Git 제외) | `public/models/chapel/crucifix.glb` |
+| 성모상 | 프로젝트 소유자가 Meshy AI 로 생성 (원본 `object/Meshy_AI_virgin_mary_statue_…glb`, Git 제외) | `public/models/chapel/mary.glb` |
 
-⚠ Meshy 결과물의 이용 조건은 요금제에 따라 다릅니다(무료 플랜 결과물은 CC BY 4.0 등 표기가 필요할 수 있음). 공개 배포 전에 사용한 Meshy 계정의 요금제와 약관을 확인하세요.
+두 모델은 프로젝트 소유자가 Meshy AI 로 직접 만든 소유 모델입니다.
 코드로 만든 예전 십자가상·성모상은 모델을 불러오는 동안·실패했을 때 대신 보입니다.
 
 ## 기도문
