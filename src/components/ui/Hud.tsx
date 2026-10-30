@@ -8,7 +8,7 @@ import { roomNumber } from "@/lib/net/RoomManager";
 import { RunButton, TouchJoystick } from "./TouchJoystick";
 import { NetStats } from "./NetStats";
 import { FEATURES } from "@/lib/features";
-import { bow, signCross, standUp } from "@/store/localPlayer";
+import { bow, scatterRose, signCross, standUp } from "@/store/localPlayer";
 import { LanguageTabs } from "./LanguageTabs";
 
 export function PresenceChip() {
@@ -80,6 +80,7 @@ export function Hud({ onExit }: { onExit: () => void }) {
   const meditation = useApp((s) => s.meditation);
   const setMeditation = useApp((s) => s.setMeditation);
   const nearShrine = useApp((s) => s.nearMary || s.nearJesus);
+  const holdingRose = useApp((s) => s.holdingRose);
   const ui = getUi(settings.locale);
   const hideForMeditation = meditation && panel === null;
 
@@ -136,6 +137,16 @@ export function Hud({ onExit }: { onExit: () => void }) {
             <button className="btn" onClick={standUp}>
               {ui.stand}
               <kbd>F</kbd>
+            </button>
+          </div>
+        )}
+        {/* 장미를 들고 있으면: 안내 + 어디서든 바닥에 뿌리기 */}
+        {holdingRose && pose !== "sit" && panel === null && (
+          <div className="hud-actions rose-bar">
+            <span className="muted small">{ui.holdingRose}</span>
+            <button className="btn quiet" onClick={scatterRose}>
+              🌹 {ui.scatterRose}
+              <kbd>G</kbd>
             </button>
           </div>
         )}

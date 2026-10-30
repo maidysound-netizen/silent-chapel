@@ -33,7 +33,20 @@ function RemoteAvatar({ uid, label, pose }: { uid: string; label: string; pose: 
   const cross = getNetworkManager().remotes.get(uid)?.cross;
   // 받은 애니메이션 상태(idle/walk/run/sit…)를 매 프레임 읽음
   const getAnim = useCallback((): AnimState => getNetworkManager().remotes.get(uid)?.anim ?? (pose === "sit" ? "sit" : "idle"), [uid, pose]);
-  return <Avatar ref={ref} color={colorFor(uid)} pose={pose} bow={bow} cross={cross} getAnim={getAnim} label={label} showLabel={showNames} />;
+  const getHoldingRose = useCallback(() => getNetworkManager().remotes.get(uid)?.holdingRose ?? false, [uid]);
+  return (
+    <Avatar
+      ref={ref}
+      color={colorFor(uid)}
+      pose={pose}
+      bow={bow}
+      cross={cross}
+      getHoldingRose={getHoldingRose}
+      getAnim={getAnim}
+      label={label}
+      showLabel={showNames}
+    />
+  );
 }
 
 export function RemoteAvatars() {

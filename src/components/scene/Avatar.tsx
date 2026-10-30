@@ -21,6 +21,8 @@ export interface AvatarProps {
   bow?: BowState;
   /** 성호 긋기 시작 시각 (가변 객체) */
   cross?: BowState;
+  /** 장미를 들고 있는지 (매 프레임 읽음) */
+  getHoldingRose?: () => boolean;
   /** 지금 애니메이션 상태 (매 프레임 읽음). 로컬은 내 이동 상태, 원격은 받은 상태 */
   getAnim: () => AnimState;
   label?: string;
@@ -41,9 +43,9 @@ class ModelBoundary extends Component<{ fallback: ReactNode; children: ReactNode
   }
 }
 
-export const Avatar = forwardRef<THREE.Group, AvatarProps>(function Avatar({ color, pose, bow, cross, getAnim, label, showLabel }, ref) {
+export const Avatar = forwardRef<THREE.Group, AvatarProps>(function Avatar({ color, pose, bow, cross, getHoldingRose, getAnim, label, showLabel }, ref) {
   const sit = pose === "sit";
-  const placeholder = <PlaceholderCharacter color={color} pose={pose} bow={bow} cross={cross} getAnim={getAnim} />;
+  const placeholder = <PlaceholderCharacter color={color} pose={pose} bow={bow} cross={cross} getHoldingRose={getHoldingRose} getAnim={getAnim} />;
   const url = AVATAR_MODEL.url;
   return (
     <group ref={ref}>

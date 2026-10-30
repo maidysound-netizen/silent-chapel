@@ -71,6 +71,10 @@ interface AppState {
   /** 성모상 가까이 있음 (절하기 버튼 문구용) */
   nearMary: boolean;
   nearJesus: boolean;
+  /** 장미 제단 가까이 있는지 */
+  nearRoseAltar: boolean;
+  /** 장미를 들고 있는지 */
+  holdingRose: boolean;
   pose: Pose;
   rosary: RosaryProgress | null;
   hydrated: boolean;
@@ -84,6 +88,8 @@ interface AppState {
   setPrompt(t: InteractionTarget | null): void;
   setNearMary(v: boolean): void;
   setNearJesus(v: boolean): void;
+  setNearRoseAltar(v: boolean): void;
+  setHoldingRose(v: boolean): void;
   setPose(p: Pose): void;
   setRosary(p: RosaryProgress | null): void;
 }
@@ -105,6 +111,8 @@ export const useApp = create<AppState>((set, get) => ({
   prompt: null,
   nearMary: false,
   nearJesus: false,
+  nearRoseAltar: false,
+  holdingRose: false,
   pose: "stand",
   rosary: null,
   hydrated: false,
@@ -140,6 +148,12 @@ export const useApp = create<AppState>((set, get) => ({
   },
   setNearMary: (nearMary) => {
     if (get().nearMary !== nearMary) set({ nearMary });
+  },
+  setNearRoseAltar: (nearRoseAltar) => {
+    if (get().nearRoseAltar !== nearRoseAltar) set({ nearRoseAltar });
+  },
+  setHoldingRose: (holdingRose) => {
+    if (get().holdingRose !== holdingRose) set({ holdingRose });
   },
   setNearJesus: (nearJesus) => {
     if (get().nearJesus !== nearJesus) set({ nearJesus });

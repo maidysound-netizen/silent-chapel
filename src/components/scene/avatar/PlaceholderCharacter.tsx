@@ -11,6 +11,7 @@ import { AvatarAnimator } from "./AvatarAnimator";
 import { placeholderClips } from "./placeholderClips";
 import { useAnimationDriver } from "./useAnimationDriver";
 import { useBow, useCrossHand, type BowState } from "./bow";
+import { HeldRose } from "../Roses";
 
 export interface CharacterProps {
   color: string;
@@ -19,6 +20,8 @@ export interface CharacterProps {
   bow?: BowState;
   /** 성호 긋기 시작 시각 (가변 객체) */
   cross?: BowState;
+  /** 장미를 들고 있는지 (매 프레임 읽음) */
+  getHoldingRose?: () => boolean;
   /** 지금 재생할 애니메이션 상태 (매 프레임 읽음) */
   getAnim: () => AnimState;
 }
@@ -55,7 +58,7 @@ function CrossHand({ handRef }: { handRef: RefObject<THREE.Mesh | null> }) {
   );
 }
 
-function SeatedBody({ color, bow, cross }: { color: string; bow?: BowState; cross?: BowState }) {
+function SeatedBody({ color, bow, cross, getHoldingRose }: { color: string; bow?: BowState; cross?: BowState; getHoldingRose?: () => boolean }) {
   const torso = useMemo(() => torsoGeo(), []);
   const upper = useRef<THREE.Group>(null);
   const hand = useRef<THREE.Mesh>(null);
@@ -85,6 +88,7 @@ function SeatedBody({ color, bow, cross }: { color: string; bow?: BowState; cros
         <boxGeometry args={[0.3, hipY, 0.12]} />
         <meshStandardMaterial color={color} roughness={0.85} />
       </mesh>
+      <HeldRose position={[0.03, 0.49 + 0.12, -0.34]} getHolding={getHoldingRose} />
       {/* 무릎 위에 모은 손 */}
       <mesh position={[0, hipY + 0.16, -0.3]} rotation={[Math.PI / 2, 0, Math.PI / 2]}>
         <capsuleGeometry args={[0.04, 0.12, 4, 8]} />
@@ -98,7 +102,19 @@ function SeatedBody({ color, bow, cross }: { color: string; bow?: BowState; cros
  * 서 있는 몸. 애니메이션 대상 노드: Body / Hem / Upper / Head (placeholderClips.ts).
  * 절하기는 클립과 겹치지 않도록 Upper 바깥의 BowPivot 을 돌립니다.
  */
-function StandingBody({ color, bow, cross, getAnim }: { color: string; bow?: BowState; cross?: BowState; getAnim: () => AnimState }) {
+function StandingBody({
+  color,
+  bow,
+  cross,
+  getAnim,
+  getHoldingRose,
+}: {
+  color: string;
+  bow?: BowState;
+  cross?: BowState;
+  getAnim: () => AnimState;
+  getHoldingRose?: () => boolean;
+}) {
   const geos = useMemo(() => robeGeos(), []);
   const root = useRef<THREE.Group>(null);
   const bowPivot = useRef<THREE.Group>(null);
@@ -137,6 +153,8 @@ function StandingBody({ color, bow, cross, getAnim }: { color: string; bow?: Bow
               <meshStandardMaterial color={SKIN} roughness={0.8} />
             </mesh>
             <CrossHand handRef={hand} />
+            {/* 모은 손에 든 장미 */}
+            <HeldRose position={[0.03, 0.12, -0.25]} getHolding={getHoldingRose} />
           </group>
         </group>
       </group>
@@ -145,10 +163,10 @@ function StandingBody({ color, bow, cross, getAnim }: { color: string; bow?: Bow
 }
 
 /** kneel · pray 는 아직 임시 캐릭터 모양이 없어 서 있는 Idle 로 대신합니다 (GLB에 클립이 있으면 그걸 씀) */
-export function PlaceholderCharacter({ color, pose, bow, cross, getAnim }: CharacterProps) {
+export function PlaceholderCharacter({ color, pose, bow, cross, getAnim, getHoldingRose }: CharacterProps) {
   return pose === "sit" ? (
-    <SeatedBody color={color} bow={bow} cross={cross} />
+    <SeatedBody color={color} bow={bow} cross={cross} getHoldingRose={getHoldingRose} />
   ) : (
-    <StandingBody color={color} bow={bow} cross={cross} getAnim={getAnim} />
+    <StandingBody color={color} bow={bow} cross={cross} getAnim={getAnim} getHoldingRose={getHoldingRose} />
   );
 }

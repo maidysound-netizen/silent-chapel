@@ -3,7 +3,7 @@
 import { useEffect, useRef } from "react";
 import { useFrame } from "@react-three/fiber";
 import * as THREE from "three";
-import { ALTAR, CANDLE_RACK, CRUCIFIX, MARY, MARY_SHRINE, SANCTUARY_Y } from "@/lib/game/chapelLayout";
+import { ALTAR, CANDLE_RACK, CRUCIFIX, MARY, MARY_SHRINE, ROSE_ALTAR, SANCTUARY_Y } from "@/lib/game/chapelLayout";
 import type { Quality } from "@/store/useAppStore";
 
 function FlickerLight({ position, base, color, distance }: { position: [number, number, number]; base: number; color: string; distance: number }) {
@@ -109,6 +109,8 @@ export function Lighting({ quality }: { quality: Quality }) {
       <FlickerLight position={[ALTAR.x, SANCTUARY_Y + 2, ALTAR.z + 0.6]} base={low ? 3 : 4} color="#ffc27a" distance={9} />
       {!low && (
         <>
+          {/* 장미 제단 촛불 */}
+          <FlickerLight position={[ROSE_ALTAR.x - 0.9, 1.5, ROSE_ALTAR.z]} base={2.2} color="#ffb48a" distance={5} />
           {/* 성모상과 봉헌 초 */}
           <FlickerLight position={[CANDLE_RACK.x + 0.8, 1.4, CANDLE_RACK.z]} base={2.4} color="#ffb766" distance={6} />
           {/* 성모상을 앞 위에서 비추는 부드러운 빛 (높은 품질에서만 그림자) */}

@@ -9,8 +9,8 @@ import { useEffect, useMemo, useRef } from "react";
 import * as THREE from "three";
 import { useApp } from "@/store/useAppStore";
 import { getUi } from "@/lib/i18n";
-import { ALTAR, MARY, MARY_SHRINE, ROSARY_STAND } from "@/lib/game/chapelLayout";
-import { bow, interact, sitAt } from "@/store/localPlayer";
+import { ALTAR, MARY, MARY_SHRINE, ROSARY_STAND, ROSE_ALTAR } from "@/lib/game/chapelLayout";
+import { bow, interact, offerRose, pickRose, sitAt } from "@/store/localPlayer";
 import { sceneRefs } from "../scene/sceneRefs";
 
 interface PromptItem {
@@ -31,6 +31,8 @@ export function PromptOverlay() {
   const pose = useApp((s) => s.pose);
   const nearMary = useApp((s) => s.nearMary);
   const nearJesus = useApp((s) => s.nearJesus);
+  const nearRose = useApp((s) => s.nearRoseAltar);
+  const holdingRose = useApp((s) => s.holdingRose);
   const ui = getUi(useApp((s) => s.settings.locale));
   const showKeys = useMemo(() => typeof window !== "undefined" && !window.matchMedia?.("(pointer: coarse)").matches, []);
 
@@ -38,7 +40,14 @@ export function PromptOverlay() {
   if (phase === "chapel" && panel === null) {
     // 앉아 있을 때의 행동(묵주기도·묵상 시점·일어나기)은 화면 아래 가운데(Hud)에 표시
     if (pose !== "sit") {
-      if (prompt?.kind === "rosary")
+      // 장미: 제단에서 받기 / 들고 있으면 성모상·제단 앞에서 바치기 (절하기 안내 위에 쌓아 보여 줌)
+      if (nearRose && !holdingRose)
+        items.push({ id: "rose-pick", text: `🌹 ${ui.pickRose}`, keyHint: "E", at: [ROSE_ALTAR.x, ROSE_ALTAR.height + 0.7, ROSE_ALTAR.z], run: pickRose });
+      if (holdingRose && nearMary)
+        items.push({ id: "rose-mary", text: `🌹 ${ui.offerRoseMary}`, keyHint: "E", at: [MARY.x + 0.2, MARY_SHRINE.pedestalH + MARY_SHRINE.statueH + 0.25, MARY.z], lift: 48, run: () => offerRose("mary") });
+      else if (holdingRose && nearJesus)
+        items.push({ id: "rose-jesus", text: `🌹 ${ui.offerRoseJesus}`, keyHint: "E", at: [ALTAR.x, ALTAR.height + 1.1, ALTAR.z], lift: 48, run: () => offerRose("jesus") });
+      if (prompt?.kind === "rosary" && !holdingRose)
         items.push({ id: "rosary", text: `📿 ${ui.interactRosary}`, keyHint: "E", at: [ROSARY_STAND.x, ROSARY_STAND.y + 0.35, ROSARY_STAND.z], run: interact });
       if (nearMary) items.push({ id: "mary", text: `🙏 ${ui.bowToMary}`, keyHint: "B", at: [MARY.x + 0.2, MARY_SHRINE.pedestalH + MARY_SHRINE.statueH + 0.25, MARY.z], run: bow });
       else if (nearJesus) items.push({ id: "jesus", text: `✝ ${ui.bowToJesus}`, keyHint: "B", at: [ALTAR.x, ALTAR.height + 1.1, ALTAR.z], run: bow });

@@ -211,3 +211,34 @@ export function validateModeration(raw: unknown, now = Date.now()): ModerationMe
   if (!finite(m.t) || m.t > now + MAX_FUTURE_MS || m.t < now - MAX_AGE_MS) return null;
   return { v: PROTOCOL_VERSION, u: m.u, t: m.t, k: "ban", x: m.x };
 }
+
+// ---- 장미꽃 ----
+
+/**
+ * Broadcast 'rs' 이벤트: 장미를 받음(pick) / 성모님(mary)·예수님(jesus)께 바침 / 바닥에 뿌림(floor).
+ * 꽃 자리는 받는 쪽에서 정하고, 바닥은 p(x, z) 위치에 s(모양 값)로 꽃잎을 흩뿌립니다.
+ */
+export interface RoseMessage {
+  v: number;
+  u: string;
+  t: number;
+  k: "pick" | "mary" | "jesus" | "floor";
+  s: number;
+  p?: [number, number];
+}
+
+const ROSE_KINDS = new Set(["pick", "mary", "jesus", "floor"]);
+
+export function validateRose(raw: unknown, now = Date.now()): RoseMessage | null {
+  if (!raw || typeof raw !== "object") return null;
+  const m = raw as Record<string, unknown>;
+  if (m.v !== PROTOCOL_VERSION || !isUserId(m.u) || typeof m.k !== "string" || !ROSE_KINDS.has(m.k)) return null;
+  if (!finite(m.t) || m.t > now + MAX_FUTURE_MS || m.t < now - MAX_AGE_MS) return null;
+  if (!finite(m.s) || !Number.isInteger(m.s) || m.s < 0 || m.s > 1e9) return null;
+  const out: RoseMessage = { v: PROTOCOL_VERSION, u: m.u, t: m.t, k: m.k as RoseMessage["k"], s: m.s };
+  if (m.k === "floor") {
+    if (!Array.isArray(m.p) || m.p.length !== 2 || !m.p.every(finite) || !isInsideChapel(m.p[0], m.p[1])) return null;
+    out.p = [m.p[0], m.p[1]];
+  }
+  return out;
+}

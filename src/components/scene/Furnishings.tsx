@@ -303,8 +303,9 @@ function MaryShrine() {
         <boxGeometry args={[0.75, pedestalH, 0.75]} />
         <meshStandardMaterial color="#cbbfa8" roughness={0.8} />
       </mesh>
-      <mesh position={[MARY.x, pedestalH + 0.02, MARY.z]} castShadow>
-        <boxGeometry args={[0.85, 0.04, 0.85]} />
+      {/* 꽃 선반: 바친 장미가 성모상 발치에 놓이는 넓은 판 (roses.ts MARY_SHELF_HALF) */}
+      <mesh position={[MARY.x + 0.02, pedestalH + 0.02, MARY.z]} castShadow receiveShadow>
+        <boxGeometry args={[1.6, 0.04, 1.6]} />
         <meshStandardMaterial color="#b9ab92" roughness={0.75} />
       </mesh>
       {/* 성모상: Meshy 모델은 +Z 가 정면이라 반 바퀴 돌려 +X(신자석 쪽)를 바라보게 함 */}

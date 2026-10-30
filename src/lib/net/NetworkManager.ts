@@ -17,17 +17,20 @@ import {
   sendRateHz,
   validateGesture,
   validateModeration,
+  validateRose,
   validateState,
   PROTOCOL_VERSION,
   type Gesture,
   type GestureMessage,
   type ModerationMessage,
+  type RoseMessage,
   type PresenceMeta,
 } from "./protocol.ts";
 import { SnapshotBuffer } from "./PositionInterpolation.ts";
 import { PresenceManager } from "./PresenceManager.ts";
 import { ReconnectionHandler } from "./ReconnectionHandler.ts";
 import { roomCandidates, roomTopic } from "./RoomManager.ts";
+import { RoseStore, ROSE_MIN_INTERVAL_MS, type RoseTarget } from "../game/roses.ts";
 import { getSupabase, readSupabaseEnv, type SupabaseEnv } from "./supabaseClient.ts";
 
 export type NetStatus = "disabled" | "idle" | "auth" | "connecting" | "connected" | "reconnecting" | "offline" | "error" | "full" | "banned";
@@ -50,6 +53,10 @@ export interface RemotePlayer {
   bow: { at: number };
   /** 성호 긋기 시작 시각 */
   cross: { at: number };
+  /** 장미를 들고 있는지 (아바타가 매 프레임 읽음) */
+  holdingRose: boolean;
+  /** 마지막 장미 알림 시각 (도배 방지) */
+  lastRoseAt: number;
 }
 
 export interface NetMetrics {
@@ -84,6 +91,7 @@ const STALE_REMOVE_MS = 12_000;
 const EVENT_STATE = "st";
 const EVENT_GESTURE = "gs";
 const EVENT_MODERATION = "md";
+const EVENT_ROSE = "rs";
 /** 같은 사람의 제스처는 이 간격보다 자주 받지 않음 (도배 방지) */
 const GESTURE_MIN_MS = 2000;
 /** 방에 아직 있다고 DB에 알리는 주기. join_room 의 정원 계산이 이 기록을 봅니다 */
@@ -119,6 +127,8 @@ export class NetworkManager {
   private rateWindow = { sent: 0, recv: 0, at: 0 };
 
   readonly remotes = new Map<string, RemotePlayer>();
+  /** 바친 장미 (이 기기에서 본 것만, 저장하지 않음) */
+  readonly roses = new RoseStore();
   readonly metrics: NetMetrics = {
     sentTotal: 0,
     recvTotal: 0,
@@ -252,6 +262,7 @@ export class NetworkManager {
       .on("broadcast", { event: EVENT_STATE }, ({ payload }) => this.onState(payload))
       .on("broadcast", { event: EVENT_GESTURE }, ({ payload }) => this.onGesture(payload))
       .on("broadcast", { event: EVENT_MODERATION }, ({ payload }) => void this.onModeration(payload))
+      .on("broadcast", { event: EVENT_ROSE }, ({ payload }) => this.onRose(payload))
       .on("presence", { event: "sync" }, () => this.syncPresence())
       .on("presence", { event: "leave" }, ({ key }) => {
         if (key && key !== uid) {
@@ -321,6 +332,7 @@ export class NetworkManager {
     }
     this.teardownChannel();
     this.remotes.clear();
+    this.roses.clear();
     this.emit({ status: this.sb ? "idle" : "disabled", count: 1, others: [] });
   }
 
@@ -440,6 +452,8 @@ export class NetworkManager {
       present: true,
       bow: { at: 0 },
       cross: { at: 0 },
+      holdingRose: false,
+      lastRoseAt: 0,
     };
     this.remotes.set(uid, r);
     return r;
@@ -533,6 +547,41 @@ export class NetworkManager {
     const g = msg.g === "cross" ? r.cross : r.bow;
     if (now - g.at < GESTURE_MIN_MS) return;
     g.at = now;
+  }
+
+  // ---------- 장미꽃 ----------
+
+  /** 장미를 받음/바침/뿌림을 같은 방 사람들에게 알림. 내 화면의 꽃은 호출한 쪽에서 직접 추가 */
+  sendRose(k: RoseMessage["k"], seed: number, at?: { x: number; z: number }): void {
+    const ch = this.channel;
+    const uid = this.snapshot.uid;
+    if (!ch || !uid || this.snapshot.status !== "connected") return;
+    const payload: RoseMessage = { v: PROTOCOL_VERSION, u: uid, t: Date.now(), k, s: seed };
+    if (k === "floor" && at) payload.p = [Math.round(at.x * 100) / 100, Math.round(at.z * 100) / 100];
+    void ch.send({ type: "broadcast", event: EVENT_ROSE, payload });
+    this.countSent(JSON.stringify(payload).length);
+  }
+
+  private onRose(raw: unknown) {
+    const now = Date.now();
+    this.metrics.recvTotal++;
+    this.rateWindow.recv++;
+    const msg = validateRose(raw, now);
+    const r = msg ? this.remotes.get(msg.u) : undefined;
+    if (!msg || !r || !r.present) {
+      this.metrics.droppedInvalid++;
+      return;
+    }
+    if (msg.k === "pick") {
+      r.holdingRose = true;
+      return;
+    }
+    // 바치기·뿌리기는 장미를 들고 있었고 너무 잦지 않을 때만 (도배 방지)
+    if (!r.holdingRose || now - r.lastRoseAt < ROSE_MIN_INTERVAL_MS) return;
+    r.lastRoseAt = now;
+    r.holdingRose = false;
+    if (msg.k === "floor" && msg.p) this.roses.add("floor", msg.s, { x: msg.p[0], y: floorHeight(msg.p[1]), z: msg.p[1] });
+    else if (msg.k !== "floor") this.roses.add(msg.k as RoseTarget, msg.s);
   }
 
   // ---------- 관리자 내보내기 ----------

@@ -1,5 +1,6 @@
 "use client";
 // 로컬 플레이어: 입력 → stepPlayer → 아바타 위치 반영 → 근처 상호작용 확인 → 네트워크 전송 판단
+import { nearRoseAltar } from "@/lib/game/roses";
 import { useEffect, useRef } from "react";
 import { useFrame } from "@react-three/fiber";
 import * as THREE from "three";
@@ -13,6 +14,8 @@ import { sceneRefs } from "./sceneRefs";
 import { deriveAnimState } from "@/lib/game/avatarConfig";
 
 const getLocalAnim = () => deriveAnimState(localPlayer.state);
+
+const getLocalHoldingRose = () => useApp.getState().holdingRose;
 
 export function LocalPlayer() {
   const ref = useRef<THREE.Group>(null);
@@ -57,6 +60,7 @@ export function LocalPlayer() {
       app.setPrompt(s.pose === "sit" ? null : findInteraction(s.x, s.z, occupiedSeats()));
       app.setNearMary(s.pose === "stand" && isNearMary(s.x, s.z));
       app.setNearJesus(s.pose === "stand" && isNearJesus(s.x, s.z));
+      app.setNearRoseAltar(s.pose === "stand" && nearRoseAltar(s.x, s.z));
     }
 
     getNetworkManager().updateLocal(s);
@@ -87,5 +91,5 @@ export function LocalPlayer() {
     return () => void delete w.__chapelDebug;
   }, []);
 
-  return <Avatar ref={ref} color="#8b7d6b" pose={pose} bow={localPlayer.bow} cross={localPlayer.cross} getAnim={getLocalAnim} label={nickname} showLabel={false} />;
+  return <Avatar ref={ref} color="#8b7d6b" pose={pose} bow={localPlayer.bow} cross={localPlayer.cross} getHoldingRose={getLocalHoldingRose} getAnim={getLocalAnim} label={nickname} showLabel={false} />;
 }

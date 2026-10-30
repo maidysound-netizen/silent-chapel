@@ -413,3 +413,30 @@ test("[시뮬레이션] 성호 긋기: 상대에게 전달되고, 절과 따로 
   assert.ok(r.bow.at > 0, "성호 직후 절도 따로 받음");
   for (const p of players) await p.net.disconnect();
 });
+
+test("[시뮬레이션] 장미: 받은 사람이 바치면 상대 화면에 꽃이 생기고, 받지 않고 보낸 꽃은 무시", async () => {
+  const { players } = await makePlayers(2);
+  const [a, b] = players;
+  // 장미를 받지 않고 바로 바친다는 알림 → 무시
+  a.net.sendRose("mary", 1);
+  await tick();
+  assert.equal(b.net.roses.all().length, 0);
+  // 받기 → 들고 있는 모습 → 성모님께 바치기
+  a.net.sendRose("pick", 0);
+  await tick();
+  assert.equal(b.net.remotes.get(a.uid)!.holdingRose, true);
+  await sleep(1600); // 도배 방지 간격
+  a.net.sendRose("mary", 7);
+  await tick();
+  assert.equal(b.net.roses.all().length, 1);
+  assert.equal(b.net.roses.all()[0].target, "mary");
+  assert.equal(b.net.remotes.get(a.uid)!.holdingRose, false, "바친 뒤에는 빈손");
+  // 다시 받아 바닥에 뿌리기
+  a.net.sendRose("pick", 0);
+  await sleep(1600);
+  a.net.sendRose("floor", 9, { x: 1, z: 2 });
+  await tick();
+  const floor = b.net.roses.all().find((r) => r.target === "floor")!;
+  assert.ok(floor && Math.abs(floor.x - 1) < 1e-9 && Math.abs(floor.z - 2) < 1e-9);
+  for (const p of players) await p.net.disconnect();
+});
