@@ -24,7 +24,7 @@ function LightShafts() {
       {zs.map((z) => (
         <mesh key={z} position={[-3.2, 7.5, z + 1.5]} rotation={[0.35, 0, -0.6]}>
           <planeGeometry args={[1.4, 14]} />
-          <meshBasicMaterial color="#ffe2b0" transparent opacity={0.045} blending={THREE.AdditiveBlending} depthWrite={false} side={THREE.DoubleSide} />
+          <meshBasicMaterial color="#fff0cc" transparent opacity={0.075} blending={THREE.AdditiveBlending} depthWrite={false} side={THREE.DoubleSide} />
         </mesh>
       ))}
     </group>
@@ -57,18 +57,19 @@ export function Lighting({ quality }: { quality: Quality }) {
 
   return (
     <>
-      <color attach="background" args={["#120d09"]} />
-      <fog attach="fog" args={["#1a130d", 20, 62]} />
-      {/* 사방에서 고르게 오는 빛은 조각상을 납작하게 만들므로 약하게 둠 */}
-      <hemisphereLight args={["#b9c4dc", "#3a2a1c", low ? 0.6 : 0.38]} />
-      <ambientLight intensity={low ? 0.25 : 0.13} color="#ffe9cc" />
+      {/* 화사한 낮의 성당: 밝은 크림빛 공기, 따뜻한 반사광 */}
+      <color attach="background" args={["#3a2f24"]} />
+      <fog attach="fog" args={["#5a4a38", 26, 75]} />
+      {/* 사방에서 고르게 오는 빛. 너무 세면 조각상이 납작해지므로 십자가상 조명(아래)과 균형을 맞춤 */}
+      <hemisphereLight args={["#fff3dc", "#8a6a4a", low ? 1.15 : 0.95]} />
+      <ambientLight intensity={low ? 0.4 : 0.3} color="#fff1dc" />
 
       {/* 왼쪽 창으로 들어오는 오후 햇빛 */}
       <directionalLight
         ref={sun}
         position={[-14, 16, 4]}
-        intensity={high ? 1.1 : 0.8}
-        color="#ffe3b8"
+        intensity={high ? 2.0 : 1.6}
+        color="#fff0d2"
         castShadow={high}
         shadow-mapSize-width={2048}
         shadow-mapSize-height={2048}
@@ -90,7 +91,7 @@ export function Lighting({ quality }: { quality: Quality }) {
         position={[CRUCIFIX.x + 6, 10.5, CRUCIFIX.z + 6.4]}
         angle={0.34}
         penumbra={0.7}
-        intensity={low ? 170 : 190}
+        intensity={low ? 260 : 300}
         distance={30}
         decay={1.6}
         color="#fff0d6"
@@ -102,7 +103,7 @@ export function Lighting({ quality }: { quality: Quality }) {
       />
       {/* 반대쪽 그늘이 새까매지지 않게 하는 약하고 푸른 보조광 (휴대폰 낮은 품질에서는 생략) */}
       {!low && (
-        <spotLight ref={fill} position={[CRUCIFIX.x - 6, 6, CRUCIFIX.z + 5.4]} angle={0.34} penumbra={0.8} intensity={30} distance={30} decay={1.6} color="#aebcff" />
+        <spotLight ref={fill} position={[CRUCIFIX.x - 6, 6, CRUCIFIX.z + 5.4]} angle={0.34} penumbra={0.8} intensity={45} distance={30} decay={1.6} color="#cfd8ff" />
       )}
 
       {/* 제단 촛불 */}

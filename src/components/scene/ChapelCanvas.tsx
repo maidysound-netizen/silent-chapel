@@ -27,6 +27,10 @@ export default function ChapelCanvas() {
       dpr={DPR[quality]}
       gl={{ antialias: quality !== "low", powerPreference: quality === "low" ? "low-power" : "high-performance" }}
       camera={{ fov: 60, near: 0.1, far: 120, position: [0, 3, 18] }}
+      // 화사한 분위기: 전체 노출을 조금 올림
+      onCreated={({ gl }) => {
+        gl.toneMappingExposure = 1.25;
+      }}
       aria-label={getUi(locale).canvasLabel}
     >
       <Lighting quality={quality} />
