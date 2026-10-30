@@ -69,6 +69,10 @@
 | `is_banned`, `am_i_banned` | 앱이 '내보내기' 알림이 진짜인지 서버에 확인 |
 | `join_room` (교체) | 차단된 사람 입장 거절 |
 
+**비밀번호 시도 제한** — [`20261030020000_admin_rate_limit.sql`](../supabase/migrations/20261030020000_admin_rate_limit.sql) 을 이어서 실행하면,
+한 기기가 1시간에 3번 틀리면 1시간 잠기고, 전체 틀린 횟수가 10분에 30번을 넘으면 10분 동안 모두 잠깁니다(이미 관리자인 기기는 영향 없음).
+잠김 바로 풀기: `delete from public.admin_claim_failures;`
+
 차단 풀기: `delete from public.banned_users where user_id = '<id>';` · 관리자 해제: `delete from public.admins where user_id = '<id>';`
 
 **한계:** 익명 로그인이라 상대가 브라우저 데이터를 지우면 새 id 로 다시 들어올 수 있습니다. 또 Realtime 권한은 채널에 들어올 때 검사되므로, 공식 앱이 아닌 조작된 클라이언트는 다시 연결하기 전까지 메시지를 보낼 수 있지만, 다른 사람들의 앱은 서버에서 차단을 확인한 순간부터 그 사람을 화면에서 숨깁니다.
