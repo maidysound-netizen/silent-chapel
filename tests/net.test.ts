@@ -157,3 +157,16 @@ test("절(bow) 제스처 메시지 검증", () => {
   assert.equal(validateGesture({ ...ok, u: "x" }, NOW), null);
   assert.equal(validateGesture({ ...ok, t: NOW - 120_000 }, NOW), null);
 });
+
+test("방 나누기 순서: 자동 배정 방은 한 바퀴, 별도 방은 그 방만", async () => {
+  const { roomCandidates, roomNumber, ROOM_SEQUENCE } = await import("../src/lib/net/RoomManager.ts");
+  assert.equal(ROOM_SEQUENCE.length, 10);
+  assert.deepEqual(roomCandidates("main-chapel").slice(0, 3), ["main-chapel", "chapel-2", "chapel-3"]);
+  const fromThree = roomCandidates("chapel-3");
+  assert.equal(fromThree.length, 10);
+  assert.deepEqual([fromThree[0], fromThree[8], fromThree[9]], ["chapel-3", "main-chapel", "chapel-2"]);
+  assert.deepEqual(roomCandidates("study-group"), ["study-group"]);
+  assert.equal(roomNumber("main-chapel"), 1);
+  assert.equal(roomNumber("chapel-10"), 10);
+  assert.equal(roomNumber("study-group"), null);
+});

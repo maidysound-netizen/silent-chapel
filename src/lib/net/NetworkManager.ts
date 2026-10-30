@@ -25,10 +25,10 @@ import {
 import { SnapshotBuffer } from "./PositionInterpolation.ts";
 import { PresenceManager } from "./PresenceManager.ts";
 import { ReconnectionHandler } from "./ReconnectionHandler.ts";
-import { roomTopic } from "./RoomManager.ts";
+import { roomCandidates, roomTopic } from "./RoomManager.ts";
 import { getSupabase, readSupabaseEnv, type SupabaseEnv } from "./supabaseClient.ts";
 
-export type NetStatus = "disabled" | "idle" | "auth" | "connecting" | "connected" | "reconnecting" | "offline" | "error";
+export type NetStatus = "disabled" | "idle" | "auth" | "connecting" | "connected" | "reconnecting" | "offline" | "error" | "full";
 
 export interface RemotePlayer {
   uid: string;
@@ -79,6 +79,12 @@ const EVENT_STATE = "st";
 const EVENT_GESTURE = "gs";
 /** 같은 사람의 제스처는 이 간격보다 자주 받지 않음 (도배 방지) */
 const GESTURE_MIN_MS = 2000;
+/** 방에 아직 있다고 DB에 알리는 주기. join_room 의 정원 계산이 이 기록을 봅니다 */
+const HEARTBEAT_MS = 30_000;
+
+type RpcError = { code?: string; message?: string };
+const isRoomFull = (e: RpcError) => e.code === "P0001" || /room is full/i.test(e.message ?? "");
+const isRoomMissing = (e: RpcError) => e.code === "P0002" || /room not found/i.test(e.message ?? "");
 
 export class NetworkManager {
   private sb: SupabaseClient | null;
@@ -97,6 +103,7 @@ export class NetworkManager {
   private wantConnected = false;
   /** 연결 시도 번호. 더 새로운 시도나 disconnect가 생기면 이전 시도는 중간에 멈춥니다 */
   private generation = 0;
+  private lastHeartbeat = 0;
   private janitor: ReturnType<typeof setInterval> | null = null;
   private latencySamples: number[] = [];
   private rateWindow = { sent: 0, recv: 0, at: 0 };
@@ -152,7 +159,8 @@ export class NetworkManager {
     try {
       await this.openChannel();
     } catch (e) {
-      this.emit({ status: "error", error: errorText(e) });
+      // 모든 방이 가득 찬 경우는 openChannel 이 이미 "full" 로 알렸으므로 그대로 둠
+      if (this.snapshot.status !== "full") this.emit({ status: "error", error: errorText(e) });
       this.reconnector.schedule();
     }
   }
@@ -179,7 +187,7 @@ export class NetworkManager {
     if (!this.wantConnected || !this.sb || !this.env) return;
     const gen = ++this.generation;
     const stale = () => gen !== this.generation || !this.wantConnected;
-    const roomId = this.snapshot.roomId!;
+    let roomId = this.snapshot.roomId!;
     this.teardownChannel();
     this.emit({ status: this.metrics.reconnects > 0 || this.snapshot.uid ? "reconnecting" : "connecting" });
 
@@ -190,9 +198,26 @@ export class NetworkManager {
     if (this.env.privateChannels) {
       // DB 함수가 방 존재 여부와 닉네임을 검증하고 visitor_sessions 행을 만듭니다.
       // Realtime 권한 정책(RLS)은 이 행이 있는 사용자만 채널에 들어오게 합니다.
-      const { error } = await this.sb.rpc("join_room", { p_room_id: roomId, p_nickname: this.nickname });
-      if (stale()) return;
-      if (error) throw new Error(`방 입장 실패(join_room): ${error.message}`);
+      // 정원(10명)이 찼으면 다음 방으로. 아직 만들지 않은 방(room not found)도 건너뜁니다.
+      let joined: string | null = null;
+      for (const candidate of roomCandidates(roomId)) {
+        const { error } = await this.sb.rpc("join_room", { p_room_id: candidate, p_nickname: this.nickname });
+        if (stale()) return;
+        if (!error) {
+          joined = candidate;
+          break;
+        }
+        if (!isRoomFull(error) && !isRoomMissing(error)) throw new Error(`방 입장 실패(join_room): ${error.message}`);
+      }
+      if (!joined) {
+        this.emit({ status: "full", error: "all rooms are full" });
+        throw new Error("모든 방이 가득 찼습니다");
+      }
+      if (joined !== roomId) {
+        roomId = joined;
+        this.emit({ roomId });
+      }
+      this.lastHeartbeat = Date.now();
       await this.sb.realtime.setAuth();
       if (stale()) return;
     }
@@ -269,6 +294,8 @@ export class NetworkManager {
     this.reconnector = null;
     if (this.janitor) clearInterval(this.janitor);
     this.janitor = null;
+    // 방 자리를 바로 비워 다른 사람이 들어올 수 있게 함 (실패해도 1분 30초 뒤 자동으로 빠짐)
+    if (this.sb && this.env?.privateChannels && this.snapshot.uid) void this.sb.rpc("leave_room").then(undefined, () => {});
     if (this.channel) {
       try {
         await this.channel.untrack();
@@ -439,6 +466,10 @@ export class NetworkManager {
   /** 1초마다: 끊긴 아바타 제거, 초당 메시지 수 계산 */
   private cleanup() {
     const now = Date.now();
+    if (this.sb && this.env?.privateChannels && this.snapshot.status === "connected" && now - this.lastHeartbeat >= HEARTBEAT_MS) {
+      this.lastHeartbeat = now;
+      void this.sb.rpc("touch_session").then(undefined, () => {});
+    }
     let changed = false;
     for (const [uid, r] of this.remotes) {
       if (!r.present && now - r.lastHeard > STALE_REMOVE_MS) {

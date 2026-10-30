@@ -34,6 +34,21 @@
 | `public.join_room(room, nickname)` | 함수(트랜잭션) | 방 존재·정원 확인 후 세션 기록 |
 | `realtime.messages` 정책 2개 | RLS | `room:<id>` 채널은 그 방에 입장한 사람만 송수신 |
 
+### 3-1. 방 나누기 (100명) — 두 번째 마이그레이션
+
+이어서 [`supabase/migrations/20261030000000_overflow_rooms.sql`](../supabase/migrations/20261030000000_overflow_rooms.sql) 도 같은 방법으로 실행합니다.
+여러 번 실행해도 안전합니다.
+
+| 이름 | 종류 | 용도 |
+| --- | --- | --- |
+| `chapel-2` … `chapel-10` | `rooms` 행 | 방 9개 추가 → 10명 × 10개 = 100명 |
+| `public.join_room` (교체) | 함수 | 최근 90초 안에 신호가 있는 사람만 정원으로 셈 |
+| `public.touch_session()` | 함수 | 앱이 30초마다 "아직 있음"을 알림 |
+| `public.leave_room()` | 함수 | 나갈 때 자리를 바로 비움 |
+
+앱은 `main-chapel` 이 가득 차면 `chapel-2`, `chapel-3` … 순서로 자동 입장하고, 화면 위 표시에 "제2경당"처럼 방 번호를 보여 줍니다.
+이 마이그레이션을 실행하기 전에도 앱은 그대로 동작합니다(추가 방이 없으면 건너뜀). 다만 그때는 정원 계산이 예전 방식이라 사실상 한 방에 모두 들어갑니다.
+
 ## 4. Realtime 설정
 
 1. **Realtime → Settings** 에서 **Allow public access** 를 **끕니다** (Private 채널만 허용).

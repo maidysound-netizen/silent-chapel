@@ -16,6 +16,24 @@ class FakeServer {
   channels = new Set<FakeChannel>();
   presence = new Map<FakeChannel, { key: string; meta: Record<string, unknown> }>();
   delivered = 0;
+  /** 가짜 DB 방 정원 (설정하지 않으면 join_room 은 항상 성공) */
+  rooms: Map<string, { max: number; members: Set<string> }> | null = null;
+
+  rpc(uid: string, name: string, args: any): { error: { code: string; message: string } | null } {
+    if (!this.rooms) return { error: null };
+    if (name === "leave_room") {
+      for (const r of this.rooms.values()) r.members.delete(uid);
+      return { error: null };
+    }
+    if (name !== "join_room") return { error: null };
+    const room = this.rooms.get(args.p_room_id);
+    if (!room) return { error: { code: "P0002", message: "room not found" } };
+    const others = [...room.members].filter((m) => m !== uid).length;
+    if (others >= room.max) return { error: { code: "P0001", message: "room is full" } };
+    for (const r of this.rooms.values()) r.members.delete(uid);
+    room.members.add(uid);
+    return { error: null };
+  }
 
   state(topic: string) {
     const out: Record<string, unknown[]> = {};
@@ -109,7 +127,7 @@ function fakeClient(server: FakeServer) {
         getSession: async () => ({ data: { session: { user: { id: uid } } } }),
         signInAnonymously: async () => ({ data: { user: { id: uid } }, error: null }),
       },
-      rpc: async () => ({ error: null }),
+      rpc: async (name: string, args?: any) => server.rpc(uid, name, args),
       realtime: { setAuth: async () => {} },
       channel: (topic: string, opts: any) => {
         const ch = new FakeChannel(server, topic, opts);
@@ -287,4 +305,34 @@ test("[시뮬레이션] 절하기: 상대에게 전달되고, 짧은 시간 안�
   assert.equal(b.net.remotes.get(a.uid)!.bow.at, first);
   await a.net.disconnect();
   await b.net.disconnect();
+});
+
+test("[시뮬레이션] 방이 가득 차면 다음 방으로 자동 입장, 모두 차면 full", async () => {
+  const server = new FakeServer();
+  // 정원 2명짜리 방 두 개만 있는 상황 (chapel-3 부터는 아직 DB에 없음)
+  server.rooms = new Map([
+    ["main-chapel", { max: 2, members: new Set() }],
+    ["chapel-2", { max: 2, members: new Set() }],
+  ]);
+  const players: (ReturnType<typeof fakeClient> & { net: NetworkManager })[] = [];
+  for (let i = 0; i < 5; i++) {
+    const fc = fakeClient(server);
+    const net = new NetworkManager(fc.client, ENV);
+    void net.connect("main-chapel", `Visitor${i + 1}`);
+    await tick();
+    players.push({ ...fc, net });
+  }
+  await tick();
+  const rooms = players.map((p) => p.net.getSnapshot().roomId);
+  assert.deepEqual(rooms.slice(0, 4), ["main-chapel", "main-chapel", "chapel-2", "chapel-2"]);
+  // 방마다 따로: 각 방에서 2명씩 보임
+  assert.equal(players[0].net.getSnapshot().count, 2);
+  assert.equal(players[2].net.getSnapshot().count, 2);
+  assert.ok(!players[2].net.getSnapshot().others.some((o) => o.uid === players[0].uid), "다른 방 사람은 안 보임");
+  // 5번째: 모든 방이 가득
+  assert.equal(players[4].net.getSnapshot().status, "full");
+  // 한 명이 나가면 자리가 비어 다음 사람이 들어올 수 있음
+  await players[0].net.disconnect();
+  assert.equal(server.rooms.get("main-chapel")!.members.size, 1);
+  for (const p of players) await p.net.disconnect();
 });

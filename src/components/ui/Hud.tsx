@@ -4,6 +4,7 @@ import { useSyncExternalStore } from "react";
 import { useApp } from "@/store/useAppStore";
 import { getUi } from "@/lib/i18n";
 import { getNetworkManager } from "@/lib/net/NetworkManager";
+import { roomNumber } from "@/lib/net/RoomManager";
 import { RunButton, TouchJoystick } from "./TouchJoystick";
 import { NetStats } from "./NetStats";
 import { FEATURES } from "@/lib/features";
@@ -18,8 +19,15 @@ export function PresenceChip() {
   let text: string;
   let tone: "ok" | "wait" | "off" = "ok";
   switch (snap.status) {
-    case "connected":
-      text = ui.visitors(snap.count);
+    case "connected": {
+      // 방이 여러 개라 지금 어느 방인지 함께 보여 줌 (?room= 으로 고른 별도 방은 번호 없음)
+      const n = roomNumber(snap.roomId);
+      text = n ? `${ui.roomName(n)} · ${ui.visitors(snap.count)}` : ui.visitors(snap.count);
+      break;
+    }
+    case "full":
+      text = ui.allRoomsFull;
+      tone = "wait";
       break;
     case "auth":
     case "connecting":
