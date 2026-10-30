@@ -7,6 +7,7 @@ import { getUi } from "@/lib/i18n";
 import { Architecture } from "./Architecture";
 import { Furnishings } from "./Furnishings";
 import { Roses } from "./Roses";
+import { Paintings } from "./Paintings";
 import { BibleObject, RosaryObject } from "./Interactables";
 import { Lighting } from "./Lighting";
 import { LocalPlayer } from "./LocalPlayer";
@@ -37,6 +38,7 @@ export default function ChapelCanvas() {
       <Architecture quality={quality} />
       <Furnishings />
       <Roses />
+      <Paintings />
       <RosaryObject />
       <BibleObject />
       <LocalPlayer />

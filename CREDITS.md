@@ -24,6 +24,10 @@
 | 성모상 | 프로젝트 소유자가 Meshy AI 로 생성 (원본 `object/Meshy_AI_virgin_mary_statue_…glb`, Git 제외) | `public/models/chapel/mary.glb` |
 
 두 모델은 프로젝트 소유자가 Meshy AI 로 직접 만든 소유 모델입니다.
+
+| 그림 | 출처 | 웹용 파일 |
+| --- | --- | --- |
+| 성모 영보 | 프로젝트 소유자가 이미지 생성 AI 로 만든 그림 (원본 `object/` 폴더 PNG, Git 제외) | `public/art/annunciation.jpg` (JPEG 82%) |
 코드로 만든 예전 십자가상·성모상은 모델을 불러오는 동안·실패했을 때 대신 보입니다.
 
 ## 기도문
