@@ -61,16 +61,19 @@ function useKeyboard(active: boolean) {
         e.preventDefault();
         pressed.add(e.code);
         recompute();
-      } else if (e.code === "KeyE") interact();
+      } else if (e.key === "Shift") localPlayer.run.key = true;
+      else if (e.code === "KeyE") interact();
       else if (e.code === "KeyF") toggleSit();
       else if (e.code === "KeyB") bow();
       else if (e.code === "KeyM" && app.pose === "sit") app.setMeditation(!app.meditation);
       else if (e.code === "KeyR" && app.pose === "sit") app.openPanel("rosary");
     };
     const up = (e: KeyboardEvent) => {
+      if (e.key === "Shift") localPlayer.run.key = false;
       if (pressed.delete(e.code)) recompute();
     };
     const clear = () => {
+      localPlayer.run.key = false;
       pressed.clear();
       recompute();
     };

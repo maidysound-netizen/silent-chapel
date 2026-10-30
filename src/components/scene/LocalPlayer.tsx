@@ -1,6 +1,6 @@
 "use client";
 // 로컬 플레이어: 입력 → stepPlayer → 아바타 위치 반영 → 근처 상호작용 확인 → 네트워크 전송 판단
-import { useRef } from "react";
+import { useEffect, useRef } from "react";
 import { useFrame } from "@react-three/fiber";
 import * as THREE from "three";
 import { stepPlayer } from "@/lib/game/PlayerController";
@@ -9,6 +9,10 @@ import { getNetworkManager } from "@/lib/net/NetworkManager";
 import { isBowing, isNearJesus, isNearMary, localPlayer, occupiedSeats } from "@/store/localPlayer";
 import { useApp } from "@/store/useAppStore";
 import { Avatar } from "./Avatar";
+import { sceneRefs } from "./sceneRefs";
+import { deriveAnimState } from "@/lib/game/avatarConfig";
+
+const getLocalAnim = () => deriveAnimState(localPlayer.state);
 
 export function LocalPlayer() {
   const ref = useRef<THREE.Group>(null);
@@ -31,15 +35,19 @@ export function LocalPlayer() {
       : {
           forward: localPlayer.keys.forward + localPlayer.touch.forward,
           right: localPlayer.keys.right + localPlayer.touch.right,
+          run: localPlayer.run.key || localPlayer.run.touch,
         };
     localPlayer.state = stepPlayer(localPlayer.state, input, localPlayer.camera.yaw, dt);
     const s = localPlayer.state;
 
     if (ref.current) {
-      ref.current.position.set(s.x, s.y + (s.moving ? Math.abs(Math.sin(state.clock.elapsedTime * 7)) * 0.03 : 0), s.z);
+      // 걸음에 따른 오르내림은 애니메이션 클립(Walk/Run)이 담당
+      ref.current.position.set(s.x, s.y, s.z);
       ref.current.rotation.y = s.yaw;
-      // 묵상 시점에서는 카메라가 내 눈 위치에 있으므로 내 아바타를 숨김
-      ref.current.visible = !(app.meditation && s.pose === "sit");
+      // 묵상 시점이거나, 벽·기둥 때문에 카메라가 머리에 바짝 붙으면 내 아바타를 숨김
+      const cam = state.camera.position;
+      const tooClose = Math.hypot(cam.x - s.x, cam.y - (s.y + 1.4), cam.z - s.z) < 0.5;
+      ref.current.visible = !(app.meditation && s.pose === "sit") && !tooClose;
     }
 
     // 상호작용 대상 확인은 10Hz면 충분
@@ -54,5 +62,23 @@ export function LocalPlayer() {
     getNetworkManager().updateLocal(s);
   });
 
-  return <Avatar ref={ref} color="#8b7d6b" pose={pose} bow={localPlayer.bow} label={nickname} showLabel={false} />;
+  // 개발 서버에서만: 브라우저 콘솔/자동 테스트에서 이동·애니메이션 상태 확인
+  useEffect(() => {
+    if (process.env.NODE_ENV === "production") return;
+    const w = window as unknown as { __chapelDebug?: unknown };
+    w.__chapelDebug = {
+      state: () => ({ ...localPlayer.state }),
+      camera: () => sceneRefs.camera?.position.toArray(),
+      setCamera: (yaw: number, pitch: number, distance: number) => Object.assign(localPlayer.camera, { yaw, pitch, distance }),
+      teleport: (x: number, z: number) => void (localPlayer.state = { ...localPlayer.state, x, z }),
+      anim: () => {
+        let s: unknown = null;
+        ref.current?.traverse((o) => (s ??= o.userData.animState ?? null));
+        return s;
+      },
+    };
+    return () => void delete w.__chapelDebug;
+  }, []);
+
+  return <Avatar ref={ref} color="#8b7d6b" pose={pose} bow={localPlayer.bow} getAnim={getLocalAnim} label={nickname} showLabel={false} />;
 }

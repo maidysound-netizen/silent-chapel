@@ -7,6 +7,8 @@ export interface Box2 {
   z: number;
   hx: number;
   hz: number;
+  /** 물체 윗면 높이 (m). 카메라가 이보다 높으면 위로 지나갈 수 있음. 없으면 천장까지 */
+  top?: number;
 }
 export interface Circle2 {
   x: number;
@@ -91,14 +93,14 @@ export const AMBO = { x: 4.2, z: -11, y: 1.25 };
 export const SPAWN = { x: 0, z: 13, yaw: 0 };
 
 export const COLLIDER_BOXES: Box2[] = [
-  ...PEWS.map((p) => ({ x: p.x, z: p.z + 0.05, hx: p.width / 2, hz: PEW_DEPTH / 2 })),
-  { x: ALTAR.x, z: ALTAR.z, hx: ALTAR.width / 2 + 0.2, hz: ALTAR.depth / 2 + 0.2 },
-  { x: MARY.x, z: MARY.z, hx: 0.6, hz: 0.6 },
-  { x: ROSARY_STAND.x, z: ROSARY_STAND.z, hx: 0.3, hz: 0.3 },
-  { x: KNEELER.x - 0.15, z: KNEELER.z, hx: 0.3, hz: 0.55 },
-  { x: CANDLE_RACK.x, z: CANDLE_RACK.z, hx: 0.3, hz: 0.62 },
-  { x: AMBO.x, z: AMBO.z, hx: 0.45, hz: 0.4 },
-  { x: CRUCIFIX.x, z: -21, hx: 2.5, hz: 0.6 },
+  ...PEWS.map((p) => ({ x: p.x, z: p.z + 0.05, hx: p.width / 2, hz: PEW_DEPTH / 2, top: 1.0 })),
+  { x: ALTAR.x, z: ALTAR.z, hx: ALTAR.width / 2 + 0.2, hz: ALTAR.depth / 2 + 0.2, top: SANCTUARY_Y + ALTAR.height + 0.6 },
+  { x: MARY.x, z: MARY.z, hx: 0.6, hz: 0.6, top: 2.9 },
+  { x: ROSARY_STAND.x, z: ROSARY_STAND.z, hx: 0.3, hz: 0.3, top: 1.1 },
+  { x: KNEELER.x - 0.15, z: KNEELER.z, hx: 0.3, hz: 0.55, top: 0.9 },
+  { x: CANDLE_RACK.x, z: CANDLE_RACK.z, hx: 0.3, hz: 0.62, top: 1.2 },
+  { x: AMBO.x, z: AMBO.z, hx: 0.45, hz: 0.4, top: 1.6 },
+  { x: CRUCIFIX.x, z: -21, hx: 2.5, hz: 0.6, top: 7 },
 ];
 
 export const COLLIDER_CIRCLES: Circle2[] = COLUMN_ZS.flatMap((z) => [

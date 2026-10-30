@@ -4,7 +4,7 @@ import { useSyncExternalStore } from "react";
 import { useApp } from "@/store/useAppStore";
 import { getUi } from "@/lib/i18n";
 import { getNetworkManager } from "@/lib/net/NetworkManager";
-import { TouchJoystick } from "./TouchJoystick";
+import { RunButton, TouchJoystick } from "./TouchJoystick";
 import { NetStats } from "./NetStats";
 import { FEATURES } from "@/lib/features";
 import { bow, standUp } from "@/store/localPlayer";
@@ -138,7 +138,12 @@ export function Hud({ onExit }: { onExit: () => void }) {
         <p className="controls-hint desktop-only">{ui.controlsPc}</p>
       </div>
 
-      {pose !== "sit" && panel === null && <TouchJoystick label={ui.controlsMobile} />}
+      {pose !== "sit" && panel === null && (
+        <>
+          <TouchJoystick label={ui.controlsMobile} />
+          <RunButton label={ui.run} />
+        </>
+      )}
     </div>
   );
 }

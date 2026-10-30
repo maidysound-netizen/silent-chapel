@@ -151,9 +151,16 @@ kbd { font-size: 0.72em; border: 1px solid currentColor; border-radius: 4px; pad
   position: absolute; left: 22px; bottom: calc(96px + env(safe-area-inset-bottom)); width: 120px; height: 120px; border-radius: 50%;
   border: 1px solid var(--line); background: rgba(255, 245, 225, 0.06); touch-action: none; display: none; place-items: center;
 }
+.run-btn {
+  position: absolute; right: 22px; bottom: calc(110px + env(safe-area-inset-bottom)); width: 78px; height: 78px; border-radius: 50%;
+  border: 1px solid var(--line); background: rgba(255, 245, 225, 0.08); color: var(--text); font-size: 0.85rem;
+  touch-action: none; user-select: none; -webkit-user-select: none; -webkit-touch-callout: none; display: none;
+}
+.run-btn.held { background: rgba(216, 180, 105, 0.35); border-color: var(--gold); }
 .joystick .knob { width: 52px; height: 52px; border-radius: 50%; background: rgba(255, 245, 225, 0.25); border: 1px solid var(--line); }
 @media (pointer: coarse) {
   .joystick { display: grid; }
+  .run-btn { display: block; }
   .desktop-only { display: none; }
 }
 

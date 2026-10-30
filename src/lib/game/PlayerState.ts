@@ -13,12 +13,14 @@ export interface PlayerState {
   /** 라디안. 0 = -Z(제단) 방향 */
   yaw: number;
   moving: boolean;
+  /** 달리는 중 (moving 일 때만 의미 있음) */
+  running: boolean;
   pose: Pose;
   seatId: string | null;
 }
 
 export function createPlayerState(x: number, z: number, yaw: number): PlayerState {
-  return { x, y: 0, z, yaw, moving: false, pose: "stand", seatId: null };
+  return { x, y: 0, z, yaw, moving: false, running: false, pose: "stand", seatId: null };
 }
 
 /** 각도를 -PI..PI 로 정규화 */

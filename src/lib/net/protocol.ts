@@ -3,6 +3,7 @@
 
 import type { PlayerState, Pose } from "../game/PlayerState.ts";
 import { isInsideChapel, SEAT_BY_ID } from "../game/chapelLayout.ts";
+import { animCode, animFromCode, deriveAnimState, type AnimState } from "../game/avatarConfig.ts";
 
 export const PROTOCOL_VERSION = 1;
 export const MAX_MESSAGE_BYTES = 256;
@@ -22,6 +23,9 @@ export interface StateMessage {
   m: 0 | 1; // 이동 중
   a: 0 | 1; // 0 서기, 1 앉기
   c: string | null; // 좌석 id
+  /** 애니메이션 상태 코드 (ANIM_STATES 순서: 0 idle, 1 walk, 2 run, 3 sit, 4 kneel, 5 pray).
+   *  예전 버전 클라이언트는 보내지 않으므로 선택 항목 — 없으면 m/a 로 추정 */
+  k?: number;
 }
 
 /**
@@ -50,6 +54,7 @@ export function encodeState(uid: string, seq: number, s: PlayerState, now = Date
     m: s.moving ? 1 : 0,
     a: s.pose === "sit" ? 1 : 0,
     c: s.pose === "sit" ? s.seatId : null,
+    k: animCode(deriveAnimState(s)),
   };
 }
 
@@ -76,6 +81,7 @@ export function validateState(raw: unknown, now = Date.now()): StateMessage | nu
   if (!finite(m.r) || Math.abs(m.r) > 7) return null;
   if (m.m !== 0 && m.m !== 1) return null;
   if (m.a !== 0 && m.a !== 1) return null;
+  if (m.k !== undefined && animFromCode(m.k) === null) return null;
   let c: string | null = null;
   if (m.a === 1) {
     if (typeof m.c !== "string" || !SEAT_RE.test(m.c) || !SEAT_BY_ID.has(m.c)) return null;
@@ -86,7 +92,21 @@ export function validateState(raw: unknown, now = Date.now()): StateMessage | nu
   } catch {
     return null;
   }
-  return { v: PROTOCOL_VERSION, u: m.u, s: m.s, t: m.t, p: [x, y, z], r: m.r, m: m.m, a: m.a, c };
+  const out: StateMessage = { v: PROTOCOL_VERSION, u: m.u, s: m.s, t: m.t, p: [x, y, z], r: m.r, m: m.m, a: m.a, c };
+  if (m.k !== undefined) out.k = m.k as number;
+  return out;
+}
+
+/** 받은 메시지의 애니메이션 상태. k 가 없거나 자세와 맞지 않으면 m/a 로 추정 */
+export function animOf(msg: StateMessage): AnimState {
+  const fromPose = deriveAnimState({ pose: poseOf(msg), moving: msg.m === 1 });
+  const k = animFromCode(msg.k);
+  if (!k) return fromPose;
+  // 앉아 있는데 달린다는 식의 모순은 자세 쪽을 믿음
+  if (msg.a === 1 && k !== "sit") return "sit";
+  if (msg.a === 0 && k === "sit") return fromPose;
+  if (msg.m === 0 && (k === "walk" || k === "run")) return "idle";
+  return k;
 }
 
 export function poseOf(msg: StateMessage): Pose {

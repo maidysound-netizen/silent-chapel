@@ -7,10 +7,12 @@
 import type { RealtimeChannel, SupabaseClient } from "@supabase/supabase-js";
 import type { PlayerState, Pose } from "../game/PlayerState.ts";
 import { SEAT_BY_ID, floorHeight } from "../game/chapelLayout.ts";
+import type { AnimState } from "../game/avatarConfig.ts";
 import {
   encodeState,
   idTag,
   interpolationDelayMs,
+  animOf,
   poseOf,
   sendRateHz,
   validateGesture,
@@ -38,6 +40,8 @@ export interface RemotePlayer {
   pose: Pose;
   seatId: string | null;
   moving: boolean;
+  /** 애니메이션 상태 (idle/walk/run/sit…), 아바타가 매 프레임 읽음 */
+  anim: AnimState;
   /** Presence에 있는지 (없으면 곧 제거) */
   present: boolean;
   /** 절 동작 시작 시각 (아바타가 매 프레임 읽음) */
@@ -301,6 +305,11 @@ export class NetworkManager {
       this.sendState();
       return;
     }
+    // 걷기 ↔ 달리기 전환은 바로 알려서 다른 사람 화면의 애니메이션도 곧바로 바뀌게 함
+    if (state.moving && last.moving && state.running !== last.running && now - this.lastSentAt >= 150) {
+      this.sendState();
+      return;
+    }
     const interval = 1000 / this.metrics.sendHz;
     const moved = Math.hypot(state.x - last.x, state.z - last.z) > 0.02 || Math.abs(state.yaw - last.yaw) > 0.05;
     if (state.moving && moved && now - this.lastSentAt >= interval) {
@@ -365,6 +374,7 @@ export class NetworkManager {
     r.pose = poseOf(msg);
     r.seatId = msg.c;
     r.moving = msg.m === 1;
+    r.anim = animOf(msg);
     r.buffer.push({ time: now, x: msg.p[0], y: msg.p[1], z: msg.p[2], yaw: msg.r });
 
     this.latencySamples.push(now - msg.t);
@@ -383,6 +393,7 @@ export class NetworkManager {
       pose: "stand",
       seatId: null,
       moving: false,
+      anim: "idle",
       present: true,
       bow: { at: 0 },
     };

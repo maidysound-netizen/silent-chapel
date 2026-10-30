@@ -5,6 +5,7 @@ import { useEffect, useRef } from "react";
 import { useFrame, useThree } from "@react-three/fiber";
 import * as THREE from "three";
 import { BOUNDS, CEILING_Y, CRUCIFIX } from "@/lib/game/chapelLayout";
+import { cameraFreeFraction } from "@/lib/game/cameraCollision";
 import { localPlayer } from "@/store/localPlayer";
 import { useApp } from "@/store/useAppStore";
 import { pointerDrag } from "./pointerDrag";
@@ -126,6 +127,9 @@ export function CameraRig() {
       desired.current.x = THREE.MathUtils.clamp(desired.current.x, BOUNDS.minX - 0.1, BOUNDS.maxX + 0.1);
       desired.current.z = THREE.MathUtils.clamp(desired.current.z, BOUNDS.minZ, BOUNDS.maxZ + 0.3);
       desired.current.y = THREE.MathUtils.clamp(desired.current.y, 0.4, CEILING_Y - 1);
+      // 기둥·장의자·제단 등을 뚫지 않도록 막히는 곳 앞까지만 (캐릭터 충돌과 같은 배치 데이터 사용)
+      const free = cameraFreeFraction(target.current, desired.current);
+      if (free < 1) desired.current.sub(target.current).multiplyScalar(free).add(target.current);
     }
     wasMeditating.current = meditation;
     // 묵상 자리에 도착한 뒤에는 고개 돌리기가 바로 따라오게 (들어가는 전환만 천천히)
@@ -135,7 +139,9 @@ export function CameraRig() {
       look.current.copy(target.current);
       init.current = true;
     }
-    camera.position.lerp(desired.current, k);
+    // 물체에 가려질 때는 빨리 당겨 오고, 다시 트일 때는 천천히 물러남
+    const pullIn = !intro && !meditation && desired.current.distanceTo(target.current) < camera.position.distanceTo(look.current) - 0.05;
+    camera.position.lerp(desired.current, pullIn ? 1 - Math.exp(-delta * 20) : k);
     look.current.lerp(target.current, lookK);
     camera.lookAt(look.current);
   });

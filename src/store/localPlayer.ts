@@ -11,6 +11,8 @@ export const localPlayer = {
   state: createPlayerState(SPAWN.x, SPAWN.z, SPAWN.yaw) as PlayerState,
   keys: { forward: 0, right: 0 },
   touch: { forward: 0, right: 0 },
+  /** 달리기 입력: Shift 키 / 모바일 달리기 버튼 (누르고 있는 동안) */
+  run: { key: false, touch: false },
   camera: { yaw: 0, pitch: 0.28, distance: 4.2 },
   bow: { at: 0 },
   /** 묵상 시점에서 둘러본 정도 (십자가 방향 기준 오프셋, 라디안) */
@@ -30,7 +32,7 @@ export function occupiedSeats(): Set<string> {
 
 export function sitAt(seat: Seat) {
   if (occupiedSeats().has(seat.id)) return;
-  localPlayer.state = { ...localPlayer.state, x: seat.x, z: seat.z, y: 0, yaw: seat.yaw, moving: false, pose: "sit", seatId: seat.id };
+  localPlayer.state = { ...localPlayer.state, x: seat.x, z: seat.z, y: 0, yaw: seat.yaw, moving: false, running: false, pose: "sit", seatId: seat.id };
   localPlayer.camera.yaw = seat.yaw;
   useApp.getState().setPose("sit");
 }
@@ -40,7 +42,7 @@ export function standUp() {
   if (s.pose !== "sit") return;
   const seat = s.seatId ? SEAT_BY_ID.get(s.seatId) : null;
   const p = seat ? collide(seat.standX, seat.standZ) : collide(s.x, s.z + 0.8);
-  localPlayer.state = { ...s, x: p.x, z: p.z, y: floorHeight(p.z), moving: false, pose: "stand", seatId: null };
+  localPlayer.state = { ...s, x: p.x, z: p.z, y: floorHeight(p.z), moving: false, running: false, pose: "stand", seatId: null };
   useApp.getState().setPose("stand");
 }
 

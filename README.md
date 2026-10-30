@@ -45,6 +45,7 @@ npm run dev
 | 동작 | PC | 모바일 |
 | --- | --- | --- |
 | 이동 | W A S D / 방향키 | 왼쪽 아래 조이스틱 |
+| 달리기 | 이동하면서 **Shift** | 오른쪽 아래 **달리기** 버튼을 누르고 있기 |
 | 시점 | 마우스 드래그, 휠로 거리 | 화면 드래그 |
 | 묵주 집기 | 가까이 가서 **E** 또는 클릭 | 화면의 버튼 또는 탭 |
 | 앉기/일어나기 | 장의자 근처에서 **F** | 버튼 |
@@ -61,6 +62,16 @@ npm run dev
 성경 기능은 다음 업데이트를 위해 잠시 꺼 두었습니다(`src/lib/features.ts` 의 `bible`).
 3D가 무거운 기기에서는 입장 화면의 **2D 기도 모드**를 사용하세요.
 
+### 아바타와 애니메이션
+- 캐릭터는 이동 방향으로 부드럽게 돌고, Three.js **AnimationMixer** 로 Idle · Walk · Run 클립을 0.3초 크로스페이드로 전환합니다.
+  걷기·달리기 클립 재생 속도는 실제 이동 속도에 맞춰 조절됩니다.
+- 지금은 코드로 만든 **임시 캐릭터**와 임시 클립을 씁니다. GLB(예: Wands King Bride)는
+  [public/models/README.md](public/models/README.md) 대로 `src/lib/game/avatarConfig.ts` 의 `AVATAR_MODEL.url` 만 바꾸면 교체됩니다.
+- 이동 속도(걷기 2.3m/s, 달리기 4.4m/s)와 모델 키·클립 이름은 같은 파일에서 따로 관리합니다.
+- 애니메이션 상태는 `idle · walk · run · sit · kneel · pray` 로 정해 두었고, kneel · pray 는 클립·자세를 넣을 자리만 마련되어 있습니다.
+- 카메라는 캐릭터와 같은 충돌 데이터로 기둥·장의자·제단 등을 뚫지 않고 그 앞에서 멈춥니다(낮은 장의자 위로는 넘어감).
+- 다른 사람에게는 애니메이션 상태가 함께 전송됩니다(`StateMessage.k`, 예전 버전과 호환).
+
 ## 4. 폴더 구조
 
 ```
@@ -76,13 +87,15 @@ silent-chapel/
 │  │  │  ├─ LocalPlayer.tsx    입력 → 이동 → 상호작용 → 네트워크 전송
 │  │  │  ├─ RemoteAvatars.tsx  다른 방문자 (보간 렌더링)
 │  │  │  ├─ CameraRig.tsx      3인칭 카메라 / 묵상 시점
+│  │  │  ├─ Avatar.tsx         아바타(모델 선택 + 이름표)
+│  │  │  ├─ avatar/            임시 캐릭터 · GLB 캐릭터 · AnimationMixer 상태 기계 · 임시 클립
 │  │  │  ├─ Lighting.tsx       품질별 조명·그림자
 │  │  │  └─ shapes.ts          아치 모양, 절차적 텍스처(직접 생성)
 │  │  └─ ui/                   입장 화면, HUD, 묵주기도·성경·설정 패널, 조이스틱
 │  ├─ lib/
 │  │  ├─ rosary/               묵주기도 순서·상태 (순수 함수) + 로컬 저장
 │  │  ├─ i18n/                 UI 문구, 기도 데이터 (ko / en / ja 구조)
-│  │  ├─ game/                 PlayerState, PlayerController, InteractionSystem, 배치 데이터
+│  │  ├─ game/                 PlayerState, PlayerController, InteractionSystem, 배치 데이터, avatarConfig(속도·모델·애니메이션), cameraCollision
 │  │  └─ net/                  NetworkManager, RoomManager, PresenceManager,
 │  │                           PositionInterpolation, ReconnectionHandler, protocol
 │  └─ store/                   UI 상태(zustand), 로컬 플레이어 가변 상태

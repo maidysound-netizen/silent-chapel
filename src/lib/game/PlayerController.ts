@@ -4,17 +4,22 @@
 
 import type { PlayerState } from "./PlayerState.ts";
 import { lerpAngle } from "./PlayerState.ts";
+import { MOVE_CONFIG } from "./avatarConfig.ts";
 import { BOUNDS, COLLIDER_BOXES, COLLIDER_CIRCLES, floorHeight, type Box2, type Circle2 } from "./chapelLayout.ts";
 
-export const WALK_SPEED = 2.3; // m/s — 성당 안을 천천히 걷는 속도
-export const PLAYER_RADIUS = 0.3;
-export const TURN_RATE = 10;
+// 속도·반지름 값은 avatarConfig.ts 의 MOVE_CONFIG 에서 관리합니다
+export const WALK_SPEED = MOVE_CONFIG.walkSpeed; // m/s — 성당 안을 천천히 걷는 속도
+export const RUN_SPEED = MOVE_CONFIG.runSpeed;
+export const PLAYER_RADIUS = MOVE_CONFIG.radius;
+export const TURN_RATE = MOVE_CONFIG.turnRate;
 
 export interface MoveInput {
   /** -1..1 (앞 +) */
   forward: number;
   /** -1..1 (오른쪽 +) */
   right: number;
+  /** 달리기 (Shift / 달리기 버튼) */
+  run?: boolean;
 }
 
 /** 원과 축정렬 상자의 충돌을 밀어내기로 해소 */
@@ -70,7 +75,7 @@ export function collide(x: number, z: number, r = PLAYER_RADIUS): { x: number; z
  * 앉아 있으면 움직이지 않습니다.
  */
 export function stepPlayer(s: PlayerState, input: MoveInput, cameraYaw: number, dt: number): PlayerState {
-  if (s.pose === "sit") return { ...s, moving: false };
+  if (s.pose === "sit") return { ...s, moving: false, running: false };
   let f = input.forward;
   let r = input.right;
   const len = Math.hypot(f, r);
@@ -78,13 +83,15 @@ export function stepPlayer(s: PlayerState, input: MoveInput, cameraYaw: number, 
     f /= len;
     r /= len;
   }
-  if (len < 0.05) return { ...s, moving: false, y: floorHeight(s.z) };
+  if (len < 0.05) return { ...s, moving: false, running: false, y: floorHeight(s.z) };
+  const running = !!input.run;
+  const speed = running ? RUN_SPEED : WALK_SPEED;
 
   // yaw=0 → 정면 (0,0,-1), 오른쪽 (1,0,0)
   const sin = Math.sin(cameraYaw);
   const cos = Math.cos(cameraYaw);
-  const dx = (-sin * f + cos * r) * WALK_SPEED * dt;
-  const dz = (-cos * f - sin * r) * WALK_SPEED * dt;
+  const dx = (-sin * f + cos * r) * speed * dt;
+  const dz = (-cos * f - sin * r) * speed * dt;
   const next = collide(s.x + dx, s.z + dz);
   const targetYaw = Math.atan2(-dx, -dz);
   return {
@@ -94,5 +101,6 @@ export function stepPlayer(s: PlayerState, input: MoveInput, cameraYaw: number, 
     y: floorHeight(next.z),
     yaw: lerpAngle(s.yaw, targetYaw, Math.min(1, TURN_RATE * dt)),
     moving: true,
+    running,
   };
 }
