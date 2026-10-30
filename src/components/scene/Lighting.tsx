@@ -1,10 +1,22 @@
 "use client";
 // 은은한 간접 조명. 품질 설정에 따라 조명 수와 그림자를 줄입니다.
-import { useEffect, useRef } from "react";
-import { useFrame } from "@react-three/fiber";
+import { useEffect, useRef, useState } from "react";
+import { useFrame, useThree } from "@react-three/fiber";
 import * as THREE from "three";
 import { ALTAR, CANDLE_RACK, CRUCIFIX, MARY, MARY_SHRINE, ROSE_ALTAR, SANCTUARY_Y } from "@/lib/game/chapelLayout";
 import type { Quality } from "@/store/useAppStore";
+import { hourOverride, koreaHour, moodAt, type LightMood } from "@/lib/timeOfDay";
+
+/** 한국 시각에 맞춘 조명. 1분마다 다시 계산 (주소 ?hour=21 이면 그 시각으로 고정) */
+function useMood(): LightMood {
+  const read = () => moodAt(hourOverride(typeof window === "undefined" ? "" : window.location.search) ?? koreaHour());
+  const [mood, setMood] = useState(read);
+  useEffect(() => {
+    const id = setInterval(() => setMood(read()), 60_000);
+    return () => clearInterval(id);
+  }, []);
+  return mood;
+}
 
 function FlickerLight({ position, base, color, distance }: { position: [number, number, number]; base: number; color: string; distance: number }) {
   const ref = useRef<THREE.PointLight>(null);
@@ -17,14 +29,14 @@ function FlickerLight({ position, base, color, distance }: { position: [number, 
 }
 
 /** 창으로 들어오는 빛줄기 (반투명 판, 가산 혼합) */
-function LightShafts() {
+function LightShafts({ opacity }: { opacity: number }) {
   const zs = [-12.5, -7.5, -2.5, 2.5, 7.5];
   return (
     <group>
       {zs.map((z) => (
         <mesh key={z} position={[-3.2, 7.5, z + 1.5]} rotation={[0.35, 0, -0.6]}>
           <planeGeometry args={[1.4, 14]} />
-          <meshBasicMaterial color="#fff0cc" transparent opacity={0.075} blending={THREE.AdditiveBlending} depthWrite={false} side={THREE.DoubleSide} />
+          <meshBasicMaterial color="#fff0cc" transparent opacity={opacity} blending={THREE.AdditiveBlending} depthWrite={false} side={THREE.DoubleSide} />
         </mesh>
       ))}
     </group>
@@ -38,6 +50,11 @@ export function Lighting({ quality }: { quality: Quality }) {
   const marySpot = useRef<THREE.SpotLight>(null);
   const high = quality === "high";
   const low = quality === "low";
+  const mood = useMood();
+  const gl = useThree((s) => s.gl);
+  useEffect(() => {
+    gl.toneMappingExposure = mood.exposure;
+  }, [gl, mood.exposure]);
 
   useEffect(() => {
     for (const l of [spot.current, fill.current]) {
@@ -57,19 +74,20 @@ export function Lighting({ quality }: { quality: Quality }) {
 
   return (
     <>
-      {/* 화사한 낮의 성당: 밝은 크림빛 공기, 따뜻한 반사광 */}
-      <color attach="background" args={["#3a2f24"]} />
-      <fog attach="fog" args={["#5a4a38", 26, 75]} />
-      {/* 사방에서 고르게 오는 빛. 너무 세면 조각상이 납작해지므로 십자가상 조명(아래)과 균형을 맞춤 */}
-      <hemisphereLight args={["#fff3dc", "#8a6a4a", low ? 1.15 : 0.95]} />
-      <ambientLight intensity={low ? 0.4 : 0.3} color="#fff1dc" />
+      {/* 시간에 따라: 낮은 화사한 크림빛, 노을은 주황빛, 밤은 어둑하고 촛불이 은은함 (lib/timeOfDay.ts) */}
+      <color attach="background" args={[mood.background]} />
+      <fog attach="fog" args={[mood.fog, 26, 75]} />
+      {/* 사방에서 고르게 오는 빛. 너무 세면 조각상이 납작해지므로 십자가상 조명(아래)과 균형을 맞춤.
+          휴대폰 낮은 품질은 그림자·보조광이 없어 조금 더 밝게 */}
+      <hemisphereLight args={[mood.sky, mood.ground, mood.hemi * (low ? 1.2 : 1)]} />
+      <ambientLight intensity={mood.ambient * (low ? 1.3 : 1)} color="#fff1dc" />
 
-      {/* 왼쪽 창으로 들어오는 오후 햇빛 */}
+      {/* 왼쪽 창으로 들어오는 햇빛 (밤에는 푸르스름한 달빛) */}
       <directionalLight
         ref={sun}
         position={[-14, 16, 4]}
-        intensity={high ? 2.0 : 1.6}
-        color="#fff0d2"
+        intensity={mood.sun * (high ? 1.25 : 1)}
+        color={mood.sunColor}
         castShadow={high}
         shadow-mapSize-width={2048}
         shadow-mapSize-height={2048}
@@ -107,13 +125,13 @@ export function Lighting({ quality }: { quality: Quality }) {
       )}
 
       {/* 제단 촛불 */}
-      <FlickerLight position={[ALTAR.x, SANCTUARY_Y + 2, ALTAR.z + 0.6]} base={low ? 3 : 4} color="#ffc27a" distance={9} />
+      <FlickerLight position={[ALTAR.x, SANCTUARY_Y + 2, ALTAR.z + 0.6]} base={(low ? 3 : 4) * mood.candles} color="#ffc27a" distance={9} />
       {!low && (
         <>
           {/* 장미 제단 촛불 */}
-          <FlickerLight position={[ROSE_ALTAR.x - 0.9, 1.5, ROSE_ALTAR.z]} base={2.2} color="#ffb48a" distance={5} />
+          <FlickerLight position={[ROSE_ALTAR.x - 0.9, 1.5, ROSE_ALTAR.z]} base={2.2 * mood.candles} color="#ffb48a" distance={5} />
           {/* 성모상과 봉헌 초 */}
-          <FlickerLight position={[CANDLE_RACK.x + 0.8, 1.4, CANDLE_RACK.z]} base={2.4} color="#ffb766" distance={6} />
+          <FlickerLight position={[CANDLE_RACK.x + 0.8, 1.4, CANDLE_RACK.z]} base={2.4 * mood.candles} color="#ffb766" distance={6} />
           {/* 성모상을 앞 위에서 비추는 부드러운 빛 (높은 품질에서만 그림자) */}
           <spotLight
             ref={marySpot}
@@ -137,7 +155,7 @@ export function Lighting({ quality }: { quality: Quality }) {
           <pointLight position={[0, 5, 10]} intensity={4} distance={14} color="#ffd8a8" decay={2} />
         </>
       )}
-      {!low && <LightShafts />}
+      {!low && <LightShafts opacity={mood.shafts} />}
     </>
   );
 }
