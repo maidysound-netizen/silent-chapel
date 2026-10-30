@@ -4,7 +4,7 @@
 import { Component, Suspense, type ReactNode } from "react";
 import { useTexture } from "@react-three/drei";
 import * as THREE from "three";
-import { APSE_Z, SANCTUARY_Y } from "@/lib/game/chapelLayout";
+import { APSE_Z } from "@/lib/game/chapelLayout";
 
 export interface PaintingDef {
   url: string;
@@ -22,8 +22,6 @@ export const PAINTINGS: PaintingDef[] = [
   // 천상의 영광 — 십자가상 바로 뒤 벽화. 가운데 빛기둥(십자가 없음) 앞에 3D 십자가상이 섬.
   // 양옆 창문(x ±1.9 부터, 높이 6.6m 부터)과 겹치지 않는 크기
   { url: "/art/glory-mural.jpg", position: [0, 3.85, APSE_Z + 0.03], rotationY: 0, width: 3.8, height: 5.7, frame: false },
-  // 성모 영보 — 제단 뒤 벽, 십자가상 왼쪽(성모 기도 공간 쪽)
-  { url: "/art/annunciation.jpg", position: [-4.8, SANCTUARY_Y + 3.75, APSE_Z + 0.06], rotationY: 0, width: 2.4, height: 3.6 },
 ];
 
 const FRAME = 0.14;
