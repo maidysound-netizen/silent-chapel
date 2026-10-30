@@ -4,10 +4,10 @@
 import { useLayoutEffect, useMemo, useRef } from "react";
 import { useFrame } from "@react-three/fiber";
 import { StatueModel, STATUE_URLS } from "./StatueModel";
+import { WishCandles } from "./WishCandles";
 import * as THREE from "three";
 import {
   ALTAR,
-  CANDLE_RACK,
   CRUCIFIX,
   KNEELER,
   MARY,
@@ -320,35 +320,6 @@ function MaryShrine() {
   );
 }
 
-function CandleRack() {
-  const candles = useMemo(() => {
-    const out: [number, number, number][] = [];
-    for (let r = 0; r < 2; r++) for (let i = 0; i < 6; i++) out.push([-0.45 + i * 0.18, 0.86 + r * 0.14, -0.1 + r * 0.16]);
-    return out;
-  }, []);
-  return (
-    <group position={[CANDLE_RACK.x, 0, CANDLE_RACK.z]} rotation={[0, MARY.yaw, 0]}>
-      <mesh position={[0, 0.4, 0]}>
-        <boxGeometry args={[1.2, 0.8, 0.5]} />
-        <meshStandardMaterial color={WOOD_DARK} roughness={0.8} />
-      </mesh>
-      <mesh position={[0, 0.88, 0.08]}>
-        <boxGeometry args={[1.2, 0.04, 0.5]} />
-        <meshStandardMaterial color="#3a3530" metalness={0.6} roughness={0.5} />
-      </mesh>
-      {candles.map((p, i) => (
-        <group key={i} position={p}>
-          <mesh>
-            <cylinderGeometry args={[0.035, 0.035, 0.08, 8]} />
-            <meshStandardMaterial color="#a8322e" roughness={0.5} transparent opacity={0.85} />
-          </mesh>
-          <Flame position={[0, 0.08, 0]} scale={0.8} seed={i} />
-        </group>
-      ))}
-    </group>
-  );
-}
-
 function Kneeler() {
   return (
     <group position={[KNEELER.x, 0, KNEELER.z]} rotation={[0, Math.PI / 2, 0]}>
@@ -375,7 +346,7 @@ export function Furnishings() {
       <Altar />
       <Crucifix />
       <MaryShrine />
-      <CandleRack />
+      <WishCandles />
       <Kneeler />
     </group>
   );

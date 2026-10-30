@@ -440,3 +440,21 @@ test("[시뮬레이션] 장미: 받은 사람이 바치면 상대 화면에 꽃�
   assert.ok(floor && Math.abs(floor.x - 1) < 1e-9 && Math.abs(floor.z - 2) < 1e-9);
   for (const p of players) await p.net.disconnect();
 });
+
+test("[시뮬레이션] 남이 놓은 바닥 꽃도 치우면 상대 화면에서도 사라짐", async () => {
+  const { players } = await makePlayers(2);
+  const [a, b] = players;
+  a.net.sendRose("pick", 0);
+  await tick();
+  await sleep(1600);
+  a.net.sendRose("floorRose", 5, { x: 1, z: 2 });
+  a.net.roses.add("floorRose", 5, { x: 1, y: 0, z: 2 }); // 놓은 사람 화면
+  await tick();
+  assert.equal(b.net.roses.all().filter((r) => r.target === "floorRose").length, 1, "꽃송이째 놓은 꽃이 보임");
+  // B가 치움 → A 화면에서도 사라짐
+  assert.equal(b.net.roses.sweep(1.2, 2.1), 1);
+  b.net.sendRose("sweep", 0, { x: 1.2, z: 2.1 });
+  await tick();
+  assert.equal(a.net.roses.all().length, 0);
+  for (const p of players) await p.net.disconnect();
+});

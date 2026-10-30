@@ -8,7 +8,7 @@ import type { Pose } from "@/lib/game/PlayerState";
 import { saveProgress } from "@/lib/rosary/storage";
 
 export type Quality = "low" | "medium" | "high";
-export type Panel = null | "rosary" | "bible" | "settings" | "people";
+export type Panel = null | "rosary" | "bible" | "settings" | "people" | "wishes";
 
 export interface Settings {
   quality: Quality;
@@ -75,6 +75,8 @@ interface AppState {
   nearRoseAltar: boolean;
   /** 장미를 들고 있는지 */
   holdingRose: boolean;
+  /** 발 근처에 치울 바닥 꽃이 있는지 */
+  nearFloorRoses: boolean;
   pose: Pose;
   rosary: RosaryProgress | null;
   hydrated: boolean;
@@ -90,6 +92,7 @@ interface AppState {
   setNearJesus(v: boolean): void;
   setNearRoseAltar(v: boolean): void;
   setHoldingRose(v: boolean): void;
+  setNearFloorRoses(v: boolean): void;
   setPose(p: Pose): void;
   setRosary(p: RosaryProgress | null): void;
 }
@@ -113,6 +116,7 @@ export const useApp = create<AppState>((set, get) => ({
   nearJesus: false,
   nearRoseAltar: false,
   holdingRose: false,
+  nearFloorRoses: false,
   pose: "stand",
   rosary: null,
   hydrated: false,
@@ -154,6 +158,9 @@ export const useApp = create<AppState>((set, get) => ({
   },
   setHoldingRose: (holdingRose) => {
     if (get().holdingRose !== holdingRose) set({ holdingRose });
+  },
+  setNearFloorRoses: (nearFloorRoses) => {
+    if (get().nearFloorRoses !== nearFloorRoses) set({ nearFloorRoses });
   },
   setNearJesus: (nearJesus) => {
     if (get().nearJesus !== nearJesus) set({ nearJesus });

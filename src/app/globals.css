@@ -336,3 +336,14 @@ button.chip.presence:disabled { cursor: default; }
 .btn.danger { border-color: rgba(200, 90, 80, 0.6); color: #f0b7ae; }
 .admin-section form { display: grid; gap: 8px; margin-top: 8px; }
 .admin-section input { width: 100%; margin-top: 4px; }
+
+/* 소원 초 */
+.wish-panel { bottom: auto; max-height: calc(100% - 160px); }
+.wish-form { display: grid; gap: 8px; margin-bottom: 12px; }
+.wish-input-row { display: flex; gap: 10px; align-items: flex-start; }
+.wish-input-row textarea { flex: 1; resize: none; font: inherit; padding: 8px; border-radius: 8px; border: 1px solid rgba(255, 255, 255, 0.18); background: rgba(0, 0, 0, 0.25); color: inherit; }
+.wish-actions { display: flex; justify-content: space-between; align-items: center; }
+.wish-swatch { flex: none; width: 14px; height: 22px; border-radius: 4px 4px 3px 3px; margin-top: 4px; box-shadow: 0 -4px 6px -2px rgba(255, 210, 122, 0.8); }
+.wish-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 10px; }
+.wish-list li { display: flex; gap: 10px; align-items: flex-start; }
+.wish-text { flex: 1; overflow-wrap: anywhere; }

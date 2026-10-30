@@ -55,3 +55,16 @@ test("바닥 꽃잎: 같은 seed 면 모든 사람 화면에서 같은 모양, �
   assert.notDeepEqual(petalOffsets(42), petalOffsets(43));
   for (const p of petalOffsets(7)) assert.ok(Math.hypot(p.dx, p.dz) < 0.5);
 });
+
+test("바닥 꽃 치우기: 근처의 꽃잎·꽃송이만 치우고, 바친 꽃과 멀리 있는 꽃은 그대로", () => {
+  const store = new RoseStore();
+  store.add("floor", 1, { x: 0, y: 0, z: 0 });
+  store.add("floorRose", 2, { x: 0.8, y: 0, z: 0.5 });
+  store.add("floorRose", 3, { x: 5, y: 0, z: 5 });
+  store.add("mary", 4);
+  assert.equal(store.hasFloorNear(0, 0), true);
+  assert.equal(store.sweep(0, 0), 2);
+  assert.deepEqual(store.all().map((r) => r.target).sort(), ["floorRose", "mary"]);
+  assert.equal(store.hasFloorNear(0, 0), false);
+  assert.equal(store.sweep(0, 0), 0);
+});

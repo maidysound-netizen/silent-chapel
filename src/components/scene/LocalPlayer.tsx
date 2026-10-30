@@ -61,6 +61,7 @@ export function LocalPlayer() {
       app.setNearMary(s.pose === "stand" && isNearMary(s.x, s.z));
       app.setNearJesus(s.pose === "stand" && isNearJesus(s.x, s.z));
       app.setNearRoseAltar(s.pose === "stand" && nearRoseAltar(s.x, s.z));
+      app.setNearFloorRoses(s.pose === "stand" && getNetworkManager().roses.hasFloorNear(s.x, s.z));
     }
 
     getNetworkManager().updateLocal(s);

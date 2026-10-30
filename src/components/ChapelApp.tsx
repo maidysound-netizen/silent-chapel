@@ -6,13 +6,14 @@ import { useApp, loadNickname, loadSettings } from "@/store/useAppStore";
 import { loadProgress } from "@/lib/rosary/storage";
 import { getNetworkManager } from "@/lib/net/NetworkManager";
 import { roomFromLocation } from "@/lib/net/RoomManager";
-import { bow, localPlayer, interact, resetLocalPlayer, scatterRose, signCross, toggleSit } from "@/store/localPlayer";
+import { bow, localPlayer, interact, placeRoseOnFloor, resetLocalPlayer, scatterRose, signCross, sweepRoses, toggleSit } from "@/store/localPlayer";
 import { EntryScreen } from "./ui/EntryScreen";
 import { Hud } from "./ui/Hud";
 import { RosaryPanel } from "./ui/RosaryPanel";
 import { BiblePanel } from "./ui/BiblePanel";
 import { SettingsPanel } from "./ui/SettingsPanel";
 import { PeoplePanel } from "./ui/PeoplePanel";
+import { WishPanel } from "./ui/WishPanel";
 import { LanguageTabs } from "./ui/LanguageTabs";
 import { PromptOverlay } from "./ui/PromptOverlay";
 import { useSacredMusic } from "./ui/useSacredMusic";
@@ -68,6 +69,8 @@ function useKeyboard(active: boolean) {
       else if (e.code === "KeyB") bow();
       else if (e.code === "KeyC") signCross();
       else if (e.code === "KeyG") scatterRose();
+      else if (e.code === "KeyH") placeRoseOnFloor();
+      else if (e.code === "KeyX") sweepRoses();
       else if (e.code === "KeyM" && app.pose === "sit") app.setMeditation(!app.meditation);
       else if (e.code === "KeyR" && app.pose === "sit") app.openPanel("rosary");
     };
@@ -175,6 +178,7 @@ export default function ChapelApp() {
           {FEATURES.bible && panel === "bible" && <BiblePanel />}
           {panel === "settings" && <SettingsPanel />}
           {panel === "people" && <PeoplePanel />}
+          {panel === "wishes" && <WishPanel />}
         </>
       )}
 

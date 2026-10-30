@@ -93,7 +93,11 @@ export const MARY = { x: -8.7, z: -7.5, yaw: -Math.PI / 2 }; // 오른쪽(+X)을
 export const MARY_SHRINE = { pedestalH: 0.8, statueH: 2.2, rug: { minX: -9.5, maxX: -6.7, minZ: -9.3, maxZ: -5.0 } };
 export const ROSARY_STAND = { x: -7.6, z: -6.3, y: 0.95 };
 export const KNEELER = { x: -7.3, z: -7.5 };
-export const CANDLE_RACK = { x: -8.6, z: -5.6 };
+/**
+ * 성모 기도 공간 옆 초 제단 (소원 초). 3단 계단식, 벽 쪽(-X)으로 갈수록 높아지고 신자석 쪽(+X)을 바라봄.
+ * width 는 Z 방향 길이, depth 는 X 방향 깊이
+ */
+export const CANDLE_RACK = { x: -8.75, z: -5.2, width: 2.4, depth: 0.8, tiers: 3, perTier: 16 };
 export const AMBO = { x: 4.2, z: -11, y: 1.25 };
 /** 오른쪽 측랑의 장미꽃 제단 (성모 기도 공간의 맞은편). 신자석 쪽(-X)을 바라봄 */
 export const ROSE_ALTAR = { x: 8.75, z: -7.5, yaw: Math.PI / 2, width: 1.6, depth: 0.6, height: 0.95 };
@@ -107,7 +111,7 @@ export const COLLIDER_BOXES: Box2[] = [
   { x: MARY.x, z: MARY.z, hx: 0.8, hz: 0.8, top: MARY_SHRINE.pedestalH + MARY_SHRINE.statueH },
   { x: ROSARY_STAND.x, z: ROSARY_STAND.z, hx: 0.3, hz: 0.3, top: 1.1 },
   { x: KNEELER.x - 0.15, z: KNEELER.z, hx: 0.3, hz: 0.55, top: 0.9 },
-  { x: CANDLE_RACK.x, z: CANDLE_RACK.z, hx: 0.3, hz: 0.62, top: 1.2 },
+  { x: CANDLE_RACK.x, z: CANDLE_RACK.z, hx: CANDLE_RACK.depth / 2 + 0.05, hz: CANDLE_RACK.width / 2 + 0.05, top: 1.4 },
   { x: AMBO.x, z: AMBO.z, hx: 0.45, hz: 0.4, top: 1.6 },
   { x: ROSE_ALTAR.x, z: ROSE_ALTAR.z, hx: ROSE_ALTAR.depth / 2 + 0.05, hz: ROSE_ALTAR.width / 2 + 0.05, top: ROSE_ALTAR.height + 0.5 },
   // 십자가상 받침(폭 약 1.8m)과 기둥. 팔(높이 4.6m 이상)은 사람·카메라 높이 위라 충돌 상자에서 뺌

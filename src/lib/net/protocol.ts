@@ -222,12 +222,13 @@ export interface RoseMessage {
   v: number;
   u: string;
   t: number;
-  k: "pick" | "mary" | "jesus" | "floor";
+  /** floorRose: 꽃송이째 놓음, sweep: p 근처 바닥 꽃 치우기 (장미를 들고 있지 않아도 됨) */
+  k: "pick" | "mary" | "jesus" | "floor" | "floorRose" | "sweep";
   s: number;
   p?: [number, number];
 }
 
-const ROSE_KINDS = new Set(["pick", "mary", "jesus", "floor"]);
+const ROSE_KINDS = new Set(["pick", "mary", "jesus", "floor", "floorRose", "sweep"]);
 
 export function validateRose(raw: unknown, now = Date.now()): RoseMessage | null {
   if (!raw || typeof raw !== "object") return null;
@@ -236,7 +237,7 @@ export function validateRose(raw: unknown, now = Date.now()): RoseMessage | null
   if (!finite(m.t) || m.t > now + MAX_FUTURE_MS || m.t < now - MAX_AGE_MS) return null;
   if (!finite(m.s) || !Number.isInteger(m.s) || m.s < 0 || m.s > 1e9) return null;
   const out: RoseMessage = { v: PROTOCOL_VERSION, u: m.u, t: m.t, k: m.k as RoseMessage["k"], s: m.s };
-  if (m.k === "floor") {
+  if (m.k === "floor" || m.k === "floorRose" || m.k === "sweep") {
     if (!Array.isArray(m.p) || m.p.length !== 2 || !m.p.every(finite) || !isInsideChapel(m.p[0], m.p[1])) return null;
     out.p = [m.p[0], m.p[1]];
   }

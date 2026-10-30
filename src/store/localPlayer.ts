@@ -77,8 +77,8 @@ export function offerRose(target: "mary" | "jesus") {
   app.setHoldingRose(false);
 }
 
-/** 들고 있던 장미를 발 앞 바닥에 꽃잎으로 뿌리기 (어디서든) */
-export function scatterRose() {
+/** 들고 있던 장미를 발 앞 바닥에 내려놓기 (어디서든): 꽃잎으로 뿌리기(G) 또는 꽃송이째 놓기(H) */
+function dropRose(kind: "floor" | "floorRose") {
   const app = useApp.getState();
   const s = localPlayer.state;
   if (!app.holdingRose || s.pose !== "stand") return;
@@ -87,9 +87,19 @@ export function scatterRose() {
   const z = s.z - Math.cos(s.yaw) * 0.6;
   const seed = newSeed();
   const net = getNetworkManager();
-  net.roses.add("floor", seed, { x, y: floorHeight(z), z });
-  net.sendRose("floor", seed, { x, z });
+  net.roses.add(kind, seed, { x, y: floorHeight(z), z });
+  net.sendRose(kind, seed, { x, z });
   app.setHoldingRose(false);
+}
+export const scatterRose = () => dropRose("floor");
+export const placeRoseOnFloor = () => dropRose("floorRose");
+
+/** 내 주변 바닥의 꽃잎·꽃송이 치우기 (남이 놓은 것도) */
+export function sweepRoses() {
+  const s = localPlayer.state;
+  if (s.pose !== "stand") return;
+  const net = getNetworkManager();
+  if (net.roses.sweep(s.x, s.z) > 0) net.sendRose("sweep", 0, { x: s.x, z: s.z });
 }
 
 /** E 키 / 상호작용 버튼 */
@@ -107,6 +117,7 @@ export function interact() {
   const t = findInteraction(s.x, s.z, occupiedSeats());
   if (!t) return;
   if (t.kind === "rosary") app.openPanel("rosary");
+  else if (t.kind === "candles") app.openPanel("wishes");
   else if (t.kind === "bible") app.openPanel("bible");
   else sitAt(t.seat);
 }

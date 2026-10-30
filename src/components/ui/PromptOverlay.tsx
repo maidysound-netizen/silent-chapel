@@ -9,7 +9,7 @@ import { useEffect, useMemo, useRef } from "react";
 import * as THREE from "three";
 import { useApp } from "@/store/useAppStore";
 import { getUi } from "@/lib/i18n";
-import { ALTAR, MARY, MARY_SHRINE, ROSARY_STAND, ROSE_ALTAR } from "@/lib/game/chapelLayout";
+import { ALTAR, CANDLE_RACK, MARY, MARY_SHRINE, ROSARY_STAND, ROSE_ALTAR } from "@/lib/game/chapelLayout";
 import { bow, interact, offerRose, pickRose, sitAt } from "@/store/localPlayer";
 import { sceneRefs } from "../scene/sceneRefs";
 
@@ -47,6 +47,8 @@ export function PromptOverlay() {
         items.push({ id: "rose-mary", text: `🌹 ${ui.offerRoseMary}`, keyHint: "E", at: [MARY.x + 0.2, MARY_SHRINE.pedestalH + MARY_SHRINE.statueH + 0.25, MARY.z], lift: 48, run: () => offerRose("mary") });
       else if (holdingRose && nearJesus)
         items.push({ id: "rose-jesus", text: `🌹 ${ui.offerRoseJesus}`, keyHint: "E", at: [ALTAR.x, ALTAR.height + 1.1, ALTAR.z], lift: 48, run: () => offerRose("jesus") });
+      if (prompt?.kind === "candles" && !holdingRose)
+        items.push({ id: "candles", text: `🕯 ${ui.lightWish}`, keyHint: "E", at: [CANDLE_RACK.x + 0.2, 1.55, CANDLE_RACK.z], run: interact });
       if (prompt?.kind === "rosary" && !holdingRose)
         items.push({ id: "rosary", text: `📿 ${ui.interactRosary}`, keyHint: "E", at: [ROSARY_STAND.x, ROSARY_STAND.y + 0.35, ROSARY_STAND.z], run: interact });
       if (nearMary) items.push({ id: "mary", text: `🙏 ${ui.bowToMary}`, keyHint: "B", at: [MARY.x + 0.2, MARY_SHRINE.pedestalH + MARY_SHRINE.statueH + 0.25, MARY.z], run: bow });

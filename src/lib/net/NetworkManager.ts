@@ -31,6 +31,7 @@ import { PresenceManager } from "./PresenceManager.ts";
 import { ReconnectionHandler } from "./ReconnectionHandler.ts";
 import { roomCandidates, roomTopic } from "./RoomManager.ts";
 import { RoseStore, ROSE_MIN_INTERVAL_MS, type RoseTarget } from "../game/roses.ts";
+import { isValidWish, lightErrorReason, WishStore, type LightResult, type WishCandle } from "../wishes.ts";
 import { getSupabase, readSupabaseEnv, type SupabaseEnv } from "./supabaseClient.ts";
 
 export type NetStatus = "disabled" | "idle" | "auth" | "connecting" | "connected" | "reconnecting" | "offline" | "error" | "full" | "banned";
@@ -92,6 +93,9 @@ const EVENT_STATE = "st";
 const EVENT_GESTURE = "gs";
 const EVENT_MODERATION = "md";
 const EVENT_ROSE = "rs";
+/** 소원 초가 켜지거나 꺼졌다는 알림 → 받은 쪽은 서버에서 목록을 다시 읽음 */
+const EVENT_WISH = "wc";
+const WISH_REFRESH_MS = 60_000;
 /** 같은 사람의 제스처는 이 간격보다 자주 받지 않음 (도배 방지) */
 const GESTURE_MIN_MS = 2000;
 /** 방에 아직 있다고 DB에 알리는 주기. join_room 의 정원 계산이 이 기록을 봅니다 */
@@ -129,6 +133,10 @@ export class NetworkManager {
   readonly remotes = new Map<string, RemotePlayer>();
   /** 바친 장미 (이 기기에서 본 것만, 저장하지 않음) */
   readonly roses = new RoseStore();
+  /** 소원 초 (서버 wish_candles, 하루 동안) */
+  readonly wishes = new WishStore();
+  private lastWishLoad = 0;
+  private wishReload: ReturnType<typeof setTimeout> | null = null;
   readonly metrics: NetMetrics = {
     sentTotal: 0,
     recvTotal: 0,
@@ -263,6 +271,7 @@ export class NetworkManager {
       .on("broadcast", { event: EVENT_GESTURE }, ({ payload }) => this.onGesture(payload))
       .on("broadcast", { event: EVENT_MODERATION }, ({ payload }) => void this.onModeration(payload))
       .on("broadcast", { event: EVENT_ROSE }, ({ payload }) => this.onRose(payload))
+      .on("broadcast", { event: EVENT_WISH }, () => this.scheduleWishReload())
       .on("presence", { event: "sync" }, () => this.syncPresence())
       .on("presence", { event: "leave" }, ({ key }) => {
         if (key && key !== uid) {
@@ -282,6 +291,7 @@ export class NetworkManager {
           // 기존 사람들은 내 Presence(위치 포함)와 아래 한 번의 상태 방송으로 나를 알게 됩니다.
           presence.update(this.presenceMeta(), true);
           this.sendState();
+          void this.loadWishes();
           if (!settled) {
             settled = true;
             resolve();
@@ -497,6 +507,7 @@ export class NetworkManager {
   /** 1초마다: 끊긴 아바타 제거, 초당 메시지 수 계산 */
   private cleanup() {
     const now = Date.now();
+    if (this.snapshot.status === "connected" && now - this.lastWishLoad >= WISH_REFRESH_MS) void this.loadWishes();
     if (this.sb && this.env?.privateChannels && this.snapshot.status === "connected" && now - this.lastHeartbeat >= HEARTBEAT_MS) {
       this.lastHeartbeat = now;
       void this.sb.rpc("touch_session").then(undefined, () => {});
@@ -557,7 +568,7 @@ export class NetworkManager {
     const uid = this.snapshot.uid;
     if (!ch || !uid || this.snapshot.status !== "connected") return;
     const payload: RoseMessage = { v: PROTOCOL_VERSION, u: uid, t: Date.now(), k, s: seed };
-    if (k === "floor" && at) payload.p = [Math.round(at.x * 100) / 100, Math.round(at.z * 100) / 100];
+    if ((k === "floor" || k === "floorRose" || k === "sweep") && at) payload.p = [Math.round(at.x * 100) / 100, Math.round(at.z * 100) / 100];
     void ch.send({ type: "broadcast", event: EVENT_ROSE, payload });
     this.countSent(JSON.stringify(payload).length);
   }
@@ -576,12 +587,96 @@ export class NetworkManager {
       r.holdingRose = true;
       return;
     }
+    if (msg.k === "sweep") {
+      // 치우기는 누구나, 다만 너무 잦지 않게
+      if (now - r.lastRoseAt < ROSE_MIN_INTERVAL_MS || !msg.p) return;
+      r.lastRoseAt = now;
+      this.roses.sweep(msg.p[0], msg.p[1]);
+      return;
+    }
     // 바치기·뿌리기는 장미를 들고 있었고 너무 잦지 않을 때만 (도배 방지)
     if (!r.holdingRose || now - r.lastRoseAt < ROSE_MIN_INTERVAL_MS) return;
     r.lastRoseAt = now;
     r.holdingRose = false;
-    if (msg.k === "floor" && msg.p) this.roses.add("floor", msg.s, { x: msg.p[0], y: floorHeight(msg.p[1]), z: msg.p[1] });
-    else if (msg.k !== "floor") this.roses.add(msg.k as RoseTarget, msg.s);
+    if ((msg.k === "floor" || msg.k === "floorRose") && msg.p) this.roses.add(msg.k, msg.s, { x: msg.p[0], y: floorHeight(msg.p[1]), z: msg.p[1] });
+    else if (msg.k === "mary" || msg.k === "jesus") this.roses.add(msg.k as RoseTarget, msg.s);
+  }
+
+  // ---------- 소원 초 ----------
+
+  /** 서버에서 하루 안의 소원 초를 읽어 옴 (모든 방이 같은 초 제단을 공유) */
+  async loadWishes(): Promise<void> {
+    if (!this.sb || !this.env?.privateChannels) return;
+    this.lastWishLoad = Date.now();
+    let data: unknown;
+    try {
+      const res = await this.sb
+        .from("wish_candles")
+        .select("id, user_id, nickname, wish, color, created_at")
+        .order("created_at", { ascending: false })
+        .limit(200);
+      if (res.error) return; // 아직 SQL 을 실행하지 않았거나 네트워크 문제 → 다음 주기에 다시
+      data = res.data;
+    } catch {
+      return;
+    }
+    if (!Array.isArray(data)) return;
+    const list: WishCandle[] = [];
+    for (const row of data as Record<string, unknown>[]) {
+      const createdAt = Date.parse(String(row.created_at));
+      if (typeof row.id !== "number" || typeof row.wish !== "string" || typeof row.nickname !== "string" || !Number.isFinite(createdAt)) continue;
+      const color = typeof row.color === "number" && row.color >= 0 && row.color < 12 ? row.color : 0;
+      list.push({ id: row.id, userId: String(row.user_id ?? ""), nickname: row.nickname, wish: row.wish, color, createdAt });
+    }
+    this.wishes.set(list);
+  }
+
+  private scheduleWishReload() {
+    if (this.wishReload) return;
+    this.wishReload = setTimeout(() => {
+      this.wishReload = null;
+      void this.loadWishes();
+    }, 400);
+  }
+
+  private announceWishChange() {
+    const ch = this.channel;
+    const uid = this.snapshot.uid;
+    if (!ch || !uid || this.snapshot.status !== "connected") return;
+    void ch.send({ type: "broadcast", event: EVENT_WISH, payload: { v: PROTOCOL_VERSION, u: uid, t: Date.now() } });
+  }
+
+  /**
+   * 소원 초 켜기. 온라인이면 서버에 저장(하루 동안 모두에게 보임),
+   * 혼자 머무는 모드(Supabase 없음)면 이 기기 화면에만 잠시 보임.
+   */
+  async lightWish(wish: string, color: number, nickname: string): Promise<LightResult> {
+    if (!isValidWish(wish)) return { ok: false, reason: "invalid" };
+    if (!this.sb || !this.env?.privateChannels) {
+      this.wishes.add({ id: -Date.now(), userId: "local", nickname, wish, color, createdAt: Date.now() });
+      return { ok: true };
+    }
+    if (this.snapshot.status !== "connected") return { ok: false, reason: "notInRoom" };
+    const { data, error } = await this.sb.rpc("light_candle", { p_wish: wish, p_color: color });
+    if (error) return { ok: false, reason: lightErrorReason(error) };
+    if (typeof data === "number") {
+      this.wishes.add({ id: data, userId: this.snapshot.uid ?? "", nickname, wish, color, createdAt: Date.now() });
+    }
+    this.announceWishChange();
+    return { ok: true };
+  }
+
+  /** 소원 초 끄기 (자기 초 또는 관리자) */
+  async removeWish(id: number): Promise<boolean> {
+    if (id < 0 || !this.sb) {
+      this.wishes.remove(id);
+      return true;
+    }
+    const { error } = await this.sb.rpc("remove_candle", { p_id: id });
+    if (error) return false;
+    this.wishes.remove(id);
+    this.announceWishChange();
+    return true;
   }
 
   // ---------- 관리자 내보내기 ----------

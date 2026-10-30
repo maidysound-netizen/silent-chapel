@@ -1,8 +1,10 @@
-// 장미꽃: 장미 제단에서 한 송이를 받아 성모님·예수님께 바치거나 바닥에 뿌립니다.
+// 장미꽃: 장미 제단에서 한 송이를 받아 성모님·예수님께 바치거나, 바닥에 꽃잎으로 뿌리거나 꽃송이째 놓습니다.
+// 바닥의 꽃은 누구나(남이 놓은 것도) 가까이 가서 치울 수 있습니다.
 // 바친 꽃은 지금 같은 방에 있는 사람들 화면에만 보이고(저장하지 않음), 너무 많아지면 오래된 것부터 사라집니다.
 import { ALTAR, MARY, MARY_SHRINE, ROSE_ALTAR, SANCTUARY_Y } from "./chapelLayout.ts";
 
-export type RoseTarget = "mary" | "jesus" | "floor";
+/** floor: 꽃잎으로 뿌림, floorRose: 꽃송이째 바닥에 놓음 */
+export type RoseTarget = "mary" | "jesus" | "floor" | "floorRose";
 
 export interface RoseItem {
   id: number;
@@ -19,7 +21,11 @@ export interface RoseItem {
 /** 장미 제단·성모상·제단에서 이 거리 안이면 받기/바치기 가능 */
 export const ROSE_PICK_RADIUS = 2.0;
 /** 대상별로 남겨 두는 최대 개수 (휴대폰 성능) */
-export const ROSE_CAP: Record<RoseTarget, number> = { mary: 30, jesus: 30, floor: 40 };
+export const ROSE_CAP: Record<RoseTarget, number> = { mary: 30, jesus: 30, floor: 40, floorRose: 40 };
+/** 이 거리 안의 바닥 꽃(꽃잎·꽃송이)을 치움 */
+export const SWEEP_RADIUS = 1.5;
+
+export const isFloorRose = (t: RoseTarget) => t === "floor" || t === "floorRose";
 /** 같은 사람이 보낸 장미 알림은 이 간격보다 자주 받지 않음 (도배 방지) */
 export const ROSE_MIN_INTERVAL_MS = 1500;
 
@@ -114,12 +120,13 @@ export class RoseStore {
 
   add(target: RoseTarget, seed: number, floorAt?: { x: number; y: number; z: number }): RoseItem {
     let pos: Omit<RoseItem, "id" | "target" | "seed">;
-    if (target === "floor") {
+    if (isFloorRose(target)) {
       const p = floorAt ?? { x: 0, y: 0, z: 0 };
       pos = { x: p.x, y: p.y + 0.012, z: p.z, yaw: rand(seed, 4) * Math.PI * 2 };
     } else {
       // 자리 번호는 계속 늘려서, 오래된 꽃이 지워져도 새 꽃이 같은 자리에 겹치지 않게 순환
-      pos = offeringSpot(target, this.counts[target]++ % ROSE_CAP[target], seed);
+      const t = target as "mary" | "jesus";
+      pos = offeringSpot(t, this.counts[t]++ % ROSE_CAP[t], seed);
     }
     const item: RoseItem = { id: this.nextId++, target, seed, ...pos };
     this.items.push(item);
@@ -131,6 +138,23 @@ export class RoseStore {
     this.version++;
     this.listeners.forEach((l) => l());
     return item;
+  }
+
+  /** (x, z) 에서 radius 안의 바닥 꽃잎·꽃송이를 치움. 치운 개수 */
+  sweep(x: number, z: number, radius = SWEEP_RADIUS): number {
+    const before = this.items.length;
+    this.items = this.items.filter((i) => !(isFloorRose(i.target) && Math.hypot(i.x - x, i.z - z) <= radius));
+    const removed = before - this.items.length;
+    if (removed > 0) {
+      this.version++;
+      this.listeners.forEach((l) => l());
+    }
+    return removed;
+  }
+
+  /** (x, z) 근처에 치울 바닥 꽃이 있는지 */
+  hasFloorNear(x: number, z: number, radius = SWEEP_RADIUS): boolean {
+    return this.items.some((i) => isFloorRose(i.target) && Math.hypot(i.x - x, i.z - z) <= radius);
   }
 
   clear() {

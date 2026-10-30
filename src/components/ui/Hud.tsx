@@ -8,7 +8,7 @@ import { roomNumber } from "@/lib/net/RoomManager";
 import { RunButton, TouchJoystick } from "./TouchJoystick";
 import { NetStats } from "./NetStats";
 import { FEATURES } from "@/lib/features";
-import { bow, scatterRose, signCross, standUp } from "@/store/localPlayer";
+import { bow, placeRoseOnFloor, scatterRose, signCross, standUp, sweepRoses } from "@/store/localPlayer";
 import { LanguageTabs } from "./LanguageTabs";
 
 export function PresenceChip() {
@@ -81,6 +81,7 @@ export function Hud({ onExit }: { onExit: () => void }) {
   const setMeditation = useApp((s) => s.setMeditation);
   const nearShrine = useApp((s) => s.nearMary || s.nearJesus);
   const holdingRose = useApp((s) => s.holdingRose);
+  const nearFloorRoses = useApp((s) => s.nearFloorRoses);
   const ui = getUi(settings.locale);
   const hideForMeditation = meditation && panel === null;
 
@@ -147,6 +148,19 @@ export function Hud({ onExit }: { onExit: () => void }) {
             <button className="btn quiet" onClick={scatterRose}>
               🌹 {ui.scatterRose}
               <kbd>G</kbd>
+            </button>
+            <button className="btn quiet" onClick={placeRoseOnFloor}>
+              🌹 {ui.placeRose}
+              <kbd>H</kbd>
+            </button>
+          </div>
+        )}
+        {/* 발 근처 바닥 꽃(남이 뿌린 것도) 치우기 */}
+        {!holdingRose && nearFloorRoses && pose !== "sit" && panel === null && (
+          <div className="hud-actions">
+            <button className="btn quiet" onClick={sweepRoses}>
+              🧹 {ui.sweepRoses}
+              <kbd>X</kbd>
             </button>
           </div>
         )}

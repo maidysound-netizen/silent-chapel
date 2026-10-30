@@ -122,7 +122,7 @@ function RoseAltarModel() {
   );
 }
 
-const MAX_OFFERED = ROSE_CAP.mary + ROSE_CAP.jesus;
+const MAX_OFFERED = ROSE_CAP.mary + ROSE_CAP.jesus + ROSE_CAP.floorRose;
 const MAX_PETALS = ROSE_CAP.floor * PETALS_PER_ROSE;
 
 /** 바친 꽃(눕혀 놓은 장미)과 바닥에 뿌린 꽃잎 */
@@ -157,7 +157,7 @@ function OfferedRoses() {
           p.setMatrixAt(np++, o.matrix);
         }
       } else if (ni < MAX_OFFERED) {
-        // 바닥에 눕힌 장미: 줄기를 수평으로(z축 기준 -90°), yaw 로 방향을 돌림
+        // 바친 꽃·바닥에 놓은 꽃송이: 줄기를 수평으로(z축 기준 -90°), yaw 로 방향을 돌림
         o.position.set(r.x, r.y + 0.012, r.z);
         o.rotation.set(0, r.yaw, -Math.PI / 2, "YXZ");
         o.scale.setScalar(ROSE_LEN / STEM_LEN); // 멀리서도 보이도록 손에 든 꽃보다 크게
