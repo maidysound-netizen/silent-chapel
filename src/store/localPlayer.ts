@@ -1,7 +1,7 @@
 "use client";
 // 로컬 플레이어의 가변 상태. 매 프레임 바뀌므로 React 상태 대신 일반 객체로 둡니다.
 import { BOW_MS, createPlayerState, type PlayerState } from "@/lib/game/PlayerState";
-import { MARY, SPAWN, type Seat, SEAT_BY_ID, floorHeight } from "@/lib/game/chapelLayout";
+import { ALTAR, CRUCIFIX, MARY, SPAWN, type Seat, SEAT_BY_ID, floorHeight } from "@/lib/game/chapelLayout";
 import { collide } from "@/lib/game/PlayerController";
 import { findInteraction, findSeat } from "@/lib/game/InteractionSystem";
 import { getNetworkManager } from "@/lib/net/NetworkManager";
@@ -13,6 +13,8 @@ export const localPlayer = {
   touch: { forward: 0, right: 0 },
   camera: { yaw: 0, pitch: 0.28, distance: 4.2 },
   bow: { at: 0 },
+  /** 묵상 시점에서 둘러본 정도 (십자가 방향 기준 오프셋, 라디안) */
+  meditationLook: { yaw: 0, pitch: 0 },
 };
 
 export function resetLocalPlayer() {
@@ -64,14 +66,25 @@ export function isBowing(now = Date.now()): boolean {
   return now - localPlayer.bow.at < BOW_MS;
 }
 
-/** B 키 / 절하기 버튼. 성모상 가까이 서 있으면 성모님을 향해 돌아선 뒤 절합니다 */
+/** 제단 앞(장의자와 제단 사이)에 서 있는지 — 예수님(십자가)께 절하기 안내 */
+export function isNearJesus(x: number, z: number): boolean {
+  return Math.abs(x - ALTAR.x) < 4.5 && z < -9.3 && z > ALTAR.z + 1;
+}
+
+/** 아바타가 (tx, tz)를 바라보는 yaw (아바타 정면은 -Z) */
+function yawToward(s: PlayerState, tx: number, tz: number) {
+  return Math.atan2(-(tx - s.x), -(tz - s.z));
+}
+
+/** B 키 / 절하기 버튼. 어디서든 지금 바라보는 방향으로 절하고,
+ *  성모상 가까이면 성모님을, 제단 앞이면 십자가(예수님)를 향해 돌아선 뒤 절합니다 */
 export function bow() {
   const now = Date.now();
   if (isBowing(now)) return;
   const s = localPlayer.state;
-  if (s.pose === "stand" && isNearMary(s.x, s.z)) {
-    const yaw = Math.atan2(-(MARY.x - s.x), -(MARY.z - s.z));
-    localPlayer.state = { ...s, yaw };
+  if (s.pose === "stand") {
+    if (isNearMary(s.x, s.z)) localPlayer.state = { ...s, yaw: yawToward(s, MARY.x, MARY.z) };
+    else if (isNearJesus(s.x, s.z)) localPlayer.state = { ...s, yaw: yawToward(s, CRUCIFIX.x, CRUCIFIX.z) };
   }
   localPlayer.bow.at = now;
   getNetworkManager().sendGesture("bow");

@@ -3,12 +3,13 @@
 // 3D 위치를 매 프레임 화면 좌표로 바꿔 따라다니게 하므로, 거리와 상관없이 글씨 크기가 일정하고
 // 터치·키보드·화면 읽기 프로그램에서도 일반 버튼처럼 동작합니다.
 //   묵주 받침대 근처 → 묵주 집어 들기 (E) · 성모상 근처 → 성모님께 절하기 (B)
+//   제단 앞 → 예수님께 절하기 (B)
 //   장의자 근처 → 앉기 (F)   (앉아 있을 때의 행동은 Hud 아래 가운데에 표시)
 import { useEffect, useMemo, useRef } from "react";
 import * as THREE from "three";
 import { useApp } from "@/store/useAppStore";
 import { getUi } from "@/lib/i18n";
-import { MARY, ROSARY_STAND } from "@/lib/game/chapelLayout";
+import { ALTAR, MARY, ROSARY_STAND } from "@/lib/game/chapelLayout";
 import { bow, interact, sitAt } from "@/store/localPlayer";
 import { sceneRefs } from "../scene/sceneRefs";
 
@@ -29,6 +30,7 @@ export function PromptOverlay() {
   const prompt = useApp((s) => s.prompt);
   const pose = useApp((s) => s.pose);
   const nearMary = useApp((s) => s.nearMary);
+  const nearJesus = useApp((s) => s.nearJesus);
   const ui = getUi(useApp((s) => s.settings.locale));
   const showKeys = useMemo(() => typeof window !== "undefined" && !window.matchMedia?.("(pointer: coarse)").matches, []);
 
@@ -39,6 +41,7 @@ export function PromptOverlay() {
       if (prompt?.kind === "rosary")
         items.push({ id: "rosary", text: `📿 ${ui.interactRosary}`, keyHint: "E", at: [ROSARY_STAND.x, ROSARY_STAND.y + 0.35, ROSARY_STAND.z], run: interact });
       if (nearMary) items.push({ id: "mary", text: `🙏 ${ui.bowToMary}`, keyHint: "B", at: [MARY.x + 0.2, 2.95, MARY.z], run: bow });
+      else if (nearJesus) items.push({ id: "jesus", text: `✝ ${ui.bowToJesus}`, keyHint: "B", at: [ALTAR.x, ALTAR.height + 1.1, ALTAR.z], run: bow });
       if (prompt?.kind === "seat") {
         const seat = prompt.seat;
         items.push({ id: `seat-${seat.id}`, text: ui.interactPew, keyHint: "F", at: [seat.x, 1.05, seat.z], run: () => sitAt(seat) });

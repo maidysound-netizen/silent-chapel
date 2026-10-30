@@ -26,8 +26,8 @@ function RoomLighting() {
   return null;
 }
 
-/** 묵주 전체(고리 위 끝 ~ 십자가 아래 끝)가 세로로 길게 다 보이도록 카메라 거리를 맞춤 */
-const BOUNDS = { cy: 0.4, halfH: 2.3, halfW: 1.25 };
+/** 묵주 전체(고리 위 끝 ~ 십자가 아래 끝)가 창에 꽉 차도록 카메라 거리를 맞춤 */
+const BOUNDS = { cy: 0.4, halfH: 2.2, halfW: 1.2 };
 function FullViewCamera() {
   const { size } = useThree();
   useFrame(({ camera }, delta) => {
@@ -44,11 +44,14 @@ function FullViewCamera() {
   return null;
 }
 
-/** 줄에 매달린 묵주가 아주 천천히 흔들림 */
+/** 손바닥 위에 놓인 듯 살짝 기울어진 묵주가 아주 천천히 흔들림 (입체감) */
 function Sway({ children }: { children: React.ReactNode }) {
   const g = useRef<THREE.Group>(null);
   useFrame(({ clock }) => {
-    if (g.current) g.current.rotation.y = Math.sin(clock.elapsedTime * 0.3) * 0.12;
+    if (!g.current) return;
+    const t = clock.elapsedTime;
+    g.current.rotation.y = Math.sin(t * 0.3) * 0.22;
+    g.current.rotation.x = -0.18 + Math.sin(t * 0.21) * 0.05;
   });
   return <group ref={g}>{children}</group>;
 }

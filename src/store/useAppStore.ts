@@ -70,6 +70,7 @@ interface AppState {
   prompt: InteractionTarget | null;
   /** 성모상 가까이 있음 (절하기 버튼 문구용) */
   nearMary: boolean;
+  nearJesus: boolean;
   pose: Pose;
   rosary: RosaryProgress | null;
   hydrated: boolean;
@@ -82,6 +83,7 @@ interface AppState {
   setMeditation(on: boolean): void;
   setPrompt(t: InteractionTarget | null): void;
   setNearMary(v: boolean): void;
+  setNearJesus(v: boolean): void;
   setPose(p: Pose): void;
   setRosary(p: RosaryProgress | null): void;
 }
@@ -102,6 +104,7 @@ export const useApp = create<AppState>((set, get) => ({
   meditation: false,
   prompt: null,
   nearMary: false,
+  nearJesus: false,
   pose: "stand",
   rosary: null,
   hydrated: false,
@@ -137,6 +140,9 @@ export const useApp = create<AppState>((set, get) => ({
   },
   setNearMary: (nearMary) => {
     if (get().nearMary !== nearMary) set({ nearMary });
+  },
+  setNearJesus: (nearJesus) => {
+    if (get().nearJesus !== nearJesus) set({ nearJesus });
   },
   setPose: (pose) => set(pose === "stand" ? { pose, meditation: false } : { pose }),
   setRosary: (rosary) => {

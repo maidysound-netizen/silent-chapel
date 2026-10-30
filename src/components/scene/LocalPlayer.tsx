@@ -6,7 +6,7 @@ import * as THREE from "three";
 import { stepPlayer } from "@/lib/game/PlayerController";
 import { findInteraction } from "@/lib/game/InteractionSystem";
 import { getNetworkManager } from "@/lib/net/NetworkManager";
-import { isBowing, isNearMary, localPlayer, occupiedSeats } from "@/store/localPlayer";
+import { isBowing, isNearJesus, isNearMary, localPlayer, occupiedSeats } from "@/store/localPlayer";
 import { useApp } from "@/store/useAppStore";
 import { Avatar } from "./Avatar";
 
@@ -48,6 +48,7 @@ export function LocalPlayer() {
       lastPromptCheck.current = now;
       app.setPrompt(s.pose === "sit" ? null : findInteraction(s.x, s.z, occupiedSeats()));
       app.setNearMary(s.pose === "stand" && isNearMary(s.x, s.z));
+      app.setNearJesus(s.pose === "stand" && isNearJesus(s.x, s.z));
     }
 
     getNetworkManager().updateLocal(s);

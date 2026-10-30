@@ -7,7 +7,7 @@ import { getNetworkManager } from "@/lib/net/NetworkManager";
 import { TouchJoystick } from "./TouchJoystick";
 import { NetStats } from "./NetStats";
 import { FEATURES } from "@/lib/features";
-import { standUp } from "@/store/localPlayer";
+import { bow, standUp } from "@/store/localPlayer";
 import { LanguageTabs } from "./LanguageTabs";
 
 export function PresenceChip() {
@@ -55,6 +55,7 @@ export function Hud({ onExit }: { onExit: () => void }) {
   const pose = useApp((s) => s.pose);
   const meditation = useApp((s) => s.meditation);
   const setMeditation = useApp((s) => s.setMeditation);
+  const nearShrine = useApp((s) => s.nearMary || s.nearJesus);
   const ui = getUi(settings.locale);
   const hideForMeditation = meditation && panel === null;
 
@@ -89,7 +90,7 @@ export function Hud({ onExit }: { onExit: () => void }) {
 
       <div className="hud-bottom">
         {/* 서 있을 때의 행동 안내는 물체 위에 필요할 때만 뜹니다(PromptOverlay).
-            앉아 있을 때만 아래 가운데에 묵주기도 · 묵상 시점 · 일어나기를 보여 줌 */}
+            앉아 있을 때만 아래 가운데에 묵주기도 · 묵상 시점 · 절하기 · 일어나기를 보여 줌 */}
         {pose === "sit" && !meditation && panel === null && (
           <div className="hud-actions seated-bar">
             <button className="btn" onClick={() => openPanel("rosary")}>
@@ -100,9 +101,22 @@ export function Hud({ onExit }: { onExit: () => void }) {
               {ui.meditate}
               <kbd>M</kbd>
             </button>
+            <button className="btn" onClick={bow}>
+              {ui.bow}
+              <kbd>B</kbd>
+            </button>
             <button className="btn" onClick={standUp}>
               {ui.stand}
               <kbd>F</kbd>
+            </button>
+          </div>
+        )}
+        {/* 서 있을 때는 어디서든, 바라보는 방향으로 절할 수 있음 (성모상·제단 앞에서는 물체 위 안내가 대신함) */}
+        {pose !== "sit" && panel === null && !nearShrine && (
+          <div className="hud-actions">
+            <button className="btn quiet" onClick={bow}>
+              🙇 {ui.bow}
+              <kbd>B</kbd>
             </button>
           </div>
         )}

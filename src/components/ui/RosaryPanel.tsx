@@ -37,6 +37,7 @@ export function RosaryPanel() {
   const [choosing, setChoosing] = useState(progress === null);
   const [options, setOptions] = useState<RosaryOptions>(progress?.options ?? DEFAULT_ROSARY_OPTIONS);
   const headingRef = useRef<HTMLHeadingElement>(null);
+  const closeRef = useRef<HTMLButtonElement>(null);
   const [use3D] = useState(() => {
     try {
       return !!document.createElement("canvas").getContext("webgl2");
@@ -57,17 +58,17 @@ export function RosaryPanel() {
     // 멈춤 상태였어도 묵주를 굴리면 다시 이어서 기도 (nextStep이 praying으로 바꿈)
     if (!p || p.status === "complete") return;
     setRosary(nextStep(p));
-    if (useApp.getState().settings.sound) beadClick();
+    if (useApp.getState().settings.sound) beadClick(0.07);
   }, [setRosary]);
   const goBack = useCallback(() => {
     const p = useApp.getState().rosary;
     if (!p || p.stepIndex === 0) return;
     setRosary(prevStep(p));
-    if (useApp.getState().settings.sound) beadClick(0.15);
+    if (useApp.getState().settings.sound) beadClick(0.045);
   }, [setRosary]);
 
   useEffect(() => {
-    headingRef.current?.focus();
+    (headingRef.current ?? closeRef.current)?.focus({ preventScroll: true });
   }, [choosing]);
 
   // 키보드 조작
@@ -175,58 +176,46 @@ export function RosaryPanel() {
   const step = steps[progress.stepIndex];
   const prayer = data.prayers[step.kind];
   const mystery = data.mysteries[progress.mystery];
-  const decadeInfo = step.decade > 0 ? mystery.decades[step.decade - 1] : null;
   const firstDecadeIndex = steps.findIndex((s) => s.decade === 1);
   const section = step.decade > 0 ? ui.decadeN(step.decade) : step.index < firstDecadeIndex ? ui.intro : ui.outro;
   const liveText = complete
     ? ui.complete
     : [section, prayer.name, step.hailMary ? ui.hailMaryCount(step.hailMary.n, step.hailMary.of) : ""].filter(Boolean).join(", ");
 
+  // 기도 중에는 글씨 없이 3D 묵주만 창 가득 보여 줌 (닫기·처음부터는 구석의 작은 아이콘)
   return (
-    <section className="panel rosary-panel" role="dialog" aria-modal="false" aria-labelledby="rosary-title">
-      <header className="panel-header">
-        <h2 id="rosary-title" ref={headingRef} tabIndex={-1}>
-          {mystery.name}
-          {!complete && <span className="sub"> · {section}</span>}
-        </h2>
-        <div className="row">
-          <button className="icon-btn" onClick={() => setChoosing(true)} aria-label={ui.restart} title={ui.restart}>
-            ↺
-          </button>
-          <button className="icon-btn" onClick={close} aria-label={ui.close}>
-            ✕
-          </button>
+    <section className="rosary-full" role="dialog" aria-modal="true" aria-label={mystery.name}>
+      {use3D ? (
+        <RosaryViewer done={done} currentKey={currentKey} onNext={advance} onPrev={goBack} hint={ui.rollHint} />
+      ) : (
+        <div className="rosary-full-2d">
+          <RosaryBeadsSvg steps={steps} stepIndex={progress.stepIndex} complete={complete} />
         </div>
-      </header>
-      <div className="panel-body rosary-body">
-        <div className="beads-wrap">
-          {use3D ? (
-            <RosaryViewer done={done} currentKey={currentKey} onNext={advance} onPrev={goBack} hint={ui.rollHint} />
-          ) : (
-            <RosaryBeadsSvg steps={steps} stepIndex={progress.stepIndex} complete={complete} />
-          )}
-        </div>
-
-        <div className="step-area">
-          <p className="sr-only" aria-live="polite">
-            {liveText}
-          </p>
-
-          {complete ? (
-            <div className="complete-card">
-              <h3>{ui.complete}</h3>
-              <div className="row">
-                <button className="btn" onClick={() => setChoosing(true)}>
-                  {ui.again}
-                </button>
-                <button className="btn primary" onClick={close}>
-                  {ui.close}
-                </button>
-              </div>
-            </div>
-          ) : null}
-        </div>
+      )}
+      <div className="rosary-corner">
+        <button className="icon-btn" onClick={() => setChoosing(true)} aria-label={ui.restart} title={ui.restart}>
+          ↺
+        </button>
+        <button className="icon-btn" ref={closeRef} onClick={close} aria-label={ui.close} title={ui.close}>
+          ✕
+        </button>
       </div>
+      <p className="sr-only" aria-live="polite">
+        {liveText}
+      </p>
+      {complete && (
+        <div className="complete-card rosary-complete">
+          <h3>{ui.complete}</h3>
+          <div className="row">
+            <button className="btn" onClick={() => setChoosing(true)}>
+              {ui.again}
+            </button>
+            <button className="btn primary" onClick={close}>
+              {ui.close}
+            </button>
+          </div>
+        </div>
+      )}
     </section>
   );
 }

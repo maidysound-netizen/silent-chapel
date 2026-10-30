@@ -213,6 +213,18 @@ kbd { font-size: 0.72em; border: 1px solid currentColor; border-radius: 4px; pad
   border: 1px solid var(--line); user-select: none; -webkit-user-select: none;
 }
 .rosary-3d:active { cursor: grabbing; }
+/* 기도 중: 묵주만 창 전체에 */
+.rosary-full {
+  position: fixed; inset: 0; z-index: 30; display: grid; place-items: stretch;
+  background: radial-gradient(ellipse at 50% 42%, rgba(60, 44, 24, 0.55), rgba(6, 4, 3, 0.92) 75%);
+  backdrop-filter: blur(6px); animation: panel-in 0.4s ease-out;
+}
+.rosary-full .rosary-3d { height: 100dvh; border: 0; border-radius: 0; background: none; }
+.rosary-full-2d { display: grid; place-items: center; }
+.rosary-full-2d .rosary-svg { width: auto; height: 86dvh; }
+.rosary-corner { position: absolute; top: max(12px, env(safe-area-inset-top)); right: 12px; display: flex; gap: 6px; opacity: 0.45; transition: opacity 0.2s; }
+.rosary-corner:hover, .rosary-corner:focus-within { opacity: 1; }
+.rosary-complete { position: absolute; left: 50%; bottom: 8dvh; transform: translateX(-50%); background: var(--panel); border: 1px solid var(--line); border-radius: var(--radius); padding: 18px 22px; }
 .rosary-svg { width: min(220px, 60%); height: auto; }
 .bead { fill: var(--bead-todo); stroke: rgba(0, 0, 0, 0.35); stroke-width: 0.6; transition: fill 0.8s ease, filter 0.8s ease; }
 .bead-done { fill: var(--bead-done); }

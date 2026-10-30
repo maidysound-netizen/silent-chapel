@@ -1,5 +1,5 @@
 "use client";
-// 배경 성가 재생. 사용자가 소리를 켰을 때만 재생하며(자동 재생 없음), 곡 사이에 고요한 쉼을 둡니다.
+// 배경 성가 재생. 사용자가 소리를 켰을 때만 재생하며(자동 재생 없음), 목록의 곡을 이어서 반복하고 곡 사이에 고요한 쉼을 둡니다.
 // 브라우저가 음원 형식을 재생하지 못하면 직접 합성한 잔잔한 음(useAmbientSound)으로 대신합니다.
 import { useEffect, useRef, useState } from "react";
 import { MUSIC_TRACKS } from "@/lib/music";
@@ -30,13 +30,15 @@ export function useSacredMusic(enabled: boolean): MusicMode {
 
   useEffect(() => {
     if (!enabled) return;
-    const track = MUSIC_TRACKS[0];
     const probe = document.createElement("audio");
-    if (!probe.canPlayType(track.mime)) {
+    if (!probe.canPlayType(MUSIC_TRACKS[0].mime)) {
       setFallback(true);
       return;
     }
-    const el = new Audio(track.src);
+    // 목록을 순서대로 이어서 재생하고, 끝나면 처음으로 돌아가 반복
+    let index = 0;
+    let failures = 0;
+    const el = new Audio();
     el.preload = "auto";
     el.volume = 0;
     elRef.current = el;
@@ -45,19 +47,35 @@ export function useSacredMusic(enabled: boolean): MusicMode {
 
     const start = () => {
       if (stopped) return;
-      el.currentTime = 0;
+      el.src = MUSIC_TRACKS[index].src;
       el.volume = 0;
       el.play()
         .then(() => {
+          failures = 0;
           setPlaying(true);
           fade(el, TARGET_VOLUME, FADE_MS);
         })
-        .catch(() => setFallback(true));
+        .catch((e: DOMException) => {
+          // 자동 재생 차단이면 합성음으로, 파일 문제면 다음 곡으로
+          if (e.name === "NotAllowedError") setFallback(true);
+          else skip();
+        });
+    };
+    const next = () => {
+      index = (index + 1) % MUSIC_TRACKS.length;
+    };
+    const skip = () => {
+      if (stopped) return;
+      if (++failures >= MUSIC_TRACKS.length) return setFallback(true);
+      next();
+      start();
     };
     const onEnded = () => {
-      rest = setTimeout(start, track.restMs);
+      const restMs = MUSIC_TRACKS[index].restMs;
+      next();
+      rest = setTimeout(start, restMs);
     };
-    const onError = () => setFallback(true);
+    const onError = () => skip();
     el.addEventListener("ended", onEnded);
     el.addEventListener("error", onError);
     start();
@@ -69,7 +87,8 @@ export function useSacredMusic(enabled: boolean): MusicMode {
       el.removeEventListener("error", onError);
       fade(el, 0, 800, () => {
         el.pause();
-        el.src = "";
+        el.removeAttribute("src");
+        el.load();
       });
       elRef.current = null;
       setPlaying(false);
