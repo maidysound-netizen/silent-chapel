@@ -3,6 +3,7 @@
 // 나중에 고품질 GLTF 모델로 바꿀 때는 각 컴포넌트만 교체하면 됩니다.
 import { useLayoutEffect, useMemo, useRef } from "react";
 import { useFrame } from "@react-three/fiber";
+import { StatueModel, STATUE_URLS } from "./StatueModel";
 import * as THREE from "three";
 import {
   ALTAR,
@@ -10,9 +11,11 @@ import {
   CRUCIFIX,
   KNEELER,
   MARY,
+  MARY_SHRINE,
   PEWS,
   PEW_DEPTH,
   SANCTUARY_Y,
+  WALL_X,
 } from "@/lib/game/chapelLayout";
 
 const WOOD = "#6b4428";
@@ -132,10 +135,10 @@ function Altar() {
   );
 }
 
-/** 십자가와 예수님 십자가상 — 단순하고 절제된 형태로 표현 */
-function Crucifix() {
+/** 십자가상 GLB를 불러오는 동안·실패했을 때 보이는 단순한 십자가상 (예전 모형, 벽에 걸린 형태) */
+function CrucifixFallback() {
   return (
-    <group position={[CRUCIFIX.x, CRUCIFIX.y, CRUCIFIX.z]}>
+    <group position={[CRUCIFIX.x, 3.2, CRUCIFIX.z - 0.2]}>
       {/* 십자가 */}
       <mesh position={[0, 2.6, 0]} castShadow>
         <boxGeometry args={[0.32, 6.2, 0.2]} />
@@ -182,8 +185,20 @@ function Crucifix() {
   );
 }
 
-/** 성모 마리아상 — 흰 옷과 푸른 망토의 단순한 조각상 */
-function Mary() {
+/** 십자가상: 받침이 바닥(제단 단)에 닿아 위로 솟은 Meshy 모델 */
+function Crucifix() {
+  return (
+    <StatueModel
+      url={STATUE_URLS.crucifix}
+      position={[CRUCIFIX.x, CRUCIFIX.y, CRUCIFIX.z]}
+      height={CRUCIFIX.height}
+      fallback={<CrucifixFallback />}
+    />
+  );
+}
+
+/** 성모 마리아상 GLB를 불러오는 동안·실패했을 때 보이는 단순한 조각상 (예전 모형) */
+function MaryFallback() {
   const robe = useMemo(() => {
     const pts = [
       [0.0, 0],
@@ -243,6 +258,66 @@ function Mary() {
   );
 }
 
+/**
+ * 성모 기도 공간 (왼쪽 측랑): 돌 받침대 위 성모상(Meshy 모델), 벽의 푸른 감실과 금빛 아치, 바닥 카펫.
+ * 무릎틀·봉헌 초·묵주 받침은 기존 위치 그대로입니다.
+ */
+function MaryShrine() {
+  const { pedestalH, statueH, rug } = MARY_SHRINE;
+  const wallX = -WALL_X + 0.06;
+  return (
+    <group>
+      {/* 바닥 카펫: 이 구역이 따로 마련된 기도 자리임을 보여 줌 */}
+      <mesh position={[(rug.minX + rug.maxX) / 2, 0.012, (rug.minZ + rug.maxZ) / 2]} rotation={[-Math.PI / 2, 0, 0]} receiveShadow>
+        <planeGeometry args={[rug.maxX - rug.minX, rug.maxZ - rug.minZ]} />
+        <meshStandardMaterial color="#26355e" roughness={0.95} />
+      </mesh>
+      <mesh position={[(rug.minX + rug.maxX) / 2, 0.014, (rug.minZ + rug.maxZ) / 2]} rotation={[-Math.PI / 2, 0, 0]}>
+        <planeGeometry args={[rug.maxX - rug.minX - 0.25, rug.maxZ - rug.minZ - 0.25]} />
+        <meshStandardMaterial color="#2f4274" roughness={0.95} />
+      </mesh>
+      {/* 벽 감실: 푸른 판과 금빛 아치 */}
+      <group position={[wallX, 0, MARY.z]} rotation={[0, Math.PI / 2, 0]}>
+        <mesh position={[0, 1.8, 0]} receiveShadow>
+          <planeGeometry args={[1.9, 3.6]} />
+          <meshStandardMaterial color="#1d2b52" roughness={0.9} />
+        </mesh>
+        <mesh position={[0, 3.6, 0.01]}>
+          <circleGeometry args={[0.95, 32, 0, Math.PI]} />
+          <meshStandardMaterial color="#1d2b52" roughness={0.9} />
+        </mesh>
+        <mesh position={[0, 3.6, 0.03]}>
+          <torusGeometry args={[0.95, 0.04, 8, 40, Math.PI]} />
+          <meshStandardMaterial color={GOLD} metalness={0.7} roughness={0.35} />
+        </mesh>
+        {[-1, 1].map((s) => (
+          <mesh key={s} position={[s * 0.95, 1.8, 0.03]}>
+            <boxGeometry args={[0.08, 3.6, 0.06]} />
+            <meshStandardMaterial color={GOLD} metalness={0.7} roughness={0.35} />
+          </mesh>
+        ))}
+      </group>
+      {/* 돌 받침대 */}
+      <mesh position={[MARY.x, pedestalH / 2, MARY.z]} castShadow receiveShadow>
+        <boxGeometry args={[0.75, pedestalH, 0.75]} />
+        <meshStandardMaterial color="#cbbfa8" roughness={0.8} />
+      </mesh>
+      <mesh position={[MARY.x, pedestalH + 0.02, MARY.z]} castShadow>
+        <boxGeometry args={[0.85, 0.04, 0.85]} />
+        <meshStandardMaterial color="#b9ab92" roughness={0.75} />
+      </mesh>
+      {/* 성모상: Meshy 모델은 +Z 가 정면이라 반 바퀴 돌려 +X(신자석 쪽)를 바라보게 함 */}
+      <StatueModel
+        url={STATUE_URLS.mary}
+        position={[MARY.x, pedestalH + 0.04, MARY.z]}
+        rotationY={MARY.yaw + Math.PI}
+        height={statueH}
+        fallback={<MaryFallback />}
+      />
+    </group>
+  );
+}
+
 function CandleRack() {
   const candles = useMemo(() => {
     const out: [number, number, number][] = [];
@@ -297,7 +372,7 @@ export function Furnishings() {
       <PewInstances />
       <Altar />
       <Crucifix />
-      <Mary />
+      <MaryShrine />
       <CandleRack />
       <Kneeler />
     </group>

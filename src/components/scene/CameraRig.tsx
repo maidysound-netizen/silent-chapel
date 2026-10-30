@@ -104,7 +104,7 @@ export function CameraRig() {
       if (!wasMeditating.current) localPlayer.meditationLook = { yaw: 0, pitch: 0 };
       desired.current.set(s.x, s.y + 1.25, s.z - 0.05);
       const cx = CRUCIFIX.x - desired.current.x;
-      const cy = CRUCIFIX.y + 3.6 - desired.current.y;
+      const cy = CRUCIFIX.focusY - desired.current.y;
       const cz = CRUCIFIX.z - desired.current.z;
       const yaw = Math.atan2(cx, cz) + localPlayer.meditationLook.yaw;
       const pitch = THREE.MathUtils.clamp(Math.atan2(cy, Math.hypot(cx, cz)) + localPlayer.meditationLook.pitch, -1.2, 1.3);

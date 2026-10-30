@@ -9,3 +9,6 @@ next-env.d.ts
 .DS_Store
 ._*
 .vercel
+
+# Meshy 원본 3D 모델 (용량이 커서 Git 제외. 웹용 사본은 public/models/chapel)
+object/

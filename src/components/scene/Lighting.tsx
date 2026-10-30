@@ -3,7 +3,7 @@
 import { useEffect, useRef } from "react";
 import { useFrame } from "@react-three/fiber";
 import * as THREE from "three";
-import { ALTAR, CANDLE_RACK, CRUCIFIX, MARY, SANCTUARY_Y } from "@/lib/game/chapelLayout";
+import { ALTAR, CANDLE_RACK, CRUCIFIX, MARY, MARY_SHRINE, SANCTUARY_Y } from "@/lib/game/chapelLayout";
 import type { Quality } from "@/store/useAppStore";
 
 function FlickerLight({ position, base, color, distance }: { position: [number, number, number]; base: number; color: string; distance: number }) {
@@ -34,13 +34,18 @@ function LightShafts() {
 export function Lighting({ quality }: { quality: Quality }) {
   const spot = useRef<THREE.SpotLight>(null);
   const sun = useRef<THREE.DirectionalLight>(null);
+  const marySpot = useRef<THREE.SpotLight>(null);
   const high = quality === "high";
   const low = quality === "low";
 
   useEffect(() => {
     if (spot.current) {
-      spot.current.target.position.set(CRUCIFIX.x, CRUCIFIX.y + 3, CRUCIFIX.z);
+      spot.current.target.position.set(CRUCIFIX.x, CRUCIFIX.focusY - 0.6, CRUCIFIX.z);
       spot.current.target.updateMatrixWorld();
+    }
+    if (marySpot.current) {
+      marySpot.current.target.position.set(MARY.x, MARY_SHRINE.pedestalH + MARY_SHRINE.statueH * 0.6, MARY.z);
+      marySpot.current.target.updateMatrixWorld();
     }
     if (sun.current) {
       sun.current.target.position.set(0, 0, -2);
@@ -92,7 +97,21 @@ export function Lighting({ quality }: { quality: Quality }) {
         <>
           {/* 성모상과 봉헌 초 */}
           <FlickerLight position={[CANDLE_RACK.x + 0.8, 1.4, CANDLE_RACK.z]} base={2.4} color="#ffb766" distance={6} />
-          <pointLight position={[MARY.x + 1.5, 3.4, MARY.z]} intensity={4} distance={6} color="#dfe6ff" decay={2} />
+          {/* 성모상을 앞 위에서 비추는 부드러운 빛 (높은 품질에서만 그림자) */}
+          <spotLight
+            ref={marySpot}
+            position={[MARY.x + 2.4, 4.6, MARY.z + 0.4]}
+            angle={0.45}
+            penumbra={0.8}
+            intensity={22}
+            distance={9}
+            decay={1.8}
+            color="#e8ecff"
+            castShadow={high}
+            shadow-mapSize-width={512}
+            shadow-mapSize-height={512}
+            shadow-bias={-0.0008}
+          />
         </>
       )}
       {high && (

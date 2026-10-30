@@ -24,3 +24,19 @@ export const AVATAR_MODEL = {
 - **앉기(Sit) 클립**: 엉덩이가 장의자 좌판 높이(0.49m)에 오도록. 클립이 없으면 GLB 캐릭터는 앉은 자리에서 서 있는 Idle로 보입니다
 
 이 폴더의 파일은 `public/` 아래라서 누구나 내려받을 수 있습니다. 공개하면 안 되는 모델은 넣지 마세요.
+
+## 성당 성상 (chapel/)
+
+`chapel/crucifix.glb`, `chapel/mary.glb` 는 Meshy AI 원본(`object/` 폴더, 각 40~56MB, 63만·116만 삼각형)을
+모바일용으로 줄인 사본입니다 (각 1MB 이하, 약 6~7만 삼각형, 1024px WebP 텍스처, meshopt 압축).
+원본은 수정하지 않았습니다. 다시 만들 때 (프로젝트 밖 임시 폴더에 도구 설치):
+
+```bash
+npx @gltf-transform/cli@4 optimize object/Meshy_AI_crucifix_statue_….glb public/models/chapel/crucifix.glb \
+  --compress meshopt --texture-compress webp --texture-size 1024 --simplify-ratio 0.1 --simplify-error 0.0005
+npx @gltf-transform/cli@4 optimize object/Meshy_AI_virgin_mary_statue_….glb public/models/chapel/mary.glb \
+  --compress meshopt --texture-compress webp --texture-size 1024 --simplify-ratio 0.06 --simplify-error 0.0005
+```
+
+배치·크기는 `src/lib/game/chapelLayout.ts` 의 `CRUCIFIX`(받침이 제단 단 바닥에, 높이 6.4m)와
+`MARY_SHRINE`(받침대 0.7m + 성모상 1.7m)에서, 불러오기·재질 보정은 `src/components/scene/StatueModel.tsx` 에서 합니다.

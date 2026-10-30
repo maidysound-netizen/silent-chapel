@@ -83,8 +83,14 @@ export const SEATS: Seat[] = PEWS.flatMap((p) => p.seats);
 export const SEAT_BY_ID = new Map(SEATS.map((s) => [s.id, s]));
 
 export const ALTAR = { x: 0, z: -16.5, width: 3.2, depth: 1.2, height: 1.05 };
-export const CRUCIFIX = { x: 0, z: -20.6, y: 3.2 };
+/**
+ * 제단 뒤 바닥(제단 단 위)에 받침째 서 있는 십자가상 (Meshy GLB).
+ * y = 받침 밑면 높이, height = 받침부터 십자가 꼭대기까지, focusY = 예수님 상 가슴 높이(시선·조명 목표)
+ */
+export const CRUCIFIX = { x: 0, z: -20.4, y: SANCTUARY_Y, height: 6.4, focusY: SANCTUARY_Y + 4.6 };
 export const MARY = { x: -8.7, z: -7.5, yaw: -Math.PI / 2 }; // 오른쪽(+X)을 바라봄
+/** 왼쪽 측랑의 성모 기도 공간: 받침대 위 성모상, 벽의 푸른 감실, 바닥 카펫 */
+export const MARY_SHRINE = { pedestalH: 0.7, statueH: 1.7, rug: { minX: -9.5, maxX: -6.7, minZ: -9.3, maxZ: -5.0 } };
 export const ROSARY_STAND = { x: -7.6, z: -6.3, y: 0.95 };
 export const KNEELER = { x: -7.3, z: -7.5 };
 export const CANDLE_RACK = { x: -8.6, z: -5.6 };
@@ -95,12 +101,13 @@ export const SPAWN = { x: 0, z: 13, yaw: 0 };
 export const COLLIDER_BOXES: Box2[] = [
   ...PEWS.map((p) => ({ x: p.x, z: p.z + 0.05, hx: p.width / 2, hz: PEW_DEPTH / 2, top: 1.0 })),
   { x: ALTAR.x, z: ALTAR.z, hx: ALTAR.width / 2 + 0.2, hz: ALTAR.depth / 2 + 0.2, top: SANCTUARY_Y + ALTAR.height + 0.6 },
-  { x: MARY.x, z: MARY.z, hx: 0.6, hz: 0.6, top: 2.9 },
+  { x: MARY.x, z: MARY.z, hx: 0.45, hz: 0.45, top: MARY_SHRINE.pedestalH + MARY_SHRINE.statueH },
   { x: ROSARY_STAND.x, z: ROSARY_STAND.z, hx: 0.3, hz: 0.3, top: 1.1 },
   { x: KNEELER.x - 0.15, z: KNEELER.z, hx: 0.3, hz: 0.55, top: 0.9 },
   { x: CANDLE_RACK.x, z: CANDLE_RACK.z, hx: 0.3, hz: 0.62, top: 1.2 },
   { x: AMBO.x, z: AMBO.z, hx: 0.45, hz: 0.4, top: 1.6 },
-  { x: CRUCIFIX.x, z: -21, hx: 2.5, hz: 0.6, top: 7 },
+  // 십자가상 받침(폭 약 1.8m)과 기둥. 팔(높이 4.6m 이상)은 사람·카메라 높이 위라 충돌 상자에서 뺌
+  { x: CRUCIFIX.x, z: CRUCIFIX.z - 0.3, hx: 0.95, hz: 0.7, top: CRUCIFIX.y + CRUCIFIX.height },
 ];
 
 export const COLLIDER_CIRCLES: Circle2[] = COLUMN_ZS.flatMap((z) => [
