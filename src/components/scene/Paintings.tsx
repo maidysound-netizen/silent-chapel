@@ -14,9 +14,14 @@ export interface PaintingDef {
   /** 그림 크기(m, 액자 제외) */
   width: number;
   height: number;
+  /** false 면 액자 없이 벽에 직접 그린 프레스코처럼 */
+  frame?: boolean;
 }
 
 export const PAINTINGS: PaintingDef[] = [
+  // 천상의 영광 — 십자가상 바로 뒤 벽화. 가운데 빛기둥(십자가 없음) 앞에 3D 십자가상이 섬.
+  // 양옆 창문(x ±1.9 부터, 높이 6.6m 부터)과 겹치지 않는 크기
+  { url: "/art/glory-mural.jpg", position: [0, 3.85, APSE_Z + 0.03], rotationY: 0, width: 3.8, height: 5.7, frame: false },
   // 성모 영보 — 제단 뒤 벽, 십자가상 왼쪽(성모 기도 공간 쪽)
   { url: "/art/annunciation.jpg", position: [-4.8, SANCTUARY_Y + 3.75, APSE_Z + 0.06], rotationY: 0, width: 2.4, height: 3.6 },
 ];
@@ -71,7 +76,7 @@ export function Paintings() {
     <group>
       {PAINTINGS.map((p) => (
         <group key={p.url} position={p.position} rotation={[0, p.rotationY, 0]}>
-          <Frame width={p.width} height={p.height} />
+          {p.frame !== false && <Frame width={p.width} height={p.height} />}
           <PaintingBoundary>
             <Suspense fallback={null}>
               <Canvas url={p.url} width={p.width} height={p.height} />

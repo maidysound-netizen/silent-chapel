@@ -28,6 +28,7 @@
 | 그림 | 출처 | 웹용 파일 |
 | --- | --- | --- |
 | 성모 영보 | 프로젝트 소유자가 이미지 생성 AI 로 만든 그림 (원본 `object/` 폴더 PNG, Git 제외) | `public/art/annunciation.jpg` (JPEG 82%) |
+| 천상의 영광 (제단 뒤 벽화) | 프로젝트 소유자가 이미지 생성 AI 로 만든 그림 (원본 `object/jesus.jpg`, Git 제외) | `public/art/glory-mural.jpg` (JPEG 82%) |
 코드로 만든 예전 십자가상·성모상은 모델을 불러오는 동안·실패했을 때 대신 보입니다.
 
 ## 기도문
