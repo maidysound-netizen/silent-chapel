@@ -182,7 +182,8 @@ export function Architecture({ quality }: { quality: Quality }) {
         <meshStandardMaterial color="#c9bba3" roughness={0.7} />
       </mesh>
       <mesh position={[0, SANCTUARY_Y / 2, (SANCTUARY_Z - 0.3 + APSE_Z) / 2]} receiveShadow>
-        <boxGeometry args={[12, SANCTUARY_Y, APSE_Z - (SANCTUARY_Z - 0.3)]} />
+        {/* 깊이는 양수여야 함: 음수면 면이 뒤집혀 윗면이 사라지고, 밑면이 본당 바닥(y=0)과 겹쳐 물결무늬(z-fighting)가 생김 */}
+        <boxGeometry args={[12, SANCTUARY_Y, SANCTUARY_Z - 0.3 - APSE_Z]} />
         <meshStandardMaterial color="#d2c5ad" roughness={0.6} />
       </mesh>
 
