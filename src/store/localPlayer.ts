@@ -1,6 +1,7 @@
 "use client";
 // 로컬 플레이어의 가변 상태. 매 프레임 바뀌므로 React 상태 대신 일반 객체로 둡니다.
 import { BOW_MS, createPlayerState, type PlayerState } from "@/lib/game/PlayerState";
+import { CROSS_MS } from "@/lib/game/gestures";
 import { ALTAR, CRUCIFIX, MARY, SPAWN, type Seat, SEAT_BY_ID, floorHeight } from "@/lib/game/chapelLayout";
 import { collide } from "@/lib/game/PlayerController";
 import { findInteraction, findSeat } from "@/lib/game/InteractionSystem";
@@ -15,6 +16,7 @@ export const localPlayer = {
   run: { key: false, touch: false },
   camera: { yaw: 0, pitch: 0.28, distance: 4.2 },
   bow: { at: 0 },
+  cross: { at: 0 },
   /** 묵상 시점에서 둘러본 정도 (십자가 방향 기준 오프셋, 라디안) */
   meditationLook: { yaw: 0, pitch: 0 },
 };
@@ -90,6 +92,14 @@ export function bow() {
   }
   localPlayer.bow.at = now;
   getNetworkManager().sendGesture("bow");
+}
+
+/** C 키 / 성호 버튼: 서 있든 앉아 있든 그 자리에서 성호를 그음 */
+export function signCross() {
+  const now = Date.now();
+  if (now - localPlayer.cross.at < CROSS_MS) return;
+  localPlayer.cross.at = now;
+  getNetworkManager().sendGesture("cross");
 }
 
 /** F 키 / 앉기·일어나기 버튼 */

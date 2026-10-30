@@ -399,3 +399,17 @@ test("[시뮬레이션] 가짜 내보내기 알림은 서버 확인에서 걸러
   assert.ok(other.net.getSnapshot().others.some((o) => o.uid === victim.uid), "다른 사람 화면에서도 그대로 보임");
   for (const p of players) await p.net.disconnect();
 });
+
+test("[시뮬레이션] 성호 긋기: 상대에게 전달되고, 절과 따로 기록됨", async () => {
+  const { players } = await makePlayers(2);
+  const [a, b] = players;
+  a.net.sendGesture("cross");
+  await tick();
+  const r = b.net.remotes.get(a.uid)!;
+  assert.ok(r.cross.at > 0, "B가 A의 성호를 받음");
+  assert.equal(r.bow.at, 0, "절은 아님");
+  a.net.sendGesture("bow");
+  await tick();
+  assert.ok(r.bow.at > 0, "성호 직후 절도 따로 받음");
+  for (const p of players) await p.net.disconnect();
+});

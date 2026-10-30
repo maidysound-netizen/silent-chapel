@@ -170,9 +170,10 @@ export function interpolationDelayMs(hz: number): number {
   return Math.max(120, Math.min(1500, (1000 / hz) * 1.6));
 }
 
-// ---- 제스처 (절) ----
+// ---- 제스처 (절 · 성호) ----
+// 예전 앱은 "cross" 를 모르는 형식으로 보고 무시하므로 함께 접속해도 문제없음
 
-export type Gesture = "bow";
+export type Gesture = "bow" | "cross";
 /** Broadcast 'gs' 이벤트: 짧은 동작 신호. 위치와 달리 한 번만 보냅니다 */
 export interface GestureMessage {
   v: number;
@@ -184,9 +185,9 @@ export interface GestureMessage {
 export function validateGesture(raw: unknown, now = Date.now()): GestureMessage | null {
   if (!raw || typeof raw !== "object") return null;
   const m = raw as Record<string, unknown>;
-  if (m.v !== PROTOCOL_VERSION || !isUserId(m.u) || m.g !== "bow") return null;
+  if (m.v !== PROTOCOL_VERSION || !isUserId(m.u) || (m.g !== "bow" && m.g !== "cross")) return null;
   if (!finite(m.t) || m.t > now + MAX_FUTURE_MS || m.t < now - MAX_AGE_MS) return null;
-  return { v: PROTOCOL_VERSION, u: m.u, t: m.t, g: "bow" };
+  return { v: PROTOCOL_VERSION, u: m.u, t: m.t, g: m.g };
 }
 
 // ---- 관리자 내보내기 알림 ----

@@ -87,5 +87,5 @@ export function LocalPlayer() {
     return () => void delete w.__chapelDebug;
   }, []);
 
-  return <Avatar ref={ref} color="#8b7d6b" pose={pose} bow={localPlayer.bow} getAnim={getLocalAnim} label={nickname} showLabel={false} />;
+  return <Avatar ref={ref} color="#8b7d6b" pose={pose} bow={localPlayer.bow} cross={localPlayer.cross} getAnim={getLocalAnim} label={nickname} showLabel={false} />;
 }

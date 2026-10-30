@@ -6,7 +6,7 @@ import { useApp, loadNickname, loadSettings } from "@/store/useAppStore";
 import { loadProgress } from "@/lib/rosary/storage";
 import { getNetworkManager } from "@/lib/net/NetworkManager";
 import { roomFromLocation } from "@/lib/net/RoomManager";
-import { bow, localPlayer, interact, resetLocalPlayer, toggleSit } from "@/store/localPlayer";
+import { bow, localPlayer, interact, resetLocalPlayer, signCross, toggleSit } from "@/store/localPlayer";
 import { EntryScreen } from "./ui/EntryScreen";
 import { Hud } from "./ui/Hud";
 import { RosaryPanel } from "./ui/RosaryPanel";
@@ -66,6 +66,7 @@ function useKeyboard(active: boolean) {
       else if (e.code === "KeyE") interact();
       else if (e.code === "KeyF") toggleSit();
       else if (e.code === "KeyB") bow();
+      else if (e.code === "KeyC") signCross();
       else if (e.code === "KeyM" && app.pose === "sit") app.setMeditation(!app.meditation);
       else if (e.code === "KeyR" && app.pose === "sit") app.openPanel("rosary");
     };

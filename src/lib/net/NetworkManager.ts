@@ -48,6 +48,8 @@ export interface RemotePlayer {
   present: boolean;
   /** 절 동작 시작 시각 (아바타가 매 프레임 읽음) */
   bow: { at: number };
+  /** 성호 긋기 시작 시각 */
+  cross: { at: number };
 }
 
 export interface NetMetrics {
@@ -437,6 +439,7 @@ export class NetworkManager {
       anim: "idle",
       present: true,
       bow: { at: 0 },
+      cross: { at: 0 },
     };
     this.remotes.set(uid, r);
     return r;
@@ -527,8 +530,9 @@ export class NetworkManager {
       this.metrics.droppedInvalid++;
       return;
     }
-    if (now - r.bow.at < GESTURE_MIN_MS) return;
-    r.bow.at = now;
+    const g = msg.g === "cross" ? r.cross : r.bow;
+    if (now - g.at < GESTURE_MIN_MS) return;
+    g.at = now;
   }
 
   // ---------- 관리자 내보내기 ----------

@@ -8,7 +8,7 @@ import { roomNumber } from "@/lib/net/RoomManager";
 import { RunButton, TouchJoystick } from "./TouchJoystick";
 import { NetStats } from "./NetStats";
 import { FEATURES } from "@/lib/features";
-import { bow, standUp } from "@/store/localPlayer";
+import { bow, signCross, standUp } from "@/store/localPlayer";
 import { LanguageTabs } from "./LanguageTabs";
 
 export function PresenceChip() {
@@ -129,6 +129,10 @@ export function Hud({ onExit }: { onExit: () => void }) {
               {ui.bow}
               <kbd>B</kbd>
             </button>
+            <button className="btn" onClick={signCross}>
+              ✝ {ui.signCross}
+              <kbd>C</kbd>
+            </button>
             <button className="btn" onClick={standUp}>
               {ui.stand}
               <kbd>F</kbd>
@@ -141,6 +145,10 @@ export function Hud({ onExit }: { onExit: () => void }) {
             <button className="btn quiet" onClick={bow}>
               🙇 {ui.bow}
               <kbd>B</kbd>
+            </button>
+            <button className="btn quiet" onClick={signCross}>
+              ✝ {ui.signCross}
+              <kbd>C</kbd>
             </button>
           </div>
         )}

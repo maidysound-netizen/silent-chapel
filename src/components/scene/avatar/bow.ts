@@ -4,6 +4,7 @@ import type { RefObject } from "react";
 import { useFrame } from "@react-three/fiber";
 import type * as THREE from "three";
 import { BOW_MS } from "@/lib/game/PlayerState";
+import { crossHandOffset } from "@/lib/game/gestures";
 
 export interface BowState {
   at: number;
@@ -23,5 +24,16 @@ export function useBow(group: RefObject<THREE.Group | null>, bow: BowState | und
   useFrame(() => {
     if (!group.current) return;
     group.current.rotation.x = -maxAngle * (bow ? bowAmount(bow.at, Date.now()) : 0);
+  });
+}
+
+/** 성호 긋는 오른손. 머리 중심(headCenter, 부모 그룹 기준)에서 crossHandOffset 만큼 떨어진 곳에 잠깐 나타남 */
+export function useCrossHand(hand: RefObject<THREE.Object3D | null>, cross: BowState | undefined, headCenter: readonly [number, number, number]) {
+  useFrame(() => {
+    const h = hand.current;
+    if (!h) return;
+    const off = cross ? crossHandOffset(cross.at, Date.now()) : null;
+    h.visible = off !== null;
+    if (off) h.position.set(headCenter[0] + off[0], headCenter[1] + off[1], headCenter[2] + off[2]);
   });
 }
