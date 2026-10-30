@@ -33,15 +33,17 @@ function LightShafts() {
 
 export function Lighting({ quality }: { quality: Quality }) {
   const spot = useRef<THREE.SpotLight>(null);
+  const fill = useRef<THREE.SpotLight>(null);
   const sun = useRef<THREE.DirectionalLight>(null);
   const marySpot = useRef<THREE.SpotLight>(null);
   const high = quality === "high";
   const low = quality === "low";
 
   useEffect(() => {
-    if (spot.current) {
-      spot.current.target.position.set(CRUCIFIX.x, CRUCIFIX.focusY - 0.6, CRUCIFIX.z);
-      spot.current.target.updateMatrixWorld();
+    for (const l of [spot.current, fill.current]) {
+      if (!l) continue;
+      l.target.position.set(CRUCIFIX.x, CRUCIFIX.focusY, CRUCIFIX.z);
+      l.target.updateMatrixWorld();
     }
     if (marySpot.current) {
       marySpot.current.target.position.set(MARY.x, MARY_SHRINE.pedestalH + MARY_SHRINE.statueH * 0.6, MARY.z);
@@ -57,8 +59,9 @@ export function Lighting({ quality }: { quality: Quality }) {
     <>
       <color attach="background" args={["#120d09"]} />
       <fog attach="fog" args={["#1a130d", 20, 62]} />
-      <hemisphereLight args={["#b9c4dc", "#3a2a1c", low ? 0.75 : 0.55]} />
-      <ambientLight intensity={low ? 0.35 : 0.22} color="#ffe9cc" />
+      {/* 사방에서 고르게 오는 빛은 조각상을 납작하게 만들므로 약하게 둠 */}
+      <hemisphereLight args={["#b9c4dc", "#3a2a1c", low ? 0.6 : 0.38]} />
+      <ambientLight intensity={low ? 0.25 : 0.13} color="#ffe9cc" />
 
       {/* 왼쪽 창으로 들어오는 오후 햇빛 */}
       <directionalLight
@@ -78,18 +81,29 @@ export function Lighting({ quality }: { quality: Quality }) {
         shadow-bias={-0.0005}
       />
 
-      {/* 십자가를 비추는 스포트라이트 */}
+      {/*
+        십자가상 주 조명: 정면에서 비추면 근육·옷 주름에 그늘이 생기지 않아 평면처럼 보이므로
+        앞 오른쪽 위에서 비스듬히(약 45°) 비춥니다.
+      */}
       <spotLight
         ref={spot}
-        position={[0, 12, -12]}
-        angle={0.42}
+        position={[CRUCIFIX.x + 6, 10.5, CRUCIFIX.z + 6.4]}
+        angle={0.34}
         penumbra={0.7}
-        intensity={low ? 90 : 120}
+        intensity={low ? 170 : 190}
         distance={30}
         decay={1.6}
         color="#fff0d6"
         castShadow={high}
+        shadow-mapSize-width={1024}
+        shadow-mapSize-height={1024}
+        shadow-bias={-0.0006}
+        shadow-normalBias={0.02}
       />
+      {/* 반대쪽 그늘이 새까매지지 않게 하는 약하고 푸른 보조광 (휴대폰 낮은 품질에서는 생략) */}
+      {!low && (
+        <spotLight ref={fill} position={[CRUCIFIX.x - 6, 6, CRUCIFIX.z + 5.4]} angle={0.34} penumbra={0.8} intensity={30} distance={30} decay={1.6} color="#aebcff" />
+      )}
 
       {/* 제단 촛불 */}
       <FlickerLight position={[ALTAR.x, SANCTUARY_Y + 2, ALTAR.z + 0.6]} base={low ? 3 : 4} color="#ffc27a" distance={9} />

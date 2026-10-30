@@ -12,7 +12,8 @@ import { LocalPlayer } from "./LocalPlayer";
 import { RemoteAvatars } from "./RemoteAvatars";
 import { CameraRig } from "./CameraRig";
 
-const DPR: Record<string, [number, number]> = { low: [0.75, 1], medium: [1, 1.5], high: [1, 2] };
+// 낮은 품질(휴대폰 기본)도 최소 1배로: 0.75배는 화면이 뭉개져 조각상 디테일이 사라짐. 느리면 AdaptiveDpr 가 낮춤
+const DPR: Record<string, [number, number]> = { low: [1, 1.25], medium: [1, 1.5], high: [1, 2] };
 
 export default function ChapelCanvas() {
   const quality = useApp((s) => s.settings.quality);

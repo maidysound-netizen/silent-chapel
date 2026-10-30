@@ -69,8 +69,15 @@ export function LocalPlayer() {
     w.__chapelDebug = {
       state: () => ({ ...localPlayer.state }),
       camera: () => sceneRefs.camera?.position.toArray(),
+      cameraObject: () => sceneRefs.camera,
       setCamera: (yaw: number, pitch: number, distance: number) => Object.assign(localPlayer.camera, { yaw, pitch, distance }),
       teleport: (x: number, z: number) => void (localPlayer.state = { ...localPlayer.state, x, z }),
+      /** 조명·재질을 콘솔에서 살펴보기 위한 장면 루트 */
+      scene: () => {
+        let o: THREE.Object3D | null | undefined = ref.current;
+        while (o?.parent) o = o.parent;
+        return o;
+      },
       anim: () => {
         let s: unknown = null;
         ref.current?.traverse((o) => (s ??= o.userData.animState ?? null));
