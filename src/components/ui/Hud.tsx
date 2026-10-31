@@ -188,8 +188,13 @@ export function Hud({ onExit }: { onExit: () => void }) {
             </button>
           </div>
         )}
-        {meditation && (
+        {meditation && panel === null && (
           <div className="hud-actions">
+            {/* 십자가를 바라보는 묵상 시점 그대로 묵주기도 */}
+            <button className="btn quiet" onClick={() => openPanel("rosary")}>
+              📿 {ui.rosary}
+              <kbd>R</kbd>
+            </button>
             <button className="btn quiet" onClick={() => setMeditation(false)}>
               {ui.leaveMeditation}
               <kbd>M</kbd>

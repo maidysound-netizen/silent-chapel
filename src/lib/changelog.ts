@@ -11,6 +11,24 @@ export interface ChangelogEntry {
 
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    id: "2026-10-31-4",
+    date: "10/31",
+    text: {
+      ko: "묵상 시점에서도 묵주기도를 바칠 수 있어요. 십자가의 예수님을 바라보며 묵주알을 하나씩 넘겨 보세요.",
+      en: "You can now pray the rosary in meditation view, gazing at Jesus on the cross as you move through the beads.",
+      ja: "黙想の視点のままロザリオを祈れます。十字架のイエスを見つめながら珠を一つずつ進めてください。",
+    },
+  },
+  {
+    id: "2026-10-31-3",
+    date: "10/31",
+    text: {
+      ko: "♪ 버튼에서 지금 흐르는 성가와 곡 정보, 그리고 이곳의 새 소식을 볼 수 있어요.",
+      en: "Tap ♪ to see which chant is playing, the playlist, and news from the chapel.",
+      ja: "♪ ボタンで、いま流れている聖歌と曲の情報、ここのお知らせが見られます。",
+    },
+  },
+  {
     id: "2026-10-31-2",
     date: "10/31",
     text: {

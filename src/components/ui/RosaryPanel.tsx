@@ -34,6 +34,8 @@ export function RosaryPanel() {
   const progress = useApp((s) => s.rosary);
   const setRosary = useApp((s) => s.setRosary);
   const openPanel = useApp((s) => s.openPanel);
+  // 묵상 시점에서 연 묵주기도: 십자가를 바라보는 화면 위, 아래쪽에 묵주만 투명하게 띄움
+  const meditating = useApp((s) => s.meditation && s.pose === "sit");
   const [choosing, setChoosing] = useState(progress === null);
   const [options, setOptions] = useState<RosaryOptions>(progress?.options ?? DEFAULT_ROSARY_OPTIONS);
   const headingRef = useRef<HTMLHeadingElement>(null);
@@ -184,7 +186,7 @@ export function RosaryPanel() {
 
   // 기도 중에는 글씨 없이 3D 묵주만 창 가득 보여 줌 (닫기·처음부터는 구석의 작은 아이콘)
   return (
-    <section className="rosary-full" role="dialog" aria-modal="true" aria-label={mystery.name}>
+    <section className={`rosary-full ${meditating ? "meditating" : ""}`} role="dialog" aria-modal="true" aria-label={mystery.name}>
       {use3D ? (
         <RosaryViewer done={done} currentKey={currentKey} onNext={advance} onPrev={goBack} hint={ui.rollHint} />
       ) : (

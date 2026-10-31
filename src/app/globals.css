@@ -372,3 +372,11 @@ button.chip.presence:disabled { cursor: default; }
   /* 나중에 추가한 패널들도 다른 패널처럼 아래쪽 시트로 */
   .people-panel, .wish-panel, .music-panel { top: auto; bottom: 8px; max-height: 72dvh; }
 }
+
+/* 묵상 시점에서의 묵주기도: 화면을 가리지 않고 아래쪽에 묵주만, 위로는 십자가가 보이게 */
+.rosary-full.meditating {
+  background: linear-gradient(180deg, transparent 35%, rgba(6, 4, 3, 0.55) 100%);
+  backdrop-filter: none; place-items: end stretch;
+}
+.rosary-full.meditating .rosary-3d { height: 58dvh; align-self: end; }
+.rosary-full.meditating .rosary-corner { top: calc(max(12px, env(safe-area-inset-top)) + 64px); }
