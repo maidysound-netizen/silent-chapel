@@ -8,9 +8,14 @@
 | Agnus Dei — Missa in Festis Apostolorum (팔레스트리나) | 악기(MIDI) 연주 버전, Knud Jeppesen 편 악보, 2018 | 퍼블릭 도메인 | [Wikimedia Commons](https://commons.wikimedia.org/wiki/File:Palestrina_Agnus_Dei_from_Missa_in_Festis_Apostolorum.ogg) | 원본 그대로 (`public/audio/palestrina-agnus-dei.ogg`) · 합창이 아닌 악기 소리 |
 | Sicut lilium inter spinas (팔레스트리나) | The Tudor Consort, 2010 | [CC BY 3.0](https://creativecommons.org/licenses/by/3.0/) | [Wikimedia Commons](https://commons.wikimedia.org/wiki/File:The_Tudor_Consort_-_01_-_Palestrina_-_Sicut_lilium_inter_spinas.ogg) | 원본 그대로 (`public/audio/palestrina-sicut-lilium-tudor-consort.ogg`) |
 | Miserere mei, Deus (알레그리) | Ensamble Escénico Vocal, 멕시코 틀락스칼라 대성당, 2021 | [CC BY 3.0](https://creativecommons.org/licenses/by/3.0/) | [Wikimedia Commons](https://commons.wikimedia.org/wiki/File:Allegri_-_Miserere_Mei,_Deus_-_Ensamble_Esc%C3%A9nico_Vocal_(audio).ogg) | 원본 그대로 (`public/audio/allegri-miserere-ensamble-escenico-vocal.ogg`) |
+| Pange lingua (그레고리오 성가) | Wikimedia Commons 사용자 Garzo가 올린 녹음, 2005 | [CC BY-SA 3.0](https://creativecommons.org/licenses/by-sa/3.0/) | [Wikimedia Commons](https://commons.wikimedia.org/wiki/File:Pange_Lingua_Latin_in_Latin.ogg) | 원본 그대로 (`public/audio/pange-lingua-gregorian.ogg`) |
+| Kyrie — Missa Papae Marcelli (팔레스트리나) | European Archive Music, Musopen 제공 | [CC0](https://creativecommons.org/publicdomain/zero/1.0/) | [Wikimedia Commons](https://commons.wikimedia.org/wiki/File:Missa_Papae_Marcelli_-_I._Kyrie.flac) | Wikimedia Commons가 만든 Ogg 변환본 사용 (`public/audio/palestrina-papae-marcelli-kyrie.ogg`) |
+| Civitas sancti tui (버드) | The Tudor Consort | [CC BY 3.0](https://creativecommons.org/licenses/by/3.0/) | [Wikimedia Commons](https://commons.wikimedia.org/wiki/File:The_Tudor_Consort_-_02_-_William_Byrd_-_Civitas_Sancti_Tui.ogg) | 원본 그대로 (`public/audio/byrd-civitas-sancti-tui-tudor-consort.ogg`) |
+| Agnus Dei — 4성부 미사 (버드) | Ensemble Morales, Musopen 제공, 2017 | [CC BY 3.0](https://creativecommons.org/licenses/by/3.0/) | [Wikimedia Commons](https://commons.wikimedia.org/wiki/File:Byrd_4-Part_Mass_-_Agnus_Dei.ogg) | 원본 그대로 (`public/audio/byrd-mass-4-agnus-dei-ensemble-morales.ogg`) |
+| Ave verum corpus, K. 618 (모차르트) | 독일 젠프텐베르크(Senftenberg) 합창단과 관현악단, Wikimedia Commons 사용자 Metzner 녹음, 2008 | [CC BY-SA 3.0](https://creativecommons.org/licenses/by-sa/3.0/) | [Wikimedia Commons](https://commons.wikimedia.org/wiki/File:Ave_verum_Mozart_Senftenberg2008.ogg) | 원본 그대로 (`public/audio/mozart-ave-verum-senftenberg.ogg`) |
 
-- 위 순서대로 이어서 재생하고, 마지막 곡이 끝나면 처음부터 반복합니다(곡 사이 8초, 한 바퀴 뒤 20초 쉼).
-- 곡 자체(그레고리오 성가, 팔레스트리나, 알레그리)는 모두 퍼블릭 도메인이며, 녹음은 각 행의 라이선스를 따릅니다.
+- 10곡을 무작위 순서로 이어서 재생하고, 한 바퀴가 끝나면 다시 섞어 반복합니다(곡 사이 8초 쉼, 알레그리 뒤에는 20초).
+- 곡 자체(그레고리오 성가, 팔레스트리나, 알레그리, 버드, 모차르트)는 모두 퍼블릭 도메인이며, 녹음은 각 행의 라이선스를 따릅니다.
 - CC BY / CC BY-SA 3.0: 출처 표시가 필요하며, CC BY-SA는, 이 음원을 **변형한 파일**을 배포할 때는 같은 라이선스를 적용해야 합니다.
 - 앱 안에서는 설정(⚙) → "음악 정보"에 같은 내용이 표시됩니다.
 - 브라우저가 Ogg Vorbis를 재생하지 못하면(일부 iOS/Safari 버전) 직접 합성한 잔잔한 음으로 대신 재생합니다.

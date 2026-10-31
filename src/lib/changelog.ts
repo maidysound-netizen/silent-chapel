@@ -11,6 +11,15 @@ export interface ChangelogEntry {
 
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    id: "2026-10-31-8",
+    date: "10/31",
+    text: {
+      ko: "성가가 다섯 곡 더해져 열 곡이 되었어요. Pange lingua, 팔레스트리나의 Kyrie, 버드의 Civitas sancti tui와 Agnus Dei, 모차르트의 Ave verum corpus를 만나 보세요. 🎵",
+      en: "Five more chants join the playlist, making ten: Pange lingua, Palestrina's Kyrie, Byrd's Civitas sancti tui and Agnus Dei, and Mozart's Ave verum corpus. 🎵",
+      ja: "聖歌が5曲増えて10曲になりました。Pange lingua、パレストリーナの Kyrie、バードの Civitas sancti tui と Agnus Dei、モーツァルトの Ave verum corpus をどうぞ。🎵",
+    },
+  },
+  {
     id: "2026-10-31-7",
     date: "10/31",
     text: {
