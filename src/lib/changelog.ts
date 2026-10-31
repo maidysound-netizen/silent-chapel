@@ -41,9 +41,9 @@ export const CHANGELOG: ChangelogEntry[] = [
     id: "2026-10-31-3",
     date: "10/31",
     text: {
-      ko: "🕊 버튼에서 이곳의 새 소식을, ⚙ 설정에서 지금 흐르는 성가와 곡 정보를 볼 수 있어요.",
-      en: "Tap 🕊 for news from the chapel, and open ⚙ Settings to see which chant is playing.",
-      ja: "🕊 ボタンでお知らせを、⚙ 設定でいま流れている聖歌と曲の情報が見られます。",
+      ko: "📢 버튼에서 이곳의 새 소식을, ⚙ 설정에서 지금 흐르는 성가와 곡 정보를 볼 수 있어요.",
+      en: "Tap 📢 for news from the chapel, and open ⚙ Settings to see which chant is playing.",
+      ja: "📢 ボタンでお知らせを、⚙ 設定でいま流れている聖歌と曲の情報が見られます。",
     },
   },
   {

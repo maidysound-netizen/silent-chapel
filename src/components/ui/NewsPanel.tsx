@@ -21,7 +21,7 @@ export function NewsPanel() {
   return (
     <section className="panel news-panel" role="dialog" aria-modal="false" aria-labelledby="news-title">
       <header className="panel-header">
-        <h2 id="news-title">🕊 {ui.news}</h2>
+        <h2 id="news-title">📢 {ui.news}</h2>
         <button className="icon-btn" onClick={() => openPanel(null)} aria-label={ui.close}>
           ✕
         </button>

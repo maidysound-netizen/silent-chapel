@@ -367,11 +367,10 @@ button.chip.presence:disabled { cursor: default; }
 .icon-btn.has-dot { position: relative; }
 .icon-btn.has-dot::after { content: ""; position: absolute; top: 6px; right: 6px; width: 6px; height: 6px; border-radius: 50%; background: #e9c97a; opacity: 0.85; }
 
-/* 모바일: 위쪽 표시줄이 화면 밖으로 밀리지 않게 (언어는 설정에서 바꿀 수 있음), 넘치면 두 줄로 */
+/* 모바일: 위쪽 표시줄이 화면 밖으로 밀리지 않게, 넘치면 두 줄로 (언어 탭은 그대로 보임) */
 @media (max-width: 640px) {
   .hud-top { flex-wrap: wrap; row-gap: 6px; }
   .hud-right { margin-left: auto; gap: 6px; }
-  .hud-right > .lang-tabs { display: none; }
   /* 나중에 추가한 패널들도 다른 패널처럼 아래쪽 시트로 */
   .people-panel, .wish-panel, .news-panel { top: auto; bottom: 8px; max-height: 72dvh; }
 }
