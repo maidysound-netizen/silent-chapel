@@ -14,6 +14,7 @@ import { BiblePanel } from "./ui/BiblePanel";
 import { SettingsPanel } from "./ui/SettingsPanel";
 import { PeoplePanel } from "./ui/PeoplePanel";
 import { WishPanel } from "./ui/WishPanel";
+import { MusicPanel } from "./ui/MusicPanel";
 import { LanguageTabs } from "./ui/LanguageTabs";
 import { PromptOverlay } from "./ui/PromptOverlay";
 import { useSacredMusic } from "./ui/useSacredMusic";
@@ -179,6 +180,7 @@ export default function ChapelApp() {
           {panel === "settings" && <SettingsPanel />}
           {panel === "people" && <PeoplePanel />}
           {panel === "wishes" && <WishPanel />}
+          {panel === "music" && <MusicPanel />}
         </>
       )}
 

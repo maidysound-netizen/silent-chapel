@@ -8,7 +8,7 @@ import type { Pose } from "@/lib/game/PlayerState";
 import { saveProgress } from "@/lib/rosary/storage";
 
 export type Quality = "low" | "medium" | "high";
-export type Panel = null | "rosary" | "bible" | "settings" | "people" | "wishes";
+export type Panel = null | "rosary" | "bible" | "settings" | "people" | "wishes" | "music";
 
 export interface Settings {
   quality: Quality;
@@ -67,6 +67,8 @@ interface AppState {
   settings: Settings;
   panel: Panel;
   meditation: boolean;
+  /** 지금 흐르는 성가 (MUSIC_TRACKS 번호). 소리가 꺼져 있거나 곡 사이 쉼이면 null */
+  nowPlaying: number | null;
   prompt: InteractionTarget | null;
   /** 성모상 가까이 있음 (절하기 버튼 문구용) */
   nearMary: boolean;
@@ -87,6 +89,7 @@ interface AppState {
   setSettings(p: Partial<Settings>): void;
   openPanel(p: Panel): void;
   setMeditation(on: boolean): void;
+  setNowPlaying(i: number | null): void;
   setPrompt(t: InteractionTarget | null): void;
   setNearMary(v: boolean): void;
   setNearJesus(v: boolean): void;
@@ -111,6 +114,7 @@ export const useApp = create<AppState>((set, get) => ({
   },
   panel: null,
   meditation: false,
+  nowPlaying: null,
   prompt: null,
   nearMary: false,
   nearJesus: false,
@@ -144,6 +148,9 @@ export const useApp = create<AppState>((set, get) => ({
   },
   openPanel: (panel) => set({ panel }),
   setMeditation: (meditation) => set({ meditation }),
+  setNowPlaying: (nowPlaying) => {
+    if (get().nowPlaying !== nowPlaying) set({ nowPlaying });
+  },
   setPrompt: (prompt) => {
     const cur = get().prompt;
     const same =

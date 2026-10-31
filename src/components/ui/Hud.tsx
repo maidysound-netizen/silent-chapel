@@ -10,6 +10,7 @@ import { NetStats } from "./NetStats";
 import { FEATURES } from "@/lib/features";
 import { bow, placeRoseOnFloor, scatterRose, signCross, standUp, sweepRoses } from "@/store/localPlayer";
 import { LanguageTabs } from "./LanguageTabs";
+import { useHasUnseenNews } from "./newsSeen";
 
 export function PresenceChip() {
   const locale = useApp((s) => s.settings.locale);
@@ -83,6 +84,7 @@ export function Hud({ onExit }: { onExit: () => void }) {
   const holdingRose = useApp((s) => s.holdingRose);
   const nearFloorRoses = useApp((s) => s.nearFloorRoses);
   const ui = getUi(settings.locale);
+  const unseenNews = useHasUnseenNews();
   const hideForMeditation = meditation && panel === null;
 
   return (
@@ -102,6 +104,15 @@ export function Hud({ onExit }: { onExit: () => void }) {
             title={ui.sound}
           >
             {settings.sound ? "🔈" : "🔇"}
+          </button>
+          {/* 성가와 소식 (새 소식이 있으면 작은 금빛 점) */}
+          <button
+            className={`icon-btn ${unseenNews ? "has-dot" : ""}`}
+            onClick={() => openPanel(panel === "music" ? null : "music")}
+            aria-label={ui.playlist}
+            title={ui.playlist}
+          >
+            ♪
           </button>
           <button className="icon-btn" onClick={() => openPanel(panel === "settings" ? null : "settings")} aria-label={ui.settings} title={ui.settings}>
             ⚙

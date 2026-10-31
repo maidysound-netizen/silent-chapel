@@ -347,3 +347,28 @@ button.chip.presence:disabled { cursor: default; }
 .wish-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 10px; }
 .wish-list li { display: flex; gap: 10px; align-items: flex-start; }
 .wish-text { flex: 1; overflow-wrap: anywhere; }
+
+/* 성가와 소식 */
+.music-panel { bottom: auto; max-height: calc(100% - 160px); }
+.now-playing { margin-bottom: 12px; }
+.now-playing p { margin: 4px 0 0; }
+.now-title { font-size: 1.05em; }
+.track-list { margin: 0 0 14px; padding-left: 1.4em; display: grid; gap: 8px; }
+.track-list li { display: grid; gap: 2px; }
+.track-list li.playing > span:first-child { color: #e9c97a; }
+.track-list li.playing > span:first-child::after { content: " ♪"; }
+.news { border-top: 1px solid rgba(255, 255, 255, 0.08); padding-top: 10px; }
+.news summary { cursor: pointer; }
+.news ul { list-style: none; margin: 8px 0 0; padding: 0; display: grid; gap: 8px; opacity: 0.8; }
+.news-date { display: inline-block; min-width: 3.2em; opacity: 0.6; font-variant-numeric: tabular-nums; }
+.icon-btn.has-dot { position: relative; }
+.icon-btn.has-dot::after { content: ""; position: absolute; top: 6px; right: 6px; width: 6px; height: 6px; border-radius: 50%; background: #e9c97a; opacity: 0.85; }
+
+/* 모바일: 위쪽 표시줄이 화면 밖으로 밀리지 않게 (언어는 설정에서 바꿀 수 있음), 넘치면 두 줄로 */
+@media (max-width: 640px) {
+  .hud-top { flex-wrap: wrap; row-gap: 6px; }
+  .hud-right { margin-left: auto; gap: 6px; }
+  .hud-right > .lang-tabs { display: none; }
+  /* 나중에 추가한 패널들도 다른 패널처럼 아래쪽 시트로 */
+  .people-panel, .wish-panel, .music-panel { top: auto; bottom: 8px; max-height: 72dvh; }
+}

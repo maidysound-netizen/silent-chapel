@@ -128,6 +128,12 @@ const ko = {
   soundOnHint: "소리를 켜면 그레고리오 성가 「Ave Maria」가 잔잔히 흐르고, 묵주알을 굴릴 때 작은 소리가 납니다.",
   musicCredits: "음악 정보",
   musicUnchanged: "원본 그대로 사용(편집 없음)",
+  playlist: "성가와 소식",
+  nowPlaying: "지금 흐르는 곡",
+  betweenTracks: "곡과 곡 사이, 잠시 고요한 쉼",
+  soundIsOff: "소리가 꺼져 있어요",
+  turnOnSound: "소리 켜기",
+  news: "새로운 소식",
   canvasLabel: "3D 성당 내부",
 };
 
@@ -259,6 +265,12 @@ const en: UiDict = {
   soundOnHint: "Sound plays the Gregorian chant Ave Maria softly, with a gentle click as you roll each bead.",
   musicCredits: "Music credits",
   musicUnchanged: "used unmodified",
+  playlist: "Chants & news",
+  nowPlaying: "Now playing",
+  betweenTracks: "A quiet pause between chants",
+  soundIsOff: "Sound is off",
+  turnOnSound: "Turn on sound",
+  news: "What's new",
   canvasLabel: "3D chapel interior",
 };
 
@@ -388,6 +400,12 @@ const ja: UiDict = {
   soundOnHint: "音をオンにすると、グレゴリオ聖歌「アヴェ・マリア」が静かに流れ、珠を転がすと小さな音がします。",
   musicCredits: "音楽について",
   musicUnchanged: "原音のまま使用(編集なし)",
+  playlist: "聖歌とお知らせ",
+  nowPlaying: "いま流れている曲",
+  betweenTracks: "曲と曲のあいだの静かなひととき",
+  soundIsOff: "音が消えています",
+  turnOnSound: "音をつける",
+  news: "お知らせ",
   canvasLabel: "3Dの聖堂内部",
 };
 

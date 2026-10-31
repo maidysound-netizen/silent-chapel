@@ -4,6 +4,7 @@
 import { useEffect, useRef, useState } from "react";
 import { MUSIC_TRACKS } from "@/lib/music";
 import { useAmbientSound } from "./useAmbientSound";
+import { useApp } from "@/store/useAppStore";
 
 const TARGET_VOLUME = 0.45;
 const FADE_MS = 2500;
@@ -53,6 +54,7 @@ export function useSacredMusic(enabled: boolean): MusicMode {
         .then(() => {
           failures = 0;
           setPlaying(true);
+          useApp.getState().setNowPlaying(index); // 플레이리스트 창의 '지금 흐르는 곡'
           fade(el, TARGET_VOLUME, FADE_MS);
         })
         .catch((e: DOMException) => {
@@ -71,6 +73,7 @@ export function useSacredMusic(enabled: boolean): MusicMode {
       start();
     };
     const onEnded = () => {
+      useApp.getState().setNowPlaying(null); // 곡 사이 고요한 쉼
       const restMs = MUSIC_TRACKS[index].restMs;
       next();
       rest = setTimeout(start, restMs);
@@ -92,6 +95,7 @@ export function useSacredMusic(enabled: boolean): MusicMode {
       });
       elRef.current = null;
       setPlaying(false);
+      useApp.getState().setNowPlaying(null);
     };
   }, [enabled]);
 
