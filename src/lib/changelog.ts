@@ -11,6 +11,15 @@ export interface ChangelogEntry {
 
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    id: "2026-11-01-2",
+    date: "11/1",
+    text: {
+      ko: "더 많은 분의 소원이 제단에 오를 수 있도록, 소원 초는 이제 12시간 동안 밝혀집니다.",
+      en: "So that more wishes can find a place on the stands, wish candles now stay lit for 12 hours.",
+      ja: "より多くの願いが祭壇に灯るよう、願いのろうそくは12時間灯るようになりました。",
+    },
+  },
+  {
     id: "2026-11-01-1",
     date: "11/1",
     text: {

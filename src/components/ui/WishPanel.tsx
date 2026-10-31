@@ -1,5 +1,5 @@
 "use client";
-// 소원 초: 소원을 적어 초를 켜고(색은 무작위), 하루 안에 켜진 초들을 읽습니다.
+// 소원 초: 소원을 적어 초를 켜고(색은 무작위), 12시간 안에 켜진 초들을 읽습니다.
 // 자기 초와(관리자는 모든 초) '초 끄기'로 지울 수 있습니다.
 import { useEffect, useState, useSyncExternalStore } from "react";
 import { useApp } from "@/store/useAppStore";

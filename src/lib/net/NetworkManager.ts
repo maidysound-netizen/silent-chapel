@@ -133,7 +133,7 @@ export class NetworkManager {
   readonly remotes = new Map<string, RemotePlayer>();
   /** 바친 장미 (이 기기에서 본 것만, 저장하지 않음) */
   readonly roses = new RoseStore();
-  /** 소원 초 (서버 wish_candles, 하루 동안) */
+  /** 소원 초 (서버 wish_candles, 12시간 동안) */
   readonly wishes = new WishStore();
   private lastWishLoad = 0;
   private wishReload: ReturnType<typeof setTimeout> | null = null;
@@ -604,7 +604,7 @@ export class NetworkManager {
 
   // ---------- 소원 초 ----------
 
-  /** 서버에서 하루 안의 소원 초를 읽어 옴 (모든 방이 같은 초 제단을 공유) */
+  /** 서버에서 12시간 안의 소원 초를 읽어 옴 (모든 방이 같은 초 제단을 공유) */
   async loadWishes(): Promise<void> {
     if (!this.sb || !this.env?.privateChannels) return;
     this.lastWishLoad = Date.now();
@@ -647,7 +647,7 @@ export class NetworkManager {
   }
 
   /**
-   * 소원 초 켜기. 온라인이면 서버에 저장(하루 동안 모두에게 보임),
+   * 소원 초 켜기. 온라인이면 서버에 저장(12시간 동안 모두에게 보임),
    * 혼자 머무는 모드(Supabase 없음)면 이 기기 화면에만 잠시 보임.
    */
   async lightWish(wish: string, color: number, nickname: string): Promise<LightResult> {
