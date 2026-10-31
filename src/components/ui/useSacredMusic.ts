@@ -1,8 +1,8 @@
 "use client";
-// 배경 성가 재생. 사용자가 소리를 켰을 때만 재생하며(자동 재생 없음), 목록의 곡을 이어서 반복하고 곡 사이에 고요한 쉼을 둡니다.
+// 배경 성가 재생. 사용자가 소리를 켰을 때만 재생하며(자동 재생 없음), 곡을 무작위 순서로 이어서 반복하고 곡 사이에 고요한 쉼을 둡니다.
 // 브라우저가 음원 형식을 재생하지 못하면 직접 합성한 잔잔한 음(useAmbientSound)으로 대신합니다.
 import { useEffect, useRef, useState } from "react";
-import { MUSIC_TRACKS } from "@/lib/music";
+import { MUSIC_TRACKS, shuffledOrder } from "@/lib/music";
 import { useAmbientSound } from "./useAmbientSound";
 import { useApp } from "@/store/useAppStore";
 
@@ -36,8 +36,10 @@ export function useSacredMusic(enabled: boolean): MusicMode {
       setFallback(true);
       return;
     }
-    // 목록을 순서대로 이어서 재생하고, 끝나면 처음으로 돌아가 반복
-    let index = 0;
+    // 섞인 순서로 한 바퀴씩 재생. 한 바퀴가 끝나면 다시 섞되, 방금 들은 곡이 바로 또 나오지 않게
+    let order = shuffledOrder(MUSIC_TRACKS.length);
+    let pos = 0;
+    let index = order[0];
     let failures = 0;
     const el = new Audio();
     el.preload = "auto";
@@ -64,7 +66,12 @@ export function useSacredMusic(enabled: boolean): MusicMode {
         });
     };
     const next = () => {
-      index = (index + 1) % MUSIC_TRACKS.length;
+      pos++;
+      if (pos >= order.length) {
+        order = shuffledOrder(MUSIC_TRACKS.length, Math.random, index);
+        pos = 0;
+      }
+      index = order[pos];
     };
     const skip = () => {
       if (stopped) return;

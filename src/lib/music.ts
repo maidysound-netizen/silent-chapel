@@ -64,3 +64,17 @@ export const MUSIC_TRACKS: MusicTrack[] = [
     restMs: 20_000,
   },
 ];
+
+/**
+ * 섞인 재생 순서 (곡 번호 목록). 한 바퀴를 다 돌면 다시 섞어 부르며,
+ * avoidFirst 를 주면 방금 끝난 곡이 새 바퀴의 첫 곡으로 바로 다시 나오지 않게 합니다.
+ */
+export function shuffledOrder(n: number, rand: () => number = Math.random, avoidFirst?: number): number[] {
+  const order = Array.from({ length: n }, (_, i) => i);
+  for (let i = n - 1; i > 0; i--) {
+    const j = Math.floor(rand() * (i + 1));
+    [order[i], order[j]] = [order[j], order[i]];
+  }
+  if (n > 1 && order[0] === avoidFirst) [order[0], order[1]] = [order[1], order[0]];
+  return order;
+}

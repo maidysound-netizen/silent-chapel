@@ -11,6 +11,15 @@ export interface ChangelogEntry {
 
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    id: "2026-10-31-7",
+    date: "10/31",
+    text: {
+      ko: "성가가 이제 들어올 때마다 다른 순서로 흘러나와요.",
+      en: "The chants now play in a different order each time you visit.",
+      ja: "聖歌が訪れるたびに違う順番で流れるようになりました。",
+    },
+  },
+  {
     id: "2026-10-31-6",
     date: "10/31",
     text: {
