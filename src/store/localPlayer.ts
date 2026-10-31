@@ -50,17 +50,19 @@ export function standUp() {
   useApp.getState().setPose("stand");
 }
 
-// ---------- 장미꽃 ----------
+// ---------- 꽃 ----------
 
 const newSeed = () => Math.floor(Math.random() * 1e9);
 
-/** 장미 제단에서 한 송이 받기 */
-export function pickRose() {
+/** 꽃 제단에서 한 송이 받기 (flower: FLOWERS 번호, 없으면 마지막으로 고른 꽃) */
+export function pickRose(flower?: number) {
   const app = useApp.getState();
   const s = localPlayer.state;
   if (app.holdingRose || s.pose !== "stand" || !nearRoseAltar(s.x, s.z)) return;
+  const f = flower ?? app.heldFlower;
+  app.setHeldFlower(f);
   app.setHoldingRose(true);
-  getNetworkManager().sendRose("pick", 0);
+  getNetworkManager().sendRose("pick", 0, undefined, f);
 }
 
 /** 성모님(성모상 앞) 또는 예수님(제단 앞)께 바치기: 그쪽을 향해 돌아선 뒤 내려놓음 */
@@ -72,8 +74,9 @@ export function offerRose(target: "mary" | "jesus") {
   localPlayer.state = { ...s, yaw: yawToward(s, tx, tz) };
   const seed = newSeed();
   const net = getNetworkManager();
-  net.roses.add(target, seed);
-  net.sendRose(target, seed);
+  const rec = net.roses.add(target, seed, undefined, app.heldFlower);
+  net.sendRose(target, seed, undefined, app.heldFlower);
+  void net.placeFlower(rec); // 12시간 동안 모두에게
   app.setHoldingRose(false);
 }
 
@@ -87,8 +90,9 @@ function dropRose(kind: "floor" | "floorRose") {
   const z = s.z - Math.cos(s.yaw) * 0.6;
   const seed = newSeed();
   const net = getNetworkManager();
-  net.roses.add(kind, seed, { x, y: floorHeight(z), z });
-  net.sendRose(kind, seed, { x, z });
+  const rec = net.roses.add(kind, seed, { x, y: floorHeight(z), z }, app.heldFlower);
+  net.sendRose(kind, seed, { x, z }, app.heldFlower);
+  void net.placeFlower(rec);
   app.setHoldingRose(false);
 }
 export const scatterRose = () => dropRose("floor");
@@ -99,7 +103,10 @@ export function sweepRoses() {
   const s = localPlayer.state;
   if (s.pose !== "stand") return;
   const net = getNetworkManager();
-  if (net.roses.sweep(s.x, s.z) > 0) net.sendRose("sweep", 0, { x: s.x, z: s.z });
+  if (net.roses.sweep(s.x, s.z) > 0) {
+    net.sendRose("sweep", 0, { x: s.x, z: s.z });
+    void net.sweepFlowers(s.x, s.z);
+  }
 }
 
 /** E 키 / 상호작용 버튼 */
@@ -107,7 +114,7 @@ export function interact() {
   const app = useApp.getState();
   const s = localPlayer.state;
   if (s.pose === "sit") return;
-  // 장미: 들고 있으면 성모상·제단 앞에서 바치기, 없으면 장미 제단에서 받기
+  // 꽃: 들고 있으면 성모상·제단 앞에서 바치기, 없으면 꽃 제단에서 (마지막으로 고른) 꽃 받기
   if (app.holdingRose) {
     if (app.nearMary) return offerRose("mary");
     if (app.nearJesus) return offerRose("jesus");

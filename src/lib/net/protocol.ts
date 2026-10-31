@@ -226,6 +226,8 @@ export interface RoseMessage {
   k: "pick" | "mary" | "jesus" | "floor" | "floorRose" | "sweep";
   s: number;
   p?: [number, number];
+  /** 꽃 종류 (FLOWERS 번호). 예전 앱은 보내지 않으므로 없으면 붉은 장미(0) */
+  f?: number;
 }
 
 const ROSE_KINDS = new Set(["pick", "mary", "jesus", "floor", "floorRose", "sweep"]);
@@ -237,6 +239,10 @@ export function validateRose(raw: unknown, now = Date.now()): RoseMessage | null
   if (!finite(m.t) || m.t > now + MAX_FUTURE_MS || m.t < now - MAX_AGE_MS) return null;
   if (!finite(m.s) || !Number.isInteger(m.s) || m.s < 0 || m.s > 1e9) return null;
   const out: RoseMessage = { v: PROTOCOL_VERSION, u: m.u, t: m.t, k: m.k as RoseMessage["k"], s: m.s };
+  if (m.f !== undefined) {
+    if (typeof m.f !== "number" || !Number.isInteger(m.f) || m.f < 0 || m.f > 7) return null;
+    out.f = m.f;
+  }
   if (m.k === "floor" || m.k === "floorRose" || m.k === "sweep") {
     if (!Array.isArray(m.p) || m.p.length !== 2 || !m.p.every(finite) || !isInsideChapel(m.p[0], m.p[1])) return null;
     out.p = [m.p[0], m.p[1]];

@@ -107,8 +107,8 @@ export const CANDLE_RACKS = [
   { ...CANDLE_RACK, x: 8.75, z: -4.6, facing: -1 },
 ] as const;
 export const AMBO = { x: 4.2, z: -11, y: 1.25 };
-/** 오른쪽 측랑의 장미꽃 제단 (성모 기도 공간의 맞은편). 신자석 쪽(-X)을 바라봄 */
-export const ROSE_ALTAR = { x: 8.75, z: -7.5, yaw: Math.PI / 2, width: 1.6, depth: 0.6, height: 0.95 };
+/** 오른쪽 측랑의 꽃 제단 (성모 기도 공간의 맞은편, 여섯 가지 꽃). 신자석 쪽(-X)을 바라봄 */
+export const ROSE_ALTAR = { x: 8.75, z: -7.5, yaw: Math.PI / 2, width: 2.3, depth: 0.6, height: 0.95 };
 
 export const SPAWN = { x: 0, z: 13, yaw: 0 };
 

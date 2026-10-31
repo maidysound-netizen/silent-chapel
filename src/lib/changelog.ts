@@ -11,6 +11,15 @@ export interface ChangelogEntry {
 
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    id: "2026-10-31-9",
+    date: "10/31",
+    text: {
+      ko: "장미 제단이 꽃 제단이 되었어요. 붉은·흰·분홍 장미, 백합, 튤립, 데이지 가운데 골라 바쳐 보세요. 예수님께 바친 꽃은 제단 위에 차곡차곡 쌓이고, 바친 꽃과 바닥의 꽃은 12시간 동안 모두에게 남습니다. 💐",
+      en: "The rose altar is now a flower altar: choose a red, white or pink rose, a lily, a tulip or a daisy. Flowers offered to Jesus gather on the altar, and offered and scattered flowers stay for everyone for 12 hours. 💐",
+      ja: "バラの祭壇が花の祭壇になりました。赤・白・ピンクのバラ、百合、チューリップ、デイジーから選んで捧げてください。イエスに捧げた花は祭壇の上に重なり、捧げた花と床の花は12時間みんなに残ります。💐",
+    },
+  },
+  {
     id: "2026-10-31-8",
     date: "10/31",
     text: {

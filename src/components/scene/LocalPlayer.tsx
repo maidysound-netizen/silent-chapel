@@ -15,7 +15,10 @@ import { deriveAnimState } from "@/lib/game/avatarConfig";
 
 const getLocalAnim = () => deriveAnimState(localPlayer.state);
 
-const getLocalHoldingRose = () => useApp.getState().holdingRose;
+const getLocalHeldFlower = () => {
+  const app = useApp.getState();
+  return app.holdingRose ? app.heldFlower : null;
+};
 
 export function LocalPlayer() {
   const ref = useRef<THREE.Group>(null);
@@ -92,5 +95,5 @@ export function LocalPlayer() {
     return () => void delete w.__chapelDebug;
   }, []);
 
-  return <Avatar ref={ref} color="#8b7d6b" pose={pose} bow={localPlayer.bow} cross={localPlayer.cross} getHoldingRose={getLocalHoldingRose} getAnim={getLocalAnim} label={nickname} showLabel={false} />;
+  return <Avatar ref={ref} color="#8b7d6b" pose={pose} bow={localPlayer.bow} cross={localPlayer.cross} getHeldFlower={getLocalHeldFlower} getAnim={getLocalAnim} label={nickname} showLabel={false} />;
 }

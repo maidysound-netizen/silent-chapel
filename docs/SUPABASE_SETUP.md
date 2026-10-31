@@ -79,6 +79,12 @@
 소원 60자, 한 기기당 5분에 1개·하루 10개, 차단된 사람은 불가, 자기 초나 관리자가 끌 수 있음. 실행 전에는 초가 켜지지 않고 "잠시 후 다시" 안내가 나옵니다.
 모든 초 끄기: `delete from public.wish_candles;`
 
+### 3-4. 꽃 12시간 저장 — 다섯 번째 마이그레이션
+
+[`20261031110000_flower_offerings.sql`](../supabase/migrations/20261031110000_flower_offerings.sql) 을 실행하면 바친 꽃·바닥의 꽃이 12시간 동안 모든 방문자에게 남습니다.
+여섯 가지 꽃 종류, 바닥 꽃은 누구나 치울 수 있음, 한 사람당 3초에 1번·1시간 60번. 실행 전에는 그때 같은 방에 있던 사람에게만 보입니다.
+모든 꽃 지우기: `delete from public.flower_offerings;`
+
 차단 풀기: `delete from public.banned_users where user_id = '<id>';` · 관리자 해제: `delete from public.admins where user_id = '<id>';`
 
 **한계:** 익명 로그인이라 상대가 브라우저 데이터를 지우면 새 id 로 다시 들어올 수 있습니다. 또 Realtime 권한은 채널에 들어올 때 검사되므로, 공식 앱이 아닌 조작된 클라이언트는 다시 연결하기 전까지 메시지를 보낼 수 있지만, 다른 사람들의 앱은 서버에서 차단을 확인한 순간부터 그 사람을 화면에서 숨깁니다.

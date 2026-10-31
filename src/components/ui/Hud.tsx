@@ -8,7 +8,8 @@ import { roomNumber } from "@/lib/net/RoomManager";
 import { RunButton, TouchJoystick } from "./TouchJoystick";
 import { NetStats } from "./NetStats";
 import { FEATURES } from "@/lib/features";
-import { bow, placeRoseOnFloor, scatterRose, signCross, standUp, sweepRoses } from "@/store/localPlayer";
+import { bow, pickRose, placeRoseOnFloor, scatterRose, signCross, standUp, sweepRoses } from "@/store/localPlayer";
+import { FLOWERS } from "@/lib/game/roses";
 import { LanguageTabs } from "./LanguageTabs";
 import { useHasUnseenNews } from "./newsSeen";
 
@@ -83,6 +84,9 @@ export function Hud({ onExit }: { onExit: () => void }) {
   const nearShrine = useApp((s) => s.nearMary || s.nearJesus);
   const holdingRose = useApp((s) => s.holdingRose);
   const nearFloorRoses = useApp((s) => s.nearFloorRoses);
+  const nearRoseAltar = useApp((s) => s.nearRoseAltar);
+  const heldFlower = useApp((s) => s.heldFlower);
+  const held = FLOWERS[heldFlower] ?? FLOWERS[0];
   const ui = getUi(settings.locale);
   const unseenNews = useHasUnseenNews();
   const hideForMeditation = meditation && panel === null;
@@ -152,16 +156,29 @@ export function Hud({ onExit }: { onExit: () => void }) {
             </button>
           </div>
         )}
-        {/* 장미를 들고 있으면: 안내 + 어디서든 바닥에 뿌리기 */}
+        {/* 꽃 제단 앞: 여섯 가지 꽃 가운데 하나 고르기 */}
+        {nearRoseAltar && !holdingRose && pose !== "sit" && panel === null && (
+          <div className="hud-actions flower-picker" role="group" aria-label={ui.chooseFlower}>
+            <span className="muted small">{ui.chooseFlower}</span>
+            <div className="flower-row">
+              {FLOWERS.map((f, i) => (
+                <button key={i} className="btn quiet" onClick={() => pickRose(i)}>
+                  {f.emoji} {ui.flowerNames[i]}
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
+        {/* 꽃을 들고 있으면: 안내 + 어디서든 바닥에 뿌리기·놓기 */}
         {holdingRose && pose !== "sit" && panel === null && (
           <div className="hud-actions rose-bar">
-            <span className="muted small">{ui.holdingRose}</span>
+            <span className="muted small">{ui.holdingRose(`${held.emoji} ${ui.flowerNames[heldFlower]}`)}</span>
             <button className="btn quiet" onClick={scatterRose}>
-              🌹 {ui.scatterRose}
+              {held.emoji} {ui.scatterRose}
               <kbd>G</kbd>
             </button>
             <button className="btn quiet" onClick={placeRoseOnFloor}>
-              🌹 {ui.placeRose}
+              {held.emoji} {ui.placeRose}
               <kbd>H</kbd>
             </button>
           </div>

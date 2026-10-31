@@ -21,7 +21,7 @@ export interface CharacterProps {
   /** 성호 긋기 시작 시각 (가변 객체) */
   cross?: BowState;
   /** 장미를 들고 있는지 (매 프레임 읽음) */
-  getHoldingRose?: () => boolean;
+  getHeldFlower?: () => number | null;
   /** 지금 재생할 애니메이션 상태 (매 프레임 읽음) */
   getAnim: () => AnimState;
 }
@@ -58,7 +58,7 @@ function CrossHand({ handRef }: { handRef: RefObject<THREE.Mesh | null> }) {
   );
 }
 
-function SeatedBody({ color, bow, cross, getHoldingRose }: { color: string; bow?: BowState; cross?: BowState; getHoldingRose?: () => boolean }) {
+function SeatedBody({ color, bow, cross, getHeldFlower }: { color: string; bow?: BowState; cross?: BowState; getHeldFlower?: () => number | null }) {
   const torso = useMemo(() => torsoGeo(), []);
   const upper = useRef<THREE.Group>(null);
   const hand = useRef<THREE.Mesh>(null);
@@ -88,7 +88,7 @@ function SeatedBody({ color, bow, cross, getHoldingRose }: { color: string; bow?
         <boxGeometry args={[0.3, hipY, 0.12]} />
         <meshStandardMaterial color={color} roughness={0.85} />
       </mesh>
-      <HeldRose position={[0.03, 0.49 + 0.12, -0.34]} getHolding={getHoldingRose} />
+      <HeldRose position={[0.03, 0.49 + 0.12, -0.34]} getHeldFlower={getHeldFlower} />
       {/* 무릎 위에 모은 손 */}
       <mesh position={[0, hipY + 0.16, -0.3]} rotation={[Math.PI / 2, 0, Math.PI / 2]}>
         <capsuleGeometry args={[0.04, 0.12, 4, 8]} />
@@ -107,13 +107,13 @@ function StandingBody({
   bow,
   cross,
   getAnim,
-  getHoldingRose,
+  getHeldFlower,
 }: {
   color: string;
   bow?: BowState;
   cross?: BowState;
   getAnim: () => AnimState;
-  getHoldingRose?: () => boolean;
+  getHeldFlower?: () => number | null;
 }) {
   const geos = useMemo(() => robeGeos(), []);
   const root = useRef<THREE.Group>(null);
@@ -154,7 +154,7 @@ function StandingBody({
             </mesh>
             <CrossHand handRef={hand} />
             {/* 모은 손에 든 장미 */}
-            <HeldRose position={[0.03, 0.12, -0.25]} getHolding={getHoldingRose} />
+            <HeldRose position={[0.03, 0.12, -0.25]} getHeldFlower={getHeldFlower} />
           </group>
         </group>
       </group>
@@ -163,10 +163,10 @@ function StandingBody({
 }
 
 /** kneel · pray 는 아직 임시 캐릭터 모양이 없어 서 있는 Idle 로 대신합니다 (GLB에 클립이 있으면 그걸 씀) */
-export function PlaceholderCharacter({ color, pose, bow, cross, getAnim, getHoldingRose }: CharacterProps) {
+export function PlaceholderCharacter({ color, pose, bow, cross, getAnim, getHeldFlower }: CharacterProps) {
   return pose === "sit" ? (
-    <SeatedBody color={color} bow={bow} cross={cross} getHoldingRose={getHoldingRose} />
+    <SeatedBody color={color} bow={bow} cross={cross} getHeldFlower={getHeldFlower} />
   ) : (
-    <StandingBody color={color} bow={bow} cross={cross} getAnim={getAnim} getHoldingRose={getHoldingRose} />
+    <StandingBody color={color} bow={bow} cross={cross} getAnim={getAnim} getHeldFlower={getHeldFlower} />
   );
 }

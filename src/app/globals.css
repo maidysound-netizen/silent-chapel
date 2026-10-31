@@ -382,3 +382,7 @@ button.chip.presence:disabled { cursor: default; }
 }
 .rosary-full.meditating .rosary-3d { height: 58dvh; align-self: end; }
 .rosary-full.meditating .rosary-corner { top: calc(max(12px, env(safe-area-inset-top)) + 64px); }
+
+/* 꽃 고르기 */
+.flower-picker { flex-direction: column; align-items: center; gap: 6px; }
+.flower-row { display: flex; flex-wrap: wrap; justify-content: center; gap: 6px; max-width: min(560px, calc(100vw - 32px)); }

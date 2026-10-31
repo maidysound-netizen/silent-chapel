@@ -30,7 +30,7 @@ import { SnapshotBuffer } from "./PositionInterpolation.ts";
 import { PresenceManager } from "./PresenceManager.ts";
 import { ReconnectionHandler } from "./ReconnectionHandler.ts";
 import { roomCandidates, roomTopic } from "./RoomManager.ts";
-import { RoseStore, ROSE_MIN_INTERVAL_MS, type RoseTarget } from "../game/roses.ts";
+import { isFlower, RoseStore, ROSE_MIN_INTERVAL_MS, type FlowerRecord, type RoseTarget } from "../game/roses.ts";
 import { isValidWish, lightErrorReason, WishStore, type LightResult, type WishCandle } from "../wishes.ts";
 import { getSupabase, readSupabaseEnv, type SupabaseEnv } from "./supabaseClient.ts";
 
@@ -54,8 +54,10 @@ export interface RemotePlayer {
   bow: { at: number };
   /** 성호 긋기 시작 시각 */
   cross: { at: number };
-  /** 장미를 들고 있는지 (아바타가 매 프레임 읽음) */
+  /** 꽃을 들고 있는지 (아바타가 매 프레임 읽음) */
   holdingRose: boolean;
+  /** 들고 있는 꽃 종류 (FLOWERS 번호) */
+  heldFlower: number;
   /** 마지막 장미 알림 시각 (도배 방지) */
   lastRoseAt: number;
 }
@@ -131,8 +133,10 @@ export class NetworkManager {
   private rateWindow = { sent: 0, recv: 0, at: 0 };
 
   readonly remotes = new Map<string, RemotePlayer>();
-  /** 바친 장미 (이 기기에서 본 것만, 저장하지 않음) */
+  /** 꽃 (서버 flower_offerings 12시간 + 아직 저장되지 않은 꽃) */
   readonly roses = new RoseStore();
+  private lastFlowerLoad = 0;
+  private flowerReload: ReturnType<typeof setTimeout> | null = null;
   /** 소원 초 (서버 wish_candles, 12시간 동안) */
   readonly wishes = new WishStore();
   private lastWishLoad = 0;
@@ -292,6 +296,7 @@ export class NetworkManager {
           presence.update(this.presenceMeta(), true);
           this.sendState();
           void this.loadWishes();
+          void this.loadFlowers();
           if (!settled) {
             settled = true;
             resolve();
@@ -463,6 +468,7 @@ export class NetworkManager {
       bow: { at: 0 },
       cross: { at: 0 },
       holdingRose: false,
+      heldFlower: 0,
       lastRoseAt: 0,
     };
     this.remotes.set(uid, r);
@@ -508,6 +514,7 @@ export class NetworkManager {
   private cleanup() {
     const now = Date.now();
     if (this.snapshot.status === "connected" && now - this.lastWishLoad >= WISH_REFRESH_MS) void this.loadWishes();
+    if (this.snapshot.status === "connected" && now - this.lastFlowerLoad >= WISH_REFRESH_MS) void this.loadFlowers();
     if (this.sb && this.env?.privateChannels && this.snapshot.status === "connected" && now - this.lastHeartbeat >= HEARTBEAT_MS) {
       this.lastHeartbeat = now;
       void this.sb.rpc("touch_session").then(undefined, () => {});
@@ -560,15 +567,16 @@ export class NetworkManager {
     g.at = now;
   }
 
-  // ---------- 장미꽃 ----------
+  // ---------- 꽃 ----------
 
-  /** 장미를 받음/바침/뿌림을 같은 방 사람들에게 알림. 내 화면의 꽃은 호출한 쪽에서 직접 추가 */
-  sendRose(k: RoseMessage["k"], seed: number, at?: { x: number; z: number }): void {
+  /** 꽃을 받음/바침/뿌림/치움을 같은 방 사람들에게 바로 알림 (저장은 placeFlower/sweepFlowers) */
+  sendRose(k: RoseMessage["k"], seed: number, at?: { x: number; z: number }, flower?: number): void {
     const ch = this.channel;
     const uid = this.snapshot.uid;
     if (!ch || !uid || this.snapshot.status !== "connected") return;
     const payload: RoseMessage = { v: PROTOCOL_VERSION, u: uid, t: Date.now(), k, s: seed };
     if ((k === "floor" || k === "floorRose" || k === "sweep") && at) payload.p = [Math.round(at.x * 100) / 100, Math.round(at.z * 100) / 100];
+    if (flower !== undefined && isFlower(flower)) payload.f = flower;
     void ch.send({ type: "broadcast", event: EVENT_ROSE, payload });
     this.countSent(JSON.stringify(payload).length);
   }
@@ -585,6 +593,7 @@ export class NetworkManager {
     }
     if (msg.k === "pick") {
       r.holdingRose = true;
+      r.heldFlower = isFlower(msg.f) ? msg.f : 0;
       return;
     }
     if (msg.k === "sweep") {
@@ -592,14 +601,91 @@ export class NetworkManager {
       if (now - r.lastRoseAt < ROSE_MIN_INTERVAL_MS || !msg.p) return;
       r.lastRoseAt = now;
       this.roses.sweep(msg.p[0], msg.p[1]);
+      this.scheduleFlowerReload();
       return;
     }
-    // 바치기·뿌리기는 장미를 들고 있었고 너무 잦지 않을 때만 (도배 방지)
+    // 바치기·뿌리기는 꽃을 들고 있었고 너무 잦지 않을 때만 (도배 방지)
     if (!r.holdingRose || now - r.lastRoseAt < ROSE_MIN_INTERVAL_MS) return;
     r.lastRoseAt = now;
     r.holdingRose = false;
-    if ((msg.k === "floor" || msg.k === "floorRose") && msg.p) this.roses.add(msg.k, msg.s, { x: msg.p[0], y: floorHeight(msg.p[1]), z: msg.p[1] });
-    else if (msg.k === "mary" || msg.k === "jesus") this.roses.add(msg.k as RoseTarget, msg.s);
+    const flower = isFlower(msg.f) ? msg.f : r.heldFlower;
+    if ((msg.k === "floor" || msg.k === "floorRose") && msg.p)
+      this.roses.add(msg.k, msg.s, { x: msg.p[0], y: floorHeight(msg.p[1]), z: msg.p[1] }, flower, "remote");
+    else if (msg.k === "mary" || msg.k === "jesus") this.roses.add(msg.k as RoseTarget, msg.s, undefined, flower, "remote");
+    // 보낸 사람이 저장할 시간을 두고 서버 목록을 다시 읽음 (저장된 자리·시각으로 맞춰짐)
+    this.scheduleFlowerReload();
+  }
+
+  /** 서버에서 12시간 안의 꽃을 읽어 옴 (모든 방이 같은 꽃을 봄). 서버에 표가 없으면 아무것도 하지 않음 */
+  async loadFlowers(): Promise<void> {
+    if (!this.sb || !this.env?.privateChannels) return;
+    const requestedAt = Date.now();
+    this.lastFlowerLoad = requestedAt;
+    let data: unknown;
+    try {
+      const res = await this.sb
+        .from("flower_offerings")
+        .select("id, target, flower, seed, x, z, created_at")
+        .order("created_at", { ascending: false })
+        .limit(400);
+      if (res.error) return;
+      data = res.data;
+    } catch {
+      return;
+    }
+    if (!Array.isArray(data)) return;
+    const rows: FlowerRecord[] = [];
+    for (const row of data as Record<string, unknown>[]) {
+      const createdAt = Date.parse(String(row.created_at));
+      const target = row.target;
+      if (typeof row.id !== "number" || !Number.isFinite(createdAt) || typeof row.seed !== "number") continue;
+      if (target !== "mary" && target !== "jesus" && target !== "floor" && target !== "floorRose") continue;
+      const rec: FlowerRecord = { id: row.id, target, flower: isFlower(row.flower) ? row.flower : 0, seed: row.seed, createdAt };
+      if (target === "floor" || target === "floorRose") {
+        if (typeof row.x !== "number" || typeof row.z !== "number") continue;
+        rec.x = row.x;
+        rec.z = row.z;
+        rec.y = floorHeight(row.z);
+      }
+      rows.push(rec);
+    }
+    this.roses.replaceFromServer(rows, requestedAt);
+  }
+
+  private scheduleFlowerReload() {
+    if (this.flowerReload) return;
+    this.flowerReload = setTimeout(() => {
+      this.flowerReload = null;
+      void this.loadFlowers();
+    }, 1800);
+  }
+
+  /** 내가 놓은 꽃을 서버에 저장 (12시간). 실패하면 이 기기 화면에만 남음 */
+  async placeFlower(rec: FlowerRecord): Promise<void> {
+    if (!this.sb || !this.env?.privateChannels || this.snapshot.status !== "connected") return;
+    try {
+      const floor = rec.target === "floor" || rec.target === "floorRose";
+      const { data, error } = await this.sb.rpc("place_flower", {
+        p_target: rec.target,
+        p_flower: rec.flower,
+        p_seed: rec.seed,
+        p_x: floor ? rec.x : null,
+        p_z: floor ? rec.z : null,
+      });
+      if (!error && typeof data === "number") this.roses.confirm(rec.id, data);
+    } catch {
+      /* 저장 못 해도 화면에는 남음 */
+    }
+  }
+
+  /** 내 주변 바닥 꽃 치우기를 서버에도 반영 (남이 놓은 꽃도) */
+  async sweepFlowers(x: number, z: number): Promise<void> {
+    if (!this.sb || !this.env?.privateChannels || this.snapshot.status !== "connected") return;
+    try {
+      await this.sb.rpc("sweep_flowers", { p_x: x, p_z: z });
+    } catch {
+      /* 다음 목록 새로고침 때 맞춰짐 */
+    }
   }
 
   // ---------- 소원 초 ----------

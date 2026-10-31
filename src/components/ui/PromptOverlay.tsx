@@ -12,6 +12,7 @@ import { getUi } from "@/lib/i18n";
 import { ALTAR, CANDLE_RACKS, MARY, MARY_SHRINE, ROSARY_STAND, ROSE_ALTAR } from "@/lib/game/chapelLayout";
 import { nearCandleRack } from "@/lib/game/InteractionSystem";
 import { bow, interact, localPlayer, offerRose, pickRose, sitAt } from "@/store/localPlayer";
+import { FLOWERS } from "@/lib/game/roses";
 import { sceneRefs } from "../scene/sceneRefs";
 
 interface PromptItem {
@@ -34,6 +35,7 @@ export function PromptOverlay() {
   const nearJesus = useApp((s) => s.nearJesus);
   const nearRose = useApp((s) => s.nearRoseAltar);
   const holdingRose = useApp((s) => s.holdingRose);
+  const heldEmoji = (FLOWERS[useApp((s) => s.heldFlower)] ?? FLOWERS[0]).emoji;
   const ui = getUi(useApp((s) => s.settings.locale));
   const showKeys = useMemo(() => typeof window !== "undefined" && !window.matchMedia?.("(pointer: coarse)").matches, []);
 
@@ -43,11 +45,11 @@ export function PromptOverlay() {
     if (pose !== "sit") {
       // 장미: 제단에서 받기 / 들고 있으면 성모상·제단 앞에서 바치기 (절하기 안내 위에 쌓아 보여 줌)
       if (nearRose && !holdingRose)
-        items.push({ id: "rose-pick", text: `🌹 ${ui.pickRose}`, keyHint: "E", at: [ROSE_ALTAR.x, ROSE_ALTAR.height + 0.7, ROSE_ALTAR.z], run: pickRose });
+        items.push({ id: "rose-pick", text: `💐 ${ui.pickRose}`, keyHint: "E", at: [ROSE_ALTAR.x, ROSE_ALTAR.height + 0.7, ROSE_ALTAR.z], run: () => pickRose() });
       if (holdingRose && nearMary)
-        items.push({ id: "rose-mary", text: `🌹 ${ui.offerRoseMary}`, keyHint: "E", at: [MARY.x + 0.2, MARY_SHRINE.pedestalH + MARY_SHRINE.statueH + 0.25, MARY.z], lift: 48, run: () => offerRose("mary") });
+        items.push({ id: "rose-mary", text: `${heldEmoji} ${ui.offerRoseMary}`, keyHint: "E", at: [MARY.x + 0.2, MARY_SHRINE.pedestalH + MARY_SHRINE.statueH + 0.25, MARY.z], lift: 48, run: () => offerRose("mary") });
       else if (holdingRose && nearJesus)
-        items.push({ id: "rose-jesus", text: `🌹 ${ui.offerRoseJesus}`, keyHint: "E", at: [ALTAR.x, ALTAR.height + 1.1, ALTAR.z], lift: 48, run: () => offerRose("jesus") });
+        items.push({ id: "rose-jesus", text: `${heldEmoji} ${ui.offerRoseJesus}`, keyHint: "E", at: [ALTAR.x, ALTAR.height + 1.1, ALTAR.z], lift: 48, run: () => offerRose("jesus") });
       if (prompt?.kind === "candles" && !holdingRose)
         items.push({
           id: "candles",

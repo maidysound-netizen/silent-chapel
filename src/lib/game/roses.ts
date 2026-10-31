@@ -1,36 +1,68 @@
-// 장미꽃: 장미 제단에서 한 송이를 받아 성모님·예수님께 바치거나, 바닥에 꽃잎으로 뿌리거나 꽃송이째 놓습니다.
+// 꽃: 꽃 제단에서 여러 종류 가운데 한 송이를 받아 성모님·예수님께 바치거나, 바닥에 꽃잎으로 뿌리거나 꽃송이째 놓습니다.
 // 바닥의 꽃은 누구나(남이 놓은 것도) 가까이 가서 치울 수 있습니다.
-// 바친 꽃은 지금 같은 방에 있는 사람들 화면에만 보이고(저장하지 않음), 너무 많아지면 오래된 것부터 사라집니다.
+// 꽃은 서버(flower_offerings)에 12시간 동안 남아 모든 방문자에게 보입니다. 서버를 쓸 수 없으면 그때 같은 방에 있던 사람에게만 보입니다.
+// 바친 꽃의 자리는 '놓인 순서'로 정해지므로 모든 사람 화면에서 같은 자리에 쌓입니다.
 import { ALTAR, MARY, MARY_SHRINE, ROSE_ALTAR, SANCTUARY_Y } from "./chapelLayout.ts";
 
 /** floor: 꽃잎으로 뿌림, floorRose: 꽃송이째 바닥에 놓음 */
 export type RoseTarget = "mary" | "jesus" | "floor" | "floorRose";
 
+/** 꽃 모양 (같은 모양은 색만 달리 그림) */
+export type FlowerShape = "rose" | "lily" | "tulip" | "daisy";
+
+export interface FlowerKind {
+  shape: FlowerShape;
+  /** 꽃송이 색 */
+  color: string;
+  /** 바닥에 뿌린 꽃잎 색 */
+  petal: string;
+  emoji: string;
+}
+
+/** 꽃 종류 (번호가 서버의 flower 값). 이름은 i18n 의 flowerNames 같은 순서 */
+export const FLOWERS: readonly FlowerKind[] = [
+  { shape: "rose", color: "#a3162a", petal: "#c21f35", emoji: "🌹" },
+  { shape: "rose", color: "#f1ece2", petal: "#f6f1e7", emoji: "🤍" },
+  { shape: "rose", color: "#e2809f", petal: "#ee9cb5", emoji: "🌸" },
+  { shape: "lily", color: "#fbf7ea", petal: "#fbf5e4", emoji: "💮" },
+  { shape: "tulip", color: "#f0bd2c", petal: "#f4c948", emoji: "🌷" },
+  { shape: "daisy", color: "#ffffff", petal: "#fbfbf4", emoji: "🌼" },
+];
+
 export interface RoseItem {
-  id: number;
+  id: number | string;
   target: RoseTarget;
+  /** FLOWERS 번호 */
+  flower: number;
   /** 놓인 위치(바닥 높이 포함)와 놓인 방향 */
   x: number;
   y: number;
   z: number;
   yaw: number;
-  /** 바닥에 뿌린 경우 꽃잎 흩어짐 모양을 정하는 값 */
+  /** 모양을 조금씩 다르게 하는 값 (모든 사람 화면에서 같음) */
   seed: number;
+  createdAt: number;
 }
 
-/** 장미 제단·성모상·제단에서 이 거리 안이면 받기/바치기 가능 */
+/** 꽃 제단·성모상·제단에서 이 거리 안이면 받기/바치기 가능 */
 export const ROSE_PICK_RADIUS = 2.0;
-/** 대상별로 남겨 두는 최대 개수 (휴대폰 성능) */
-export const ROSE_CAP: Record<RoseTarget, number> = { mary: 30, jesus: 30, floor: 40, floorRose: 40 };
+/** 대상별로 보여 주는 최대 개수 (휴대폰 성능) — 넘으면 오래된 것부터 안 보임 */
+export const ROSE_CAP: Record<RoseTarget, number> = { mary: 30, jesus: 36, floor: 40, floorRose: 40 };
+/** 꽃은 12시간 동안 남음 */
+export const FLOWER_TTL_MS = 12 * 60 * 60 * 1000;
 /** 이 거리 안의 바닥 꽃(꽃잎·꽃송이)을 치움 */
 export const SWEEP_RADIUS = 1.5;
 
 export const isFloorRose = (t: RoseTarget) => t === "floor" || t === "floorRose";
-/** 같은 사람이 보낸 장미 알림은 이 간격보다 자주 받지 않음 (도배 방지) */
+/** 같은 사람이 보낸 꽃 알림은 이 간격보다 자주 받지 않음 (도배 방지) */
 export const ROSE_MIN_INTERVAL_MS = 1500;
 
 export function nearRoseAltar(x: number, z: number): boolean {
   return Math.hypot(ROSE_ALTAR.x - x, ROSE_ALTAR.z - z) < ROSE_PICK_RADIUS;
+}
+
+export function isFlower(n: unknown): n is number {
+  return typeof n === "number" && Number.isInteger(n) && n >= 0 && n < FLOWERS.length;
 }
 
 /** 0~1 사이 결정적 난수 (같은 seed → 모든 사람 화면에서 같은 모양) */
@@ -41,7 +73,7 @@ export function rand(seed: number, k: number): number {
 
 /** 성모상 받침대 위 꽃 선반(성모상 발치를 둘러싼 넓은 판)의 반폭 */
 export const MARY_SHELF_HALF = 0.8;
-/** 바친 장미(눕힌 꽃) 길이: 줄기 밑동 → 꽃송이 */
+/** 바친 꽃(눕힌 꽃) 길이: 줄기 밑동 → 꽃송이 */
 export const ROSE_LEN = 0.48;
 /** 성모상 발치 반원 고리: 고리별 반지름과 자리 수 */
 const MARY_RINGS = [
@@ -49,13 +81,18 @@ const MARY_RINGS = [
   { r: 0.53, n: 10 },
   { r: 0.62, n: 11 },
 ];
+/** 제단 위 앞쪽: 한 층에 놓이는 꽃 수 */
+export const JESUS_PER_LAYER = 12;
+/** 제단 위 꽃의 맨 아래 높이 (제대포 위) */
+export const ALTAR_TOP_Y = SANCTUARY_Y + ALTAR.height + 0.03;
 
 /**
- * n 번째로 바친 꽃의 자리.
- *  · 성모님: 받침대 위 꽃 선반에서 성모상 발치를 앞쪽(+X) 반원으로 둘러쌈 (무릎틀에 가리지 않는 높이)
- *  · 예수님: 제단 앞(+Z) 단 위 바닥에 줄지어 놓임
+ * n 번째로 바친 꽃의 자리 (0 = 가장 먼저 바친 꽃).
+ *  · 성모님: 받침대 위 꽃 선반에서 성모상 발치를 앞쪽(+X) 반원으로 둘러쌈
+ *  · 예수님: 제단(책상) 위 앞쪽 가장자리에 한 줄씩, 다음 줄은 조금 뒤·조금 위로 차곡차곡 쌓임.
+ *            밑동은 제단 안쪽, 꽃송이는 사람들 쪽(+Z)으로 가장자리에 살짝 걸침
  */
-export function offeringSpot(target: "mary" | "jesus", n: number, seed: number): Omit<RoseItem, "id" | "target" | "seed"> {
+export function offeringSpot(target: "mary" | "jesus", n: number, seed: number): Omit<RoseItem, "id" | "target" | "seed" | "flower" | "createdAt"> {
   const jitter = (k: number, amt: number) => (rand(seed, k) - 0.5) * amt;
   if (target === "mary") {
     let i = n;
@@ -79,13 +116,17 @@ export function offeringSpot(target: "mary" | "jesus", n: number, seed: number):
       yaw: -(a + Math.PI / 2),
     };
   }
-  const row = Math.floor(n / 8);
-  const col = n % 8;
-  const across = (col - 3.5) * 0.2 + jitter(1, 0.06);
-  const out = 0.15 + row * 0.16 + jitter(2, 0.05);
-  const front = ALTAR.z + ALTAR.depth / 2 + 0.1; // 제대포 앞
-  // 밑동은 제단 쪽, 꽃송이는 사람들 쪽(+Z)
-  return { x: ALTAR.x + across, y: SANCTUARY_Y + 0.02, z: front + out - 0.1, yaw: -Math.PI / 2 + jitter(3, 0.6) };
+  const layer = Math.floor(n / JESUS_PER_LAYER);
+  const col = n % JESUS_PER_LAYER;
+  // 층마다 반 칸씩 엇갈려 아래 꽃 사이에 얹힘
+  const across = (col - (JESUS_PER_LAYER - 1) / 2) * 0.25 + (layer % 2 ? 0.12 : 0) + jitter(1, 0.04);
+  const front = ALTAR.z + ALTAR.depth / 2; // 제단 앞 가장자리
+  return {
+    x: ALTAR.x + across,
+    y: ALTAR_TOP_Y + layer * 0.035,
+    z: front - ROSE_LEN + 0.06 - layer * 0.05,
+    yaw: -Math.PI / 2 + jitter(3, 0.12), // 꽃송이가 +Z(사람들 쪽)
+  };
 }
 
 export const PETALS_PER_ROSE = 14;
@@ -101,12 +142,29 @@ export function petalOffsets(seed: number, count = PETALS_PER_ROSE): { dx: numbe
   return out;
 }
 
-/** 바친 꽃 목록. 대상별 최대 개수를 넘으면 오래된 것부터 지움 */
+/** 저장되는 꽃 한 송이 (위치는 바닥 꽃만, 바친 꽃은 순서로 자리를 정함) */
+export interface FlowerRecord {
+  id: number | string;
+  target: RoseTarget;
+  flower: number;
+  seed: number;
+  x?: number;
+  z?: number;
+  /** 바닥 높이 (바닥 꽃) */
+  y?: number;
+  createdAt: number;
+  /** 서버에 아직 없는 꽃: 'local' 내가 놓음(저장 대기) · 'remote' 남이 놓았다는 알림만 받음 */
+  pending?: "local" | "remote";
+  /** pending 이 생긴 시각 */
+  pendingAt?: number;
+}
+
+/** 꽃 목록. 서버에서 받은 꽃 + 아직 저장되지 않은 꽃을 합쳐 자리를 계산 */
 export class RoseStore {
-  private items: RoseItem[] = [];
-  private counts: Record<"mary" | "jesus", number> = { mary: 0, jesus: 0 };
-  private nextId = 1;
+  private records: FlowerRecord[] = [];
+  private nextLocal = 1;
   private listeners = new Set<() => void>();
+  private cache: { version: number; now: number; items: RoseItem[] } | null = null;
   version = 0;
 
   subscribe(fn: () => void): () => void {
@@ -114,53 +172,90 @@ export class RoseStore {
     return () => this.listeners.delete(fn);
   }
 
-  all(): readonly RoseItem[] {
-    return this.items;
+  private changed() {
+    this.version++;
+    this.cache = null;
+    this.listeners.forEach((l) => l());
   }
 
-  add(target: RoseTarget, seed: number, floorAt?: { x: number; y: number; z: number }): RoseItem {
-    let pos: Omit<RoseItem, "id" | "target" | "seed">;
-    if (isFloorRose(target)) {
-      const p = floorAt ?? { x: 0, y: 0, z: 0 };
-      pos = { x: p.x, y: p.y + 0.012, z: p.z, yaw: rand(seed, 4) * Math.PI * 2 };
-    } else {
-      // 자리 번호는 계속 늘려서, 오래된 꽃이 지워져도 새 꽃이 같은 자리에 겹치지 않게 순환
-      const t = target as "mary" | "jesus";
-      pos = offeringSpot(t, this.counts[t]++ % ROSE_CAP[t], seed);
+  /** 보이는 꽃 (12시간 안, 대상별 최대 개수, 자리 계산 포함) */
+  all(now = Date.now()): readonly RoseItem[] {
+    // 같은 1분 안에서는 다시 계산하지 않음 (12시간 기준이라 충분)
+    if (this.cache && this.cache.version === this.version && Math.abs(now - this.cache.now) < 60_000) return this.cache.items;
+    const live = this.records.filter((r) => now - r.createdAt < FLOWER_TTL_MS).sort((a, b) => a.createdAt - b.createdAt);
+    const out: RoseItem[] = [];
+    for (const target of ["mary", "jesus", "floor", "floorRose"] as const) {
+      const list = live.filter((r) => r.target === target).slice(-ROSE_CAP[target]);
+      list.forEach((r, i) => {
+        if (target === "mary" || target === "jesus") {
+          out.push({ id: r.id, target, flower: r.flower, seed: r.seed, createdAt: r.createdAt, ...offeringSpot(target, i, r.seed) });
+        } else {
+          out.push({ id: r.id, target, flower: r.flower, seed: r.seed, createdAt: r.createdAt, x: r.x ?? 0, y: (r.y ?? 0) + 0.012, z: r.z ?? 0, yaw: rand(r.seed, 4) * Math.PI * 2 });
+        }
+      });
     }
-    const item: RoseItem = { id: this.nextId++, target, seed, ...pos };
-    this.items.push(item);
-    const same = this.items.filter((i) => i.target === target);
-    if (same.length > ROSE_CAP[target]) {
-      const drop = same[0];
-      this.items = this.items.filter((i) => i !== drop);
-    }
-    this.version++;
-    this.listeners.forEach((l) => l());
-    return item;
+    this.cache = { version: this.version, now, items: out };
+    return out;
+  }
+
+  /** 꽃 하나 추가 (내가 놓음 = local, 남이 놓았다는 알림 = remote) */
+  add(
+    target: RoseTarget,
+    seed: number,
+    floorAt?: { x: number; y: number; z: number },
+    flower = 0,
+    pending: "local" | "remote" = "local",
+    now = Date.now(),
+  ): FlowerRecord {
+    const rec: FlowerRecord = {
+      id: `${pending}-${this.nextLocal++}`,
+      target,
+      flower: isFlower(flower) ? flower : 0,
+      seed,
+      createdAt: now,
+      pending,
+      pendingAt: now,
+      ...(isFloorRose(target) && floorAt ? { x: floorAt.x, y: floorAt.y, z: floorAt.z } : {}),
+    };
+    this.records.push(rec);
+    this.changed();
+    return rec;
+  }
+
+  /** 내가 놓은 꽃이 서버에 저장됨 → 다음에 서버 목록을 받으면 그 줄로 바뀜 */
+  confirm(localId: number | string, serverId: number) {
+    const r = this.records.find((x) => x.id === localId);
+    if (r) r.id = serverId;
+    if (r) r.pending = undefined;
+  }
+
+  /**
+   * 서버에서 받은 12시간 안의 꽃으로 바꿈. requestedAt(요청 시각) 뒤에 생긴, 아직 저장 안 된 꽃은 남겨 둠
+   * (방금 놓은 꽃·방금 받은 알림이 깜빡 사라지지 않게)
+   */
+  replaceFromServer(rows: FlowerRecord[], requestedAt: number) {
+    const keep = this.records.filter((r) => r.pending && (r.pending === "local" || (r.pendingAt ?? 0) >= requestedAt - 1500));
+    const ids = new Set(rows.map((r) => r.id));
+    this.records = [...rows, ...keep.filter((r) => !ids.has(r.id))];
+    this.changed();
   }
 
   /** (x, z) 에서 radius 안의 바닥 꽃잎·꽃송이를 치움. 치운 개수 */
   sweep(x: number, z: number, radius = SWEEP_RADIUS): number {
-    const before = this.items.length;
-    this.items = this.items.filter((i) => !(isFloorRose(i.target) && Math.hypot(i.x - x, i.z - z) <= radius));
-    const removed = before - this.items.length;
-    if (removed > 0) {
-      this.version++;
-      this.listeners.forEach((l) => l());
-    }
+    const before = this.records.length;
+    this.records = this.records.filter((r) => !(isFloorRose(r.target) && Math.hypot((r.x ?? 1e9) - x, (r.z ?? 1e9) - z) <= radius));
+    const removed = before - this.records.length;
+    if (removed > 0) this.changed();
     return removed;
   }
 
   /** (x, z) 근처에 치울 바닥 꽃이 있는지 */
-  hasFloorNear(x: number, z: number, radius = SWEEP_RADIUS): boolean {
-    return this.items.some((i) => isFloorRose(i.target) && Math.hypot(i.x - x, i.z - z) <= radius);
+  hasFloorNear(x: number, z: number, radius = SWEEP_RADIUS, now = Date.now()): boolean {
+    return this.records.some((r) => isFloorRose(r.target) && now - r.createdAt < FLOWER_TTL_MS && Math.hypot((r.x ?? 1e9) - x, (r.z ?? 1e9) - z) <= radius);
   }
 
   clear() {
-    this.items = [];
-    this.counts = { mary: 0, jesus: 0 };
-    this.version++;
-    this.listeners.forEach((l) => l());
+    this.records = [];
+    this.changed();
   }
 }

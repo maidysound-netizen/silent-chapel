@@ -75,8 +75,10 @@ interface AppState {
   nearJesus: boolean;
   /** 장미 제단 가까이 있는지 */
   nearRoseAltar: boolean;
-  /** 장미를 들고 있는지 */
+  /** 꽃을 들고 있는지 */
   holdingRose: boolean;
+  /** 들고 있는(또는 마지막으로 고른) 꽃 종류 (FLOWERS 번호) */
+  heldFlower: number;
   /** 발 근처에 치울 바닥 꽃이 있는지 */
   nearFloorRoses: boolean;
   pose: Pose;
@@ -95,6 +97,7 @@ interface AppState {
   setNearJesus(v: boolean): void;
   setNearRoseAltar(v: boolean): void;
   setHoldingRose(v: boolean): void;
+  setHeldFlower(f: number): void;
   setNearFloorRoses(v: boolean): void;
   setPose(p: Pose): void;
   setRosary(p: RosaryProgress | null): void;
@@ -120,6 +123,7 @@ export const useApp = create<AppState>((set, get) => ({
   nearJesus: false,
   nearRoseAltar: false,
   holdingRose: false,
+  heldFlower: 0,
   nearFloorRoses: false,
   pose: "stand",
   rosary: null,
@@ -165,6 +169,9 @@ export const useApp = create<AppState>((set, get) => ({
   },
   setHoldingRose: (holdingRose) => {
     if (get().holdingRose !== holdingRose) set({ holdingRose });
+  },
+  setHeldFlower: (heldFlower) => {
+    if (get().heldFlower !== heldFlower) set({ heldFlower });
   },
   setNearFloorRoses: (nearFloorRoses) => {
     if (get().nearFloorRoses !== nearFloorRoses) set({ nearFloorRoses });

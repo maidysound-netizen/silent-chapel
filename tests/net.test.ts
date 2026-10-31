@@ -182,3 +182,13 @@ test("내보내기 알림 형식 검증: 잘못된 id·자기 자신·오래된 
   assert.equal(validateModeration({ v: 1, u: a, t: now, k: "kick-all", x: b }, now), null);
   assert.equal(validateModeration({ v: 1, u: a, t: now - 60_000, k: "ban", x: b }, now), null);
 });
+
+test("꽃 알림: 꽃 종류(f)는 0~7 정수만, 없으면 예전 앱으로 보고 허용", async () => {
+  const { validateRose } = await import("../src/lib/net/protocol.ts");
+  const u = "11111111-2222-3333-4444-555555555555";
+  const now = Date.now();
+  assert.equal(validateRose({ v: 1, u, t: now, k: "mary", s: 1, f: 4 }, now)?.f, 4);
+  assert.equal(validateRose({ v: 1, u, t: now, k: "mary", s: 1 }, now)?.f, undefined);
+  assert.equal(validateRose({ v: 1, u, t: now, k: "mary", s: 1, f: 9 }, now), null);
+  assert.equal(validateRose({ v: 1, u, t: now, k: "mary", s: 1, f: "lily" }, now), null);
+});
