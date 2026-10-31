@@ -4,7 +4,7 @@ import { getNetworkManager } from "@/lib/net/NetworkManager";
 import { useApp, type Quality } from "@/store/useAppStore";
 import { getUi } from "@/lib/i18n";
 import { LanguageTabs } from "./LanguageTabs";
-import { MUSIC_TRACKS } from "@/lib/music";
+import { MusicInfo } from "./MusicInfo";
 
 export function SettingsPanel() {
   const settings = useApp((s) => s.settings);
@@ -62,23 +62,7 @@ export function SettingsPanel() {
           <span>{ui.language}</span>
           <LanguageTabs />
         </div>
-        <details className="credits">
-          <summary>{ui.musicCredits}</summary>
-          {MUSIC_TRACKS.map((t) => (
-            <p key={t.src} className="small">
-              「{t.title}」 — {t.performer}
-              <br />
-              <a href={t.licenseUrl} target="_blank" rel="noopener noreferrer">
-                {t.license}
-              </a>{" "}
-              ·{" "}
-              <a href={t.sourceUrl} target="_blank" rel="noopener noreferrer">
-                Wikimedia Commons ↗
-              </a>{" "}
-              · {ui.musicUnchanged}
-            </p>
-          ))}
-        </details>
+        <MusicInfo />
         <AdminSection />
         <p className="muted small">{ui.disclaimer}</p>
       </div>

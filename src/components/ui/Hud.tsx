@@ -105,14 +105,14 @@ export function Hud({ onExit }: { onExit: () => void }) {
           >
             {settings.sound ? "🔈" : "🔇"}
           </button>
-          {/* 성가와 소식 (새 소식이 있으면 작은 금빛 점) */}
+          {/* 새로운 소식 (안 본 소식이 있으면 작은 금빛 점). 음악 정보는 설정 안에 */}
           <button
             className={`icon-btn ${unseenNews ? "has-dot" : ""}`}
-            onClick={() => openPanel(panel === "music" ? null : "music")}
-            aria-label={ui.playlist}
-            title={ui.playlist}
+            onClick={() => openPanel(panel === "news" ? null : "news")}
+            aria-label={ui.news}
+            title={ui.news}
           >
-            ♪
+            🕊
           </button>
           <button className="icon-btn" onClick={() => openPanel(panel === "settings" ? null : "settings")} aria-label={ui.settings} title={ui.settings}>
             ⚙

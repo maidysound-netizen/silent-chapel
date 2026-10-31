@@ -8,7 +8,7 @@ import type { Pose } from "@/lib/game/PlayerState";
 import { saveProgress } from "@/lib/rosary/storage";
 
 export type Quality = "low" | "medium" | "high";
-export type Panel = null | "rosary" | "bible" | "settings" | "people" | "wishes" | "music";
+export type Panel = null | "rosary" | "bible" | "settings" | "people" | "wishes" | "news";
 
 export interface Settings {
   quality: Quality;
