@@ -11,17 +11,17 @@ export interface ChangelogEntry {
 
 export const CHANGELOG: ChangelogEntry[] = [
   {
-    id: "2026-11-01-2",
-    date: "11/1",
+    id: "2026-10-31-6",
+    date: "10/31",
     text: {
-      ko: "더 많은 분의 소원이 제단에 오를 수 있도록, 소원 초는 이제 12시간 동안 밝혀집니다.",
-      en: "So that more wishes can find a place on the stands, wish candles now stay lit for 12 hours.",
-      ja: "より多くの願いが祭壇に灯るよう、願いのろうそくは12時間灯るようになりました。",
+      ko: "더 많은 분의 소원이 제단에 오를 수 있도록, 새로 켜는 소원 초는 12시간 동안 밝혀집니다. 이미 밝혀 주신 초는 처음 약속대로 하루 동안 타오릅니다. 🕯",
+      en: "So that more wishes can find a place on the stands, newly lit wish candles now burn for 12 hours. Candles you have already lit will keep burning for a full day, as promised. 🕯",
+      ja: "より多くの願いが祭壇に灯るよう、新しく灯す願いのろうそくは12時間灯ります。すでに灯してくださったろうそくは、はじめのお約束どおり一日灯り続けます。🕯",
     },
   },
   {
-    id: "2026-11-01-1",
-    date: "11/1",
+    id: "2026-10-31-5",
+    date: "10/31",
     text: {
       ko: "하루 동안 정말 많은 분이 소원 초를 밝혀 주셨어요. 초가 넘쳐 오른쪽 측랑, 장미 제단 옆에 초 제단을 하나 더 놓았습니다. 🕯",
       en: "So many of you lit wish candles in a single day that we placed a second candle stand in the right aisle, beside the rose altar. 🕯",

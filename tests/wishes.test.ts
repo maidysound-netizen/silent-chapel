@@ -19,8 +19,8 @@ test("초 색깔: 12가지 중 무작위", () => {
   assert.equal(randomWishColor(() => 0.9999), 11);
 });
 
-test("하루가 지난 초는 안 보이고, 새 초부터", () => {
-  const now = 1_000_000_000_000;
+test("12시간이 지난 초는 안 보이고, 새 초부터", () => {
+  const now = Date.parse("2026-11-05T00:00:00Z"); // 12시간으로 바꾼 뒤
   const mk = (id: number, ago: number) => ({ id, userId: "u", nickname: "n", wish: "w", color: 0, createdAt: now - ago });
   const list = activeWishes([mk(1, 1000), mk(2, WISH_TTL_MS + 1), mk(3, 10)], now);
   assert.deepEqual(list.map((c) => c.id), [3, 1]);
@@ -68,4 +68,18 @@ test("서버에 소원 초 SQL 이 없으면 '준비 안 됨' 안내", async () 
   const { lightErrorReason } = await import("../src/lib/wishes.ts");
   assert.equal(lightErrorReason({ code: "PGRST202" }), "notReady");
   assert.equal(lightErrorReason({ code: "PGRST205" }), "notReady");
+});
+
+test("12시간으로 바꾸기 전에 켠 초는 처음 약속대로 24시간", async () => {
+  const { activeWishes, WISH_TTL_CHANGED_AT } = await import("../src/lib/wishes.ts");
+  const mk = (id: number, createdAt: number) => ({ id, userId: "u", nickname: "n", wish: "w", color: 0, createdAt });
+  const H = 60 * 60 * 1000;
+  const old = mk(1, WISH_TTL_CHANGED_AT - 1 * H); // 바꾸기 1시간 전에 켬
+  const fresh = mk(2, WISH_TTL_CHANGED_AT + 1 * H); // 바꾼 뒤에 켬
+  // 켠 지 18시간 뒤: 예전 초는 아직 보이고, 새 초는 12시간이 지나 사라짐
+  assert.deepEqual(activeWishes([old], old.createdAt + 18 * H).map((c) => c.id), [1]);
+  assert.deepEqual(activeWishes([fresh], fresh.createdAt + 18 * H).map((c) => c.id), []);
+  assert.deepEqual(activeWishes([fresh], fresh.createdAt + 11 * H).map((c) => c.id), [2]);
+  // 예전 초도 24시간이 지나면 사라짐
+  assert.deepEqual(activeWishes([old], old.createdAt + 25 * H).map((c) => c.id), []);
 });

@@ -15,6 +15,14 @@ export interface WishCandle {
 export const WISH_MAX = 60;
 /** 초는 12시간 동안 보임 (찾는 사람이 많아 제단이 빨리 차므로 하루보다 짧게) */
 export const WISH_TTL_MS = 12 * 60 * 60 * 1000;
+/** 12시간으로 바꾸기 전(이 시각 전)에 켠 초는 처음 약속대로 24시간 */
+export const WISH_TTL_CHANGED_AT = Date.parse("2026-10-31T11:00:00Z"); // 한국 시각 10/31 20:00
+const LEGACY_TTL_MS = 24 * 60 * 60 * 1000;
+
+/** 이 초가 보이는 시간 */
+export function wishTtl(createdAt: number): number {
+  return createdAt < WISH_TTL_CHANGED_AT ? LEGACY_TTL_MS : WISH_TTL_MS;
+}
 
 /** 초(유리 촛잔) 색깔 12가지 — 무작위로 하나 */
 export const WISH_COLORS = [
@@ -51,7 +59,7 @@ export function isValidWish(w: string): boolean {
 
 /** 12시간 안에 켠 초만 (새 것부터) */
 export function activeWishes(list: readonly WishCandle[], now = Date.now()): WishCandle[] {
-  return list.filter((c) => now - c.createdAt < WISH_TTL_MS).sort((a, b) => b.createdAt - a.createdAt);
+  return list.filter((c) => now - c.createdAt < wishTtl(c.createdAt)).sort((a, b) => b.createdAt - a.createdAt);
 }
 
 /** 제단 하나에 놓이는 초 개수 (3단 × 16) */
