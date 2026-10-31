@@ -92,7 +92,7 @@ export function Hud({ onExit }: { onExit: () => void }) {
   const hideForMeditation = meditation && panel === null;
 
   return (
-    <div className={`hud ${hideForMeditation ? "hud-quiet" : ""}`}>
+    <div className={`hud ${hideForMeditation ? "hud-quiet" : ""} ${panel === "rosary" ? "rosary-open" : ""}`}>
       <div className="hud-top">
         <div className="hud-left">
           <span className="brand">{ui.appName}</span>
@@ -158,7 +158,7 @@ export function Hud({ onExit }: { onExit: () => void }) {
         )}
         {/* 꽃 제단 앞: 여섯 가지 꽃 가운데 하나 고르기 */}
         {nearRoseAltar && !holdingRose && pose !== "sit" && panel === null && (
-          <div className="hud-actions flower-picker" role="group" aria-label={ui.chooseFlower}>
+          <div className="hud-actions dock flower-picker" role="group" aria-label={ui.chooseFlower}>
             <span className="muted small">{ui.chooseFlower}</span>
             <div className="flower-row">
               {FLOWERS.map((f, i) => (
@@ -171,7 +171,7 @@ export function Hud({ onExit }: { onExit: () => void }) {
         )}
         {/* 꽃을 들고 있으면: 안내 + 어디서든 바닥에 뿌리기·놓기 */}
         {holdingRose && pose !== "sit" && panel === null && (
-          <div className="hud-actions rose-bar">
+          <div className="hud-actions dock rose-bar">
             <span className="muted small">{ui.holdingRose(`${held.emoji} ${ui.flowerNames[heldFlower]}`)}</span>
             <button className="btn quiet" onClick={scatterRose}>
               {held.emoji} {ui.scatterRose}
@@ -185,7 +185,7 @@ export function Hud({ onExit }: { onExit: () => void }) {
         )}
         {/* 발 근처 바닥 꽃(남이 뿌린 것도) 치우기 */}
         {!holdingRose && nearFloorRoses && pose !== "sit" && panel === null && (
-          <div className="hud-actions">
+          <div className="hud-actions dock">
             <button className="btn quiet" onClick={sweepRoses}>
               🧹 {ui.sweepRoses}
               <kbd>X</kbd>

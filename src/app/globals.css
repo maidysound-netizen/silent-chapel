@@ -166,13 +166,14 @@ kbd { font-size: 0.72em; border: 1px solid currentColor; border-radius: 4px; pad
 
 /* 물체 위에 필요할 때만 뜨는 행동 안내 */
 .prompt-layer { position: absolute; inset: 0; pointer-events: none; overflow: hidden; z-index: 2; }
+/* 같은 물체 위의 안내들을 위아래로 쌓는 묶음 (겹치지 않게) */
+.prompt-group { position: fixed; left: 0; top: 0; display: flex; flex-direction: column; align-items: center; gap: 6px; pointer-events: none; will-change: transform; }
 .prompt-tag {
-  position: fixed; left: 0; top: 0; pointer-events: auto; white-space: nowrap;
+  position: static; pointer-events: auto; white-space: nowrap;
   display: inline-flex; align-items: center; gap: 4px; min-height: 36px; padding: 0 14px; border-radius: 999px;
   background: rgba(28, 21, 13, 0.82); color: #f6e6c0; border: 1px solid rgba(216, 180, 105, 0.85);
   font-size: 0.9rem; font-weight: 600; cursor: pointer; backdrop-filter: blur(4px);
   box-shadow: 0 6px 18px rgba(0, 0, 0, 0.35); animation: prompt-in 0.35s ease-out;
-  will-change: transform;
 }
 .prompt-tag:hover { background: rgba(70, 52, 22, 0.92); border-color: #ffe2a0; }
 @keyframes prompt-in { from { opacity: 0; } }
@@ -381,8 +382,19 @@ button.chip.presence:disabled { cursor: default; }
   backdrop-filter: none; place-items: end stretch;
 }
 .rosary-full.meditating .rosary-3d { height: 58dvh; align-self: end; }
-.rosary-full.meditating .rosary-corner { top: calc(max(12px, env(safe-area-inset-top)) + 64px); }
 
 /* 꽃 고르기 */
 .flower-picker { flex-direction: column; align-items: center; gap: 6px; }
 .flower-row { display: flex; flex-wrap: wrap; justify-content: center; gap: 6px; max-width: min(560px, calc(100vw - 32px)); }
+
+/* 묵주기도 화면이 열려 있는 동안 위쪽 표시줄은 숨김 (↺ ✕ 와 겹쳐 나가기를 잘못 누르지 않게) */
+.hud.rosary-open .hud-top { visibility: hidden; }
+
+/* 휴대폰: 조이스틱(왼쪽 아래)·달리기 버튼(오른쪽 아래)에 가리지 않도록,
+   그때그때 나타나는 행동(꽃 고르기·꽃 들고 있을 때·꽃 치우기)은 위쪽 표시줄 바로 아래에 */
+@media (pointer: coarse) {
+  .hud-actions.dock {
+    position: fixed; left: 16px; right: 16px;
+    top: calc(max(12px, env(safe-area-inset-top)) + 104px);
+  }
+}
