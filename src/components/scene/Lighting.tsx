@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import { useFrame, useThree } from "@react-three/fiber";
 import * as THREE from "three";
-import { ALTAR, CANDLE_RACK, CRUCIFIX, MARY, MARY_SHRINE, ROSE_ALTAR, SANCTUARY_Y } from "@/lib/game/chapelLayout";
+import { ALTAR, CANDLE_RACK, CANDLE_RACKS, CRUCIFIX, MARY, MARY_SHRINE, ROSE_ALTAR, SANCTUARY_Y } from "@/lib/game/chapelLayout";
 import type { Quality } from "@/store/useAppStore";
 import { hourOverride, koreaHour, moodAt, type LightMood } from "@/lib/timeOfDay";
 
@@ -132,6 +132,8 @@ export function Lighting({ quality }: { quality: Quality }) {
           <FlickerLight position={[ROSE_ALTAR.x - 0.9, 1.5, ROSE_ALTAR.z]} base={2.2 * mood.candles} color="#ffb48a" distance={5} />
           {/* 성모상과 봉헌 초 */}
           <FlickerLight position={[CANDLE_RACK.x + 0.8, 1.4, CANDLE_RACK.z]} base={2.4 * mood.candles} color="#ffb766" distance={6} />
+          {/* 오른쪽 측랑의 둘째 초 제단 */}
+          <FlickerLight position={[CANDLE_RACKS[1].x - 0.8, 1.4, CANDLE_RACKS[1].z]} base={2.2 * mood.candles} color="#ffb766" distance={5} />
           {/* 성모상을 앞 위에서 비추는 부드러운 빛 (높은 품질에서만 그림자) */}
           <spotLight
             ref={marySpot}

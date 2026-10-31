@@ -1,5 +1,5 @@
 // 가까이 있는 상호작용 대상을 찾습니다 (묵주, 소원 초, 성경, 장의자 좌석).
-import { AMBO, CANDLE_RACK, ROSARY_STAND, SEATS, type Seat } from "./chapelLayout.ts";
+import { AMBO, CANDLE_RACKS, ROSARY_STAND, SEATS, type Seat } from "./chapelLayout.ts";
 import { FEATURES } from "../features.ts";
 
 export type InteractionTarget =
@@ -26,16 +26,19 @@ export function findSeat(x: number, z: number, occupied: ReadonlySet<string>): S
   return best;
 }
 
-/** 초 제단 앞(신자석 쪽)에 서 있으면 소원 초 */
-export function nearCandleRack(x: number, z: number): boolean {
-  const front = CANDLE_RACK.x + CANDLE_RACK.depth / 2;
-  return x > front - 0.1 && x < front + 1.6 && Math.abs(z - CANDLE_RACK.z) < CANDLE_RACK.width / 2 + 0.4;
+/** 초 제단 앞(신자석 쪽)에 서 있으면 그 제단 번호, 아니면 -1 */
+export function nearCandleRack(x: number, z: number): number {
+  return CANDLE_RACKS.findIndex((r) => {
+    const out = (x - (r.x + (r.facing * r.depth) / 2)) * r.facing; // 정면에서 바깥쪽으로 떨어진 거리
+    return out > -0.1 && out < 1.6 && Math.abs(z - r.z) < r.width / 2 + 0.4;
+  });
 }
 
 export function findInteraction(x: number, z: number, occupied: ReadonlySet<string>): InteractionTarget | null {
   // 묵주 받침대와 초 제단이 가까이 있으므로 더 가까운 쪽
   const dRosary = Math.hypot(ROSARY_STAND.x - x, ROSARY_STAND.z - z);
-  const dCandles = nearCandleRack(x, z) ? Math.abs(z - CANDLE_RACK.z) * 0.5 + (x - CANDLE_RACK.x) * 0.5 : Infinity;
+  const rack = nearCandleRack(x, z);
+  const dCandles = rack >= 0 ? Math.abs(z - CANDLE_RACKS[rack].z) * 0.5 + Math.abs(x - CANDLE_RACKS[rack].x) * 0.5 : Infinity;
   if (dCandles < dRosary && dCandles < Infinity) return { kind: "candles" };
   if (dRosary < INTERACT_RADIUS) return { kind: "rosary" };
   if (FEATURES.bible && Math.hypot(AMBO.x - x, AMBO.z - z) < INTERACT_RADIUS) return { kind: "bible" };

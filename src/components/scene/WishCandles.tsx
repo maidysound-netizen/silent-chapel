@@ -1,10 +1,10 @@
 "use client";
-// 초 제단(소원 초): 3단 계단식 제단 위에 하루 동안 켜 둔 소원 초를 색색의 유리 촛잔으로 보여 줍니다.
-// 빈 자리는 불 꺼진 맑은 촛잔. 촛잔·불꽃을 각각 InstancedMesh 하나로 그려 48개여도 그리기 호출은 몇 번뿐입니다.
+// 초 제단(소원 초): 3단 계단식 제단 두 곳(성모님 옆·오른쪽 측랑)에 하루 동안 켜 둔 소원 초를 색색의 유리 촛잔으로 보여 줍니다.
+// 빈 자리는 불 꺼진 맑은 촛잔. 촛잔·불꽃을 각각 InstancedMesh 하나로 그려 96개여도 그리기 호출은 몇 번뿐입니다.
 import { useLayoutEffect, useMemo, useRef, useSyncExternalStore } from "react";
 import { useFrame } from "@react-three/fiber";
 import * as THREE from "three";
-import { CANDLE_RACK } from "@/lib/game/chapelLayout";
+import { CANDLE_RACKS } from "@/lib/game/chapelLayout";
 import { candleSlot, tierTop, tierX, WISH_COLORS, WISH_SLOTS } from "@/lib/wishes";
 import { getNetworkManager } from "@/lib/net/NetworkManager";
 
@@ -62,24 +62,30 @@ export function WishCandles() {
     f.instanceMatrix.needsUpdate = true;
   });
 
-  const tiers = Array.from({ length: CANDLE_RACK.tiers }, (_, t) => t);
-  const step = CANDLE_RACK.depth / CANDLE_RACK.tiers;
   return (
     <group>
-      {/* 계단식 제단: 앞단이 낮고 벽 쪽이 높음 */}
-      {tiers.map((t) => (
-        <mesh key={t} position={[tierX(t), tierTop(t) / 2, CANDLE_RACK.z]} castShadow receiveShadow>
-          <boxGeometry args={[step + 0.01, tierTop(t), CANDLE_RACK.width]} />
-          <meshStandardMaterial color={t % 2 ? "#4a2e1b" : "#553521"} roughness={0.8} />
-        </mesh>
-      ))}
-      {/* 단마다 금속 받침판 */}
-      {tiers.map((t) => (
-        <mesh key={`p${t}`} position={[tierX(t), tierTop(t) + 0.005, CANDLE_RACK.z]}>
-          <boxGeometry args={[step - 0.02, 0.01, CANDLE_RACK.width - 0.04]} />
-          <meshStandardMaterial color="#3a3530" metalness={0.6} roughness={0.5} />
-        </mesh>
-      ))}
+      {CANDLE_RACKS.map((r, ri) => {
+        const step = r.depth / r.tiers;
+        const tiers = Array.from({ length: r.tiers }, (_, t) => t);
+        return (
+          <group key={ri}>
+            {/* 계단식 제단: 앞단이 낮고 벽 쪽이 높음 */}
+            {tiers.map((t) => (
+              <mesh key={t} position={[tierX(t, ri), tierTop(t) / 2, r.z]} castShadow receiveShadow>
+                <boxGeometry args={[step + 0.01, tierTop(t), r.width]} />
+                <meshStandardMaterial color={t % 2 ? "#4a2e1b" : "#553521"} roughness={0.8} />
+              </mesh>
+            ))}
+            {/* 단마다 금속 받침판 */}
+            {tiers.map((t) => (
+              <mesh key={`p${t}`} position={[tierX(t, ri), tierTop(t) + 0.005, r.z]}>
+                <boxGeometry args={[step - 0.02, 0.01, r.width - 0.04]} />
+                <meshStandardMaterial color="#3a3530" metalness={0.6} roughness={0.5} />
+              </mesh>
+            ))}
+          </group>
+        );
+      })}
       <instancedMesh ref={cups} args={[cupGeo, undefined, WISH_SLOTS]} frustumCulled={false}>
         <meshStandardMaterial roughness={0.35} transparent opacity={0.88} />
       </instancedMesh>

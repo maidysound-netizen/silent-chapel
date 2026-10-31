@@ -11,6 +11,15 @@ export interface ChangelogEntry {
 
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    id: "2026-11-01-1",
+    date: "11/1",
+    text: {
+      ko: "하루 동안 정말 많은 분이 소원 초를 밝혀 주셨어요. 초가 넘쳐 오른쪽 측랑, 장미 제단 옆에 초 제단을 하나 더 놓았습니다. 🕯",
+      en: "So many of you lit wish candles in a single day that we placed a second candle stand in the right aisle, beside the rose altar. 🕯",
+      ja: "一日でたくさんの方が願いのろうそくを灯してくださいました。あふれたので、右の側廊のバラの祭壇の隣に、ろうそく台をもう一つ置きました。🕯",
+    },
+  },
+  {
     id: "2026-10-31-4",
     date: "10/31",
     text: {

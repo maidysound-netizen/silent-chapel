@@ -1,5 +1,5 @@
 // 소원 초: 색깔, 소원 글 검사, 초 제단 위 자리.
-import { CANDLE_RACK } from "./game/chapelLayout.ts";
+import { CANDLE_RACKS } from "./game/chapelLayout.ts";
 
 export interface WishCandle {
   id: number;
@@ -54,27 +54,34 @@ export function activeWishes(list: readonly WishCandle[], now = Date.now()): Wis
   return list.filter((c) => now - c.createdAt < WISH_TTL_MS).sort((a, b) => b.createdAt - a.createdAt);
 }
 
-export const WISH_SLOTS = CANDLE_RACK.tiers * CANDLE_RACK.perTier;
+/** 제단 하나에 놓이는 초 개수 (3단 × 16) */
+export const SLOTS_PER_RACK = CANDLE_RACKS[0].tiers * CANDLE_RACKS[0].perTier;
+/** 모든 제단을 합친 자리 수 */
+export const WISH_SLOTS = SLOTS_PER_RACK * CANDLE_RACKS.length;
 
-/** 단 높이·깊이: 앞(신자석 쪽, +X)이 낮고 벽 쪽이 높음 */
+/** 단 높이·깊이: 앞(신자석 쪽)이 낮고 벽 쪽이 높음 */
 export function tierTop(tier: number): number {
   return 0.8 + tier * 0.16;
 }
-export function tierX(tier: number): number {
-  const step = CANDLE_RACK.depth / CANDLE_RACK.tiers;
-  return CANDLE_RACK.x + CANDLE_RACK.depth / 2 - step * (tier + 0.5);
+export function tierX(tier: number, rack = 0): number {
+  const r = CANDLE_RACKS[rack];
+  const step = r.depth / r.tiers;
+  return r.x + r.facing * (r.depth / 2 - step * (tier + 0.5));
 }
 
 /**
- * i 번째 초 자리 (0 = 가장 최근). 앞단 가운데부터 채워서 새 초가 잘 보이게 합니다.
+ * i 번째 초 자리 (0 = 가장 최근). 첫째 제단(성모님 옆)부터, 앞단 가운데부터 채워서 새 초가 잘 보이게 합니다.
  */
-export function candleSlot(i: number): { x: number; y: number; z: number } {
-  const tier = Math.floor(i / CANDLE_RACK.perTier) % CANDLE_RACK.tiers;
-  const k = i % CANDLE_RACK.perTier;
+export function candleSlot(i: number): { x: number; y: number; z: number; rack: number } {
+  const rack = Math.floor(i / SLOTS_PER_RACK) % CANDLE_RACKS.length;
+  const r = CANDLE_RACKS[rack];
+  const j = i % SLOTS_PER_RACK;
+  const tier = Math.floor(j / r.perTier) % r.tiers;
+  const k = j % r.perTier;
   // 가운데에서 바깥으로: 0, +1, -1, +2, -2 …
   const order = k === 0 ? 0 : k % 2 === 1 ? (k + 1) / 2 : -k / 2;
-  const spacing = (CANDLE_RACK.width - 0.16) / CANDLE_RACK.perTier;
-  return { x: tierX(tier), y: tierTop(tier), z: CANDLE_RACK.z + order * spacing - spacing / 2 };
+  const spacing = (r.width - 0.16) / r.perTier;
+  return { x: tierX(tier, rack), y: tierTop(tier), z: r.z + order * spacing - spacing / 2, rack };
 }
 
 /** 화면에 보여 줄 소원 초 목록 (서버에서 받아 온 것) */
