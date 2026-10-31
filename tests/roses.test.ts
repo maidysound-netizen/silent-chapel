@@ -65,24 +65,28 @@ test("바닥 꽃 치우기: 근처의 꽃잎·꽃송이만 치우고, 바친 꽃
   assert.equal(store.sweep(0, 0), 0);
 });
 
-test("예수님께 바친 꽃: 제단(책상) 위 앞쪽에 줄지어, 다음 줄은 조금 위·뒤로 차곡차곡", async () => {
-  const { ALTAR_TOP_Y, JESUS_PER_LAYER } = await import("../src/lib/game/roses.ts");
-  const front = ALTAR.z + ALTAR.depth / 2;
+test("예수님께 바친 꽃: 제단(책상) 위 가운데에 꽃더미로 소복이 쌓임", async () => {
+  const { ALTAR_TOP_Y, JESUS_LAYERS } = await import("../src/lib/game/roses.ts");
+  assert.equal(JESUS_LAYERS.reduce((a, b) => a + b, 0), ROSE_CAP.jesus);
   const spots = Array.from({ length: ROSE_CAP.jesus }, (_, n) => offeringSpot("jesus", n, n + 7));
+  const front = ALTAR.z + ALTAR.depth / 2;
   for (const s of spots) {
-    // 밑동은 제단 위(가장자리 안쪽), 꽃송이 끝은 가장자리에 살짝 걸침
+    // 밑동과 꽃송이 끝 모두 제단 위 (가장자리 밖으로 크게 벗어나지 않음)
+    const tipX = s.x + Math.cos(s.yaw) * ROSE_LEN;
     const tipZ = s.z - Math.sin(s.yaw) * ROSE_LEN;
-    assert.ok(s.z < front && s.z > ALTAR.z - ALTAR.depth / 2, `밑동 z=${s.z.toFixed(2)}`);
-    assert.ok(tipZ > front - 0.05 && tipZ < front + 0.15, `꽃 끝 z=${tipZ.toFixed(2)}`);
-    assert.ok(Math.abs(s.x - ALTAR.x) < ALTAR.width / 2, `x=${s.x.toFixed(2)}`);
-    assert.ok(s.y >= ALTAR_TOP_Y - 1e-9);
+    for (const [x, z] of [[s.x, s.z], [tipX, tipZ]]) {
+      assert.ok(Math.abs(x - ALTAR.x) < ALTAR.width / 2, `x=${x.toFixed(2)}`);
+      assert.ok(z < front + 0.12 && z > ALTAR.z - ALTAR.depth / 2, `z=${z.toFixed(2)}`);
+    }
+    assert.ok(s.y >= ALTAR_TOP_Y - 0.01);
   }
-  // 둘째 줄은 첫 줄보다 위, 조금 뒤
-  const a = spots[0];
-  const b = spots[JESUS_PER_LAYER];
-  assert.ok(b.y > a.y && b.z < a.z);
-  // 한 줄 안에서는 겹치지 않음
-  for (let i = 1; i < JESUS_PER_LAYER; i++) assert.ok(Math.abs(spots[i].x - spots[i - 1].x) > 0.15);
+  // 위층일수록 높고, 가운데로 모임 (아래층 평균 퍼짐 > 맨 위층)
+  const first = spots.slice(0, JESUS_LAYERS[0]);
+  const top = spots.slice(-JESUS_LAYERS[JESUS_LAYERS.length - 1]);
+  const avgY = (l: typeof spots) => l.reduce((a, s) => a + s.y, 0) / l.length;
+  const spread = (l: typeof spots) => l.reduce((a, s) => a + Math.abs(s.x + Math.cos(s.yaw) * ROSE_LEN / 2 - ALTAR.x), 0) / l.length;
+  assert.ok(avgY(top) > avgY(first) + 0.08, "위층이 높음");
+  assert.ok(spread(top) < spread(first), "위층이 가운데로 모임");
 });
 
 test("꽃 종류: 여섯 가지, 모양·색이 있고 번호 검사", async () => {

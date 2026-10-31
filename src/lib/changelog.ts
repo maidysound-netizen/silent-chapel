@@ -14,18 +14,18 @@ export const CHANGELOG: ChangelogEntry[] = [
     id: "2026-10-31-9",
     date: "10/31",
     text: {
-      ko: "장미 제단이 꽃 제단이 되었어요. 붉은·흰·분홍 장미, 백합, 튤립, 데이지 가운데 골라 바쳐 보세요. 예수님께 바친 꽃은 제단 위에 차곡차곡 쌓이고, 바친 꽃과 바닥의 꽃은 12시간 동안 모두에게 남습니다. 💐",
-      en: "The rose altar is now a flower altar: choose a red, white or pink rose, a lily, a tulip or a daisy. Flowers offered to Jesus gather on the altar, and offered and scattered flowers stay for everyone for 12 hours. 💐",
-      ja: "バラの祭壇が花の祭壇になりました。赤・白・ピンクのバラ、百合、チューリップ、デイジーから選んで捧げてください。イエスに捧げた花は祭壇の上に重なり、捧げた花と床の花は12時間みんなに残ります。💐",
+      ko: "장미 제단이 꽃 제단이 되었어요. 붉은·흰·분홍 장미, 백합, 튤립, 데이지 가운데 골라 바쳐 보세요. 예수님께 바친 꽃은 제단 위에 소복이 쌓이고, 바친 꽃과 바닥의 꽃은 12시간 동안 모두에게 남습니다. 💐",
+      en: "The rose altar is now a flower altar: choose a red, white or pink rose, a lily, a tulip or a daisy. Flowers offered to Jesus pile up on the altar, and offered and scattered flowers stay for everyone for 12 hours. 💐",
+      ja: "バラの祭壇が花の祭壇になりました。赤・白・ピンクのバラ、百合、チューリップ、デイジーから選んで捧げてください。イエスに捧げた花は祭壇の上にこんもりと積もり、捧げた花と床の花は12時間みんなに残ります。💐",
     },
   },
   {
     id: "2026-10-31-8",
     date: "10/31",
     text: {
-      ko: "성가가 다섯 곡 더해져 열 곡이 되었어요. Pange lingua, 팔레스트리나의 Kyrie, 버드의 Civitas sancti tui와 Agnus Dei, 모차르트의 Ave verum corpus를 만나 보세요. 🎵",
-      en: "Five more chants join the playlist, making ten: Pange lingua, Palestrina's Kyrie, Byrd's Civitas sancti tui and Agnus Dei, and Mozart's Ave verum corpus. 🎵",
-      ja: "聖歌が5曲増えて10曲になりました。Pange lingua、パレストリーナの Kyrie、バードの Civitas sancti tui と Agnus Dei、モーツァルトの Ave verum corpus をどうぞ。🎵",
+      ko: "성가가 네 곡 더해져 아홉 곡이 되었어요. 팔레스트리나의 Kyrie, 버드의 Civitas sancti tui와 Agnus Dei, 모차르트의 Ave verum corpus를 만나 보세요. 🎵",
+      en: "Four more chants join the playlist, making nine: Palestrina's Kyrie, Byrd's Civitas sancti tui and Agnus Dei, and Mozart's Ave verum corpus. 🎵",
+      ja: "聖歌が4曲増えて9曲になりました。パレストリーナの Kyrie、バードの Civitas sancti tui と Agnus Dei、モーツァルトの Ave verum corpus をどうぞ。🎵",
     },
   },
   {

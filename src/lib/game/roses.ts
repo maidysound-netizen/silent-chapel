@@ -81,16 +81,16 @@ const MARY_RINGS = [
   { r: 0.53, n: 10 },
   { r: 0.62, n: 11 },
 ];
-/** 제단 위 앞쪽: 한 층에 놓이는 꽃 수 */
-export const JESUS_PER_LAYER = 12;
+/** 제단 위 꽃더미: 층마다 놓이는 꽃 수 (아래층이 넓고 위로 갈수록 좁아져 소복이 쌓임) */
+export const JESUS_LAYERS = [12, 9, 7, 5, 3] as const;
 /** 제단 위 꽃의 맨 아래 높이 (제대포 위) */
 export const ALTAR_TOP_Y = SANCTUARY_Y + ALTAR.height + 0.03;
 
 /**
  * n 번째로 바친 꽃의 자리 (0 = 가장 먼저 바친 꽃).
  *  · 성모님: 받침대 위 꽃 선반에서 성모상 발치를 앞쪽(+X) 반원으로 둘러쌈
- *  · 예수님: 제단(책상) 위 앞쪽 가장자리에 한 줄씩, 다음 줄은 조금 뒤·조금 위로 차곡차곡 쌓임.
- *            밑동은 제단 안쪽, 꽃송이는 사람들 쪽(+Z)으로 가장자리에 살짝 걸침
+ *  · 예수님: 제단(책상) 위 앞쪽 가운데에 꽃더미로 소복이 쌓임. 아래층은 넓게, 위층은 좁고 높게,
+ *            꽃은 저마다 다른 방향으로 엇갈려 놓여 손으로 얹은 듯한 모양
  */
 export function offeringSpot(target: "mary" | "jesus", n: number, seed: number): Omit<RoseItem, "id" | "target" | "seed" | "flower" | "createdAt"> {
   const jitter = (k: number, amt: number) => (rand(seed, k) - 0.5) * amt;
@@ -116,16 +116,29 @@ export function offeringSpot(target: "mary" | "jesus", n: number, seed: number):
       yaw: -(a + Math.PI / 2),
     };
   }
-  const layer = Math.floor(n / JESUS_PER_LAYER);
-  const col = n % JESUS_PER_LAYER;
-  // 층마다 반 칸씩 엇갈려 아래 꽃 사이에 얹힘
-  const across = (col - (JESUS_PER_LAYER - 1) / 2) * 0.25 + (layer % 2 ? 0.12 : 0) + jitter(1, 0.04);
-  const front = ALTAR.z + ALTAR.depth / 2; // 제단 앞 가장자리
+  // 몇 번째 층의 몇 번째 꽃인지
+  let layer = 0;
+  let i = n;
+  while (layer < JESUS_LAYERS.length - 1 && i >= JESUS_LAYERS[layer]) i -= JESUS_LAYERS[layer++];
+  const inLayer = JESUS_LAYERS[layer];
+  i = i % inLayer;
+  // 층이 올라갈수록 좁아지는 타원 안에 고르게(황금각) 흩어 놓음
+  const shrink = 1 - layer / (JESUS_LAYERS.length + 0.5);
+  const rx = 0.55 * shrink;
+  const rz = 0.2 * shrink;
+  const t = (i + 0.5) / inLayer;
+  const ang = i * 2.39996 + layer * 0.9 + jitter(1, 0.4);
+  const rad = Math.sqrt(t);
+  const cx = ALTAR.x + Math.cos(ang) * rad * rx;
+  const cz = ALTAR.z + ALTAR.depth / 2 - 0.38 + Math.sin(ang) * rad * rz;
+  // 꽃이 놓이는 방향은 제각각 (꽃송이가 대체로 사람들 쪽을 향하도록 ±70°)
+  const yaw = -Math.PI / 2 + jitter(3, 2.4);
+  // 꽃의 가운데가 (cx, cz) 에 오도록 밑동을 반 길이만큼 뒤로
   return {
-    x: ALTAR.x + across,
-    y: ALTAR_TOP_Y + layer * 0.035,
-    z: front - ROSE_LEN + 0.06 - layer * 0.05,
-    yaw: -Math.PI / 2 + jitter(3, 0.12), // 꽃송이가 +Z(사람들 쪽)
+    x: cx - Math.cos(yaw) * (ROSE_LEN / 2),
+    y: ALTAR_TOP_Y + layer * 0.03 + jitter(2, 0.01),
+    z: cz + Math.sin(yaw) * (ROSE_LEN / 2),
+    yaw,
   };
 }
 

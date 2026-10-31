@@ -64,16 +64,6 @@ export const MUSIC_TRACKS: MusicTrack[] = [
     restMs: 20_000,
   },
   {
-    src: "/audio/pange-lingua-gregorian.ogg",
-    mime: 'audio/ogg; codecs="vorbis"',
-    title: "Pange lingua (Gregorian chant)",
-    performer: "Recording uploaded by Garzo to Wikimedia Commons · 2005",
-    license: "CC BY-SA 3.0",
-    licenseUrl: "https://creativecommons.org/licenses/by-sa/3.0/",
-    sourceUrl: "https://commons.wikimedia.org/wiki/File:Pange_Lingua_Latin_in_Latin.ogg",
-    restMs: 8_000,
-  },
-  {
     src: "/audio/palestrina-papae-marcelli-kyrie.ogg",
     mime: 'audio/ogg; codecs="vorbis"',
     title: "Kyrie — Missa Papae Marcelli (Palestrina)",
